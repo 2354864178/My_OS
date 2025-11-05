@@ -1,17 +1,50 @@
-%.bin: %.asm
+BUILD:=../build
+SRC:=.
+
+ENTRYPOINT:=0x10000
+
+$(BUILD)/boot/%.bin: $(SRC)/boot/%.asm
+	$(shell mkdir -p $(dir $@))
 	nasm -f bin $< -o $@
 
-os.img: boot.bin loader.bin
-	yes | ../bochs/bin/bximage -q -hd=16 -func=create -sectsize=512 -imgmode=flat os.img
-	dd if=boot.bin of=os.img bs=512 count=1 conv=notrunc
-	dd if=loader.bin of=os.img bs=512 count=4 seek=2 conv=notrunc
+$(BUILD)/kernel/%.o: $(SRC)/kernel/%.asm
+	$(shell mkdir -p $(dir $@))
+	nasm -f elf32 $(DEBUG) $< -o $@
+
+$(BUILD)/kernel.bin: \
+	$(BUILD)/kernel/start.o \
+	$(shell mkdir -p $(dir $@))
+	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT)
+
+$(BUILD)/system.bin: $(BUILD)/kernel.bin
+	objcopy -O binary $< $@
+
+$(BUILD)/system.map: $(BUILD)/kernel.bin
+	nm $< | sort > $@
+
+$(BUILD)/os.img: \
+	$(BUILD)/boot/boot.bin \
+	$(BUILD)/boot/loader.bin \
+	$(BUILD)/system.bin \
+	$(BUILD)/system.map
+	yes | ../bochs/bin/bximage -q -hd=16 -func=create -sectsize=512 -imgmode=flat $@
+	dd if=$(BUILD)/boot/boot.bin of=$@ bs=512 count=1 conv=notrunc
+	dd if=$(BUILD)/boot/loader.bin of=$@ bs=512 count=4 seek=2 conv=notrunc
+	dd if=$(BUILD)/system.bin of=$@ bs=512 count=200 seek=10 conv=notrunc
 
 .PHONY: clean
 clean:
 	rm -rf *.bin
 	rm -rf *.img
 
-.PHONY: bochs
-bochs: os.img
+.PHONY: bochsg
+bochs: $(BUILD)/os.img
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0" \
-	../bochs/bin/bochs -f bochsrc -debugger
+	../bochs/bin/bochs -f ../bochs/bochsrc -debugger
+
+.PHONY: bochs
+bochs: $(BUILD)/os.img
+	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0" \
+	../bochs/bin/bochs -q -f ../bochs/bochsrc
+
+test: $(BUILD)/os.img
