@@ -3,6 +3,18 @@ SRC:=.
 
 ENTRYPOINT:=0x10000
 
+CFLAGS:= -m32 \
+		-fno-builtin \
+		-nostdinc \
+		-fno-pic \
+		-fno-pie \
+		-nostdlib \
+		-fno-stack-protector
+CFLAGS:=$(strip ${CFLAGS})
+
+DEBUG:= -g
+INCLUDE:=-I$(SRC)/include
+
 $(BUILD)/boot/%.bin: $(SRC)/boot/%.asm
 	$(shell mkdir -p $(dir $@))
 	nasm -f bin $< -o $@
@@ -10,6 +22,10 @@ $(BUILD)/boot/%.bin: $(SRC)/boot/%.asm
 $(BUILD)/kernel/%.o: $(SRC)/kernel/%.asm
 	$(shell mkdir -p $(dir $@))
 	nasm -f elf32 $(DEBUG) $< -o $@
+
+$(BUILD)/kernel/%.o: $(SRC)/kernel/%.c
+	$(shell mkdir -p $(dir $@))
+	gcc $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
 
 $(BUILD)/kernel.bin: \
 	$(BUILD)/kernel/start.o \
