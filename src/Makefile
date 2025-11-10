@@ -19,16 +19,26 @@ $(BUILD)/boot/%.bin: $(SRC)/boot/%.asm
 	$(shell mkdir -p $(dir $@))
 	nasm -f bin $< -o $@
 
-$(BUILD)/kernel/%.o: $(SRC)/kernel/%.asm
+$(BUILD)/%.o: $(SRC)/%.asm
 	$(shell mkdir -p $(dir $@))
 	nasm -f elf32 $(DEBUG) $< -o $@
 
-$(BUILD)/kernel/%.o: $(SRC)/kernel/%.c
+$(BUILD)/%.o: $(SRC)/%.c
 	$(shell mkdir -p $(dir $@))
 	gcc $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
 
+# $(BUILD)/lib/%.o: $(SRC)/lib/%.c
+# 	$(shell mkdir -p $(dir $@))
+# 	gcc $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
+
 $(BUILD)/kernel.bin: \
 	$(BUILD)/kernel/start.o \
+	$(BUILD)/kernel/main.o \
+	$(BUILD)/kernel/io.o \
+	$(BUILD)/lib/string.o \
+	$(BUILD)/kernel/console.o \
+	$(BUILD)/lib/vsprintf.o \
+	$(BUILD)/kernel/printk.o 
 	$(shell mkdir -p $(dir $@))
 	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT)
 
@@ -54,13 +64,30 @@ clean:
 	rm -rf *.img
 
 .PHONY: bochsg
-bochs: $(BUILD)/os.img
+bochsg: $(BUILD)/os.img
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0" \
-	../bochs/bin/bochs -f ../bochs/bochsrc -debugger
+	../bochs/bin/bochs-gdb -q -f ../bochs/bochsrc.gdb
 
 .PHONY: bochs
 bochs: $(BUILD)/os.img
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0" \
 	../bochs/bin/bochs -q -f ../bochs/bochsrc
+
+.PHONY: qemu
+qemu: $(BUILD)/os.img
+	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
+	qemu-system-i386 \
+	-m 32M \
+	-boot c \
+	-hda $<
+
+.PHONY: qemug
+qemug: $(BUILD)/os.img
+	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
+	qemu-system-i386 \
+	-s -S \
+	-m 32M \
+	-boot c \
+	-hda $<
 
 test: $(BUILD)/os.img

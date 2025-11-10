@@ -162,18 +162,18 @@ read_disk:
 			loop .readw
 		ret
 
-code_selecter equ (1 << 3)
-data_selecter equ (2 << 3)
+code_selecter equ (1 << 3)	; 代码段选择子
+data_selecter equ (2 << 3)	; 数据段选择子
 
-memory_base equ 0
-memory_limit equ (1024 *1024 *1024 * 4) / (1024 * 4) - 1
+memory_base equ 0	 ; 内存基地址：从0开始
+memory_limit equ (1024 *1024 *1024 * 4) / (1024 * 4) - 1	; 内存限长（4G/4K）
 
-gdt_ptr:
-    dw (gdt_end - gdt_base) - 1
-    dd gdt_base
+gdt_ptr:	 ; GDT的“指针”（供CPU加载GDT时使用）
+    dw (gdt_end - gdt_base) - 1	; GDT的限长（总字节数-1）
+    dd gdt_base	; GDT的基地址（起始物理地址）
 gdt_base:
-    dd 0, 0
-gdt_code:
+    dd 0, 0	; 第0个描述符：空描述符（x86规定必须存在，不能用）
+gdt_code:	 ; 代码段描述符（索引1，对应code_selecter）
     dw memory_limit & 0xffff
     dw memory_base & 0xffff
     db (memory_base >> 16) & 0xff

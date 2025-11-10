@@ -1,0 +1,66 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C/C++: gcc 生成活动文件",
+			"command": "/usr/bin/gcc",
+			"args": [
+				"-fdiagnostics-color=always",
+				"-m32",
+				"-g",
+				"-I${workspaceFolder}/src/include",
+				"${file}",
+				"-o",
+				"${fileDirname}/${fileBasenameNoExtension}.out"
+			],
+			"options": {
+				"cwd": "${fileDirname}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "编译器: /usr/bin/gcc"
+		},
+
+		{
+			"type": "shell",
+			"label": "nasm: gcc 生成活动文件",
+			"command": "",
+			"args": [
+				"/usr/bin/nasm",
+                "-f",
+                "elf32",
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}/${fileBasenameNoExtension}.o",
+                ";",
+				"/usr/bin/gcc",
+				"-fdiagnostics-color=always",
+				"-m32",
+				"-g",
+				"-static",
+				"-I${workspaceFolder}/src/include",
+				"${fileDirname}/${fileBasenameNoExtension}.o",
+				"-o",
+				"${fileDirname}/${fileBasenameNoExtension}.out"
+			],
+			"options": {
+				"cwd": "${fileDirname}"
+			},
+			"problemMatcher": [
+				"$gcc"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"detail": "编译器: /usr/bin/gcc"
+		}
+	]
+}

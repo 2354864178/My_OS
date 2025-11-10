@@ -1,13 +1,15 @@
 #include <onix/onix.h>
-
-int magic = ONIX_MAGIC;
-char message[] = "hello onix";
-char buf[1024];
+#include <onix/types.h>
+#include <onix/io.h>
+#include <onix/console.h>
+#include <onix/printk.h>
 
 void kernel_init(){
-    char *video = (char*) 0xb8000;
-    for (int i = 0; i < sizeof(message); i++)
+    console_init();
+    int cnt = 30;
+    while (cnt--)
     {
-        video[i * 2] = message[i];
+        printk("hello onix %#010x\n");
     }
+    return;
 }
