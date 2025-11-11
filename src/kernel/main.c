@@ -5,12 +5,10 @@
 #include <onix/printk.h>
 #include <onix/assert.h>
 #include <onix/debug.h>
+#include <onix/global.h>
 
 void kernel_init(){
     console_init();
-    assert(3<5);
-    assert(3>5);
-    // BMB;
-    // DEBUGK("debug onix");
+    task_init();
     return;
 }
