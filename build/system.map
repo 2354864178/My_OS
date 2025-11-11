@@ -33,8 +33,12 @@
 0001091c t skip_atoi
 00010975 t number
 00010d05 T vsprintf
-00011242 T sprintf
-00011275 T printk
+00011267 T sprintf
+0001129a T printk
+000112df t spin
+000112fa T assertion_failure
+00011331 T panic
+00011388 T debugk
 00014000 d attr
 00014002 d erase
 00014004 B __bss_start
@@ -44,4 +48,6 @@
 00014028 b x
 0001402c b y
 00014040 b buf
-00014440 B _end
+00014440 b buf
+00014840 b buf
+00014c40 B _end

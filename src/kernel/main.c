@@ -3,13 +3,14 @@
 #include <onix/io.h>
 #include <onix/console.h>
 #include <onix/printk.h>
+#include <onix/assert.h>
+#include <onix/debug.h>
 
 void kernel_init(){
     console_init();
-    int cnt = 30;
-    while (cnt--)
-    {
-        printk("hello onix %#010x\n");
-    }
+    assert(3<5);
+    assert(3>5);
+    // BMB;
+    // DEBUGK("debug onix");
     return;
 }
