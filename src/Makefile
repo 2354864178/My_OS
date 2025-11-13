@@ -43,7 +43,9 @@ $(BUILD)/kernel.bin: \
 	$(BUILD)/kernel/debug.o \
 	$(BUILD)/kernel/global.o \
 	$(BUILD)/kernel/schedule.o \
-	$(BUILD)/kernel/task.o
+	$(BUILD)/kernel/task.o \
+	$(BUILD)/kernel/interrupt.o \
+	$(BUILD)/kernel/handler.o
 	$(shell mkdir -p $(dir $@))
 	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT)
 
@@ -71,7 +73,7 @@ clean:
 .PHONY: bochsg
 bochsg: $(BUILD)/os.img
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0" \
-	../bochs/bin/bochs-gdb -q -f ../bochs/bochsrc.gdb
+	../bochs/bin/bochs -q -f ../bochs/bochsrc -debugger
 
 .PHONY: bochs
 bochs: $(BUILD)/os.img

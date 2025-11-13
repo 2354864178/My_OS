@@ -6,10 +6,13 @@
 #include <onix/assert.h>
 #include <onix/debug.h>
 #include <onix/global.h>
+#include <onix/interrupt.h>
 
 void kernel_init(){
+    // BMB;
     console_init();
     gdt_init();
-    task_init();
+    // task_init();
+    interrupt_init();
     return;
 }

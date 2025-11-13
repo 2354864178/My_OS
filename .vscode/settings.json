@@ -2,7 +2,10 @@
   "files.associations": {
     "console.h": "c",
     "debug.h": "c",
-    "types.h": "c"
+    "types.h": "c",
+    "global.h": "c",
+    "interrupt.h": "c",
+    "onix.h": "c"
   },
   "C_Cpp_Runner.msvcBatchPath": ""
 }
