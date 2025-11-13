@@ -64,7 +64,7 @@
 00014440 b buf
 00014840 b buf
 00014c40 B gdt
-00015240 B gdt_ptr
-00015260 B idt
-00015a60 B idt_ptr
-00015a68 B _end
+00015040 B gdt_ptr
+00015060 B idt
+00015860 B idt_ptr
+00015868 B _end

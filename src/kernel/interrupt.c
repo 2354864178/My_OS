@@ -20,9 +20,8 @@ void interrupt_init(){
         gate->DPL = 0;           // 内核态
         gate->present = 1;       // 有效
     }
-    // idt_ptr.base = (u32)idt;
-    idt_ptr.base = 0x00105060;
-    idt_ptr.limit = (u16)(sizeof(idt) - 1);
+    idt_ptr.base = (u32)idt;
+    idt_ptr.limit = sizeof(idt) - 1;
     BMB;
     asm volatile("lidt idt_ptr\n");
 }
