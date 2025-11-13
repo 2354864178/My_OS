@@ -9,6 +9,7 @@
 
 void kernel_init(){
     console_init();
+    gdt_init();
     task_init();
     return;
 }
