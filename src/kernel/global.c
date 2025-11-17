@@ -9,12 +9,13 @@ pointer_t gdt_ptr;          // 内核全局描述符表指针
 void gdt_init()
 {
     DEBUGK("init gdt!!!\n");
-
-    asm volatile("sgdt gdt_ptr");
+    // BMB;
+    asm volatile("sgdt gdt_ptr\n");
+    // BMB;
     memcpy(&gdt, (void *)gdt_ptr.base, gdt_ptr.limit + 1);
     gdt_ptr.base = (u32)&gdt;
-    gdt_ptr.limit = (sizeof(gdt) - 1);
-
-    // BMB;
+    gdt_ptr.limit = sizeof(gdt) - 1;
+    DEBUGK("pointer_t : %d \n", sizeof(pointer_t));
+    BMB;
     asm volatile("lgdt gdt_ptr\n");
 }

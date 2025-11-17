@@ -9,7 +9,7 @@ CFLAGS:= -m32 \
 		-fno-pic \
 		-fno-pie \
 		-nostdlib \
-		-fno-stack-protector
+		-fno-stack-protector 
 CFLAGS:=$(strip ${CFLAGS})
 
 DEBUG:= -g

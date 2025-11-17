@@ -4,7 +4,7 @@
 #include <onix/types.h>
 
 #define IDT_SIZE 256
-
+#pragma pack(1) 
 typedef struct gate_t
 {
     u16 offset0;    // 段内偏移 0 ~ 15 位
@@ -15,8 +15,10 @@ typedef struct gate_t
     u8 DPL : 2;     // 使用 int 指令访问的最低权限
     u8 present : 1; // 是否有效
     u16 offset1;    // 段内偏移 16 ~ 31 位
-} _packed gate_t;
+} gate_t;
+#pragma pack() 
 
+typedef void *handler_t; // 中断处理函数
 void interrupt_init();
 
 #endif

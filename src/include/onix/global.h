@@ -7,6 +7,8 @@
 
 // 全局描述符
 // unsigned char 本身是 8 位的整数类型（1 字节），但在结构体中，它可以作为 “容器”，通过位域语法（成员名 : 位数）将这 8 位分割成多个独立的 “子成员”，每个子成员占用指定的位数。
+// #pragma pack 的对齐控制 优先级高于编译器默认规则和大多数其他对齐属性，用#define _packed __attribute__((_packed))有时候不起作用，不知道为什么
+#pragma pack(1) 
 typedef struct descriptor_t /* 共 8 个字节 */
 {
     unsigned short limit_low;      // 段界限 0 ~ 15 位
@@ -21,7 +23,8 @@ typedef struct descriptor_t /* 共 8 个字节 */
     unsigned char big : 1;         // 32 位 还是 16 位;
     unsigned char granularity : 1; // 粒度 4KB 或 1B
     unsigned char base_high;       // 基地址 24 ~ 31 位
-} _packed descriptor_t;
+} descriptor_t;
+#pragma pack() 
 
 // 段选择子
 typedef struct selector_t
@@ -32,11 +35,13 @@ typedef struct selector_t
 } selector_t;
 
 // 全局描述符表指针
+#pragma pack(1)  
 typedef struct pointer_t
 {
     u16 limit;
     u32 base;
-} _packed pointer_t;    // 取消内存对齐，强制紧密排列
+}pointer_t;    // 取消内存对齐，强制紧密排列
+#pragma pack()  
 
 void gdt_init();
 
