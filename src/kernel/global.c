@@ -15,7 +15,7 @@ void gdt_init()
     memcpy(&gdt, (void *)gdt_ptr.base, gdt_ptr.limit + 1);
     gdt_ptr.base = (u32)&gdt;
     gdt_ptr.limit = sizeof(gdt) - 1;
-    DEBUGK("pointer_t : %d \n", sizeof(pointer_t));
+    // DEBUGK("pointer_t : %d \n", sizeof(pointer_t));
     BMB;
     asm volatile("lgdt gdt_ptr\n");
 }

@@ -8,7 +8,7 @@ section .text
 interrupt_handler_%1:
     ; xchg bx, bx
 %ifn %2
-    push 0x20222202
+    push 0x20251117
 %endif
     push %1; 压入中断向量，跳转到中断入口
     jmp interrupt_entry
@@ -16,9 +16,27 @@ interrupt_handler_%1:
 
 interrupt_entry:
 
-    mov eax, [esp]
-    ; 调用中断处理函数，handler_table 中存储了中断处理函数的指针
-    call [handler_table + eax * 4]
+    ; 保存上文寄存器信息
+    push ds
+    push es
+    push fs
+    push gs
+    pusha
+
+    mov eax, [esp + 12 * 4]; 找到前面 push %1 压入的 中断向量
+
+    push eax
+    
+    call [handler_table + eax * 4]; 调用中断处理函数
+
+    add esp, 4
+
+    ; 恢复下文寄存器信息
+    popa
+    pop gs
+    pop fs
+    pop es
+    pop ds
 
     add esp, 8
     iret

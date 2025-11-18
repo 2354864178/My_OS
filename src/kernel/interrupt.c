@@ -1,8 +1,19 @@
 #include <onix/debug.h>
 #include <onix/global.h>
 #include <onix/interrupt.h>
+#include <onix/printk.h>
+#include <onix/io.h>
+#include <onix/assert.h>
 
-#define ENTRY_SIZE 0x20
+#define LOGK(fmt, args...) DEBUGK(fmt, ##args)
+
+#define ENTRY_SIZE 0x30
+
+#define PIC_M_CTRL 0x20 // 主片的控制端口
+#define PIC_M_DATA 0x21 // 主片的数据端口
+#define PIC_S_CTRL 0xa0 // 从片的控制端口
+#define PIC_S_DATA 0xa1 // 从片的数据端口
+#define PIC_EOI 0x20    // 通知中断控制器中断结束
 
 gate_t idt[IDT_SIZE];
 pointer_t idt_ptr;
@@ -37,22 +48,82 @@ static char *messages[] = {
     "#CP Control Protection Exception\0",
 };
 
-void exception_handler(int vector){
+// 通知中断控制器，中断处理结束
+void send_eoi(int vector)
+{
+    if (vector >= 0x20 && vector < 0x28)
+    {
+        outb(PIC_M_CTRL, PIC_EOI);
+    }
+    if (vector >= 0x28 && vector < 0x30)
+    {
+        outb(PIC_M_CTRL, PIC_EOI);
+        outb(PIC_S_CTRL, PIC_EOI);
+    }
+}
+
+// 初始化中断控制器
+void pic_init()
+{
+    outb(PIC_M_CTRL, 0b00010001); // ICW1: 边沿触发, 级联 8259, 需要ICW4.
+    outb(PIC_M_DATA, 0x20);       // ICW2: 起始中断向量号 0x20
+    outb(PIC_M_DATA, 0b00000100); // ICW3: IR2接从片.
+    outb(PIC_M_DATA, 0b00000001); // ICW4: 8086模式, 正常EOI
+
+    outb(PIC_S_CTRL, 0b00010001); // ICW1: 边沿触发, 级联 8259, 需要ICW4.
+    outb(PIC_S_DATA, 0x28);       // ICW2: 起始中断向量号 0x28
+    outb(PIC_S_DATA, 2);          // ICW3: 设置从片连接到主片的 IR2 引脚
+    outb(PIC_S_DATA, 0b00000001); // ICW4: 8086模式, 正常EOI
+
+    outb(PIC_M_DATA, 0b11111110); // 打开时钟中断
+    outb(PIC_S_DATA, 0b11111111); // 关闭所有中断
+}
+
+void exception_handler(
+    int vector,
+    u32 edi, u32 esi, u32 ebp, u32 esp,
+    u32 ebx, u32 edx, u32 ecx, u32 eax,
+    u32 gs, u32 fs, u32 es, u32 ds,
+    u32 vector0, u32 error, u32 eip, u32 cs, u32 eflags)
+{
     char *message = NULL;
-    if(vector < 22){
+    if (vector < 22)
+    {
         message = messages[vector];
     }
-    else{
+    else
+    {
         message = messages[15];
     }
-    printk("EXCEPTION : [0x%02x] %s \n", vector, messages[vector]);
 
-    while (true) 
+    printk("\nEXCEPTION : %s \n", message);
+    printk("   VECTOR : 0x%02X\n", vector);
+    printk("    ERROR : 0x%08X\n", error);
+    printk("   EFLAGS : 0x%08X\n", eflags);
+    printk("       CS : 0x%02X\n", cs);
+    printk("      EIP : 0x%08X\n", eip);
+    printk("      ESP : 0x%08X\n", esp);
+
+    bool hanging = true;
+
+    // 阻塞
+    while (hanging)
         ;
+    // 通过 EIP 的值应该可以找到出错的位置
+    // 也可以在出错时，可以将 hanging 在调试器中手动设置为 0
+    // 然后在下面 return 打断点，单步调试，找到出错的位置
+    return;
+}
+
+extern void schedule();
+void default_handler(int vector)
+{
+    send_eoi(vector);
+    schedule();
 }
 
 
-void interrupt_init(){
+void idt_init(){
     for (size_t i = 0; i < IDT_SIZE; i++)
     {
         gate_t *gate = &idt[i];
@@ -73,8 +144,19 @@ void interrupt_init(){
         handler_table[i] = exception_handler;
     }
 
+    for (size_t i = 0x20; i < ENTRY_SIZE; i++)
+    {
+        handler_table[i] = default_handler;
+    }
+
     idt_ptr.base = (u32)idt;
     idt_ptr.limit = sizeof(idt) - 1;
     BMB;
     asm volatile("lidt idt_ptr\n");
+}
+
+void interrupt_init()
+{
+    pic_init();
+    idt_init();
 }

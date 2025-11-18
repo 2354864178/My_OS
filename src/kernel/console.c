@@ -98,23 +98,18 @@ void console_clear(){
 
 // 向上滚屏
 static void scroll_up(){
-    //  缓冲区有足够空间
-    if(screen + SCR_SIZE + ROW_SIZE < MEM_END){
-        u32 *ptr = (u32 *)(screen + SCR_SIZE);  //  当前屏幕内容的末尾地址，转为u32*方便一次写2个字符（4字节）
-        //  将新增的一行清空（填充空格）
-        for(size_t i=0; i<WIDTH; i++){
-            *ptr++ = erase;
-        }
-        screen += ROW_SIZE; //  原来的第二行内容现在变成第一行，所以屏幕起始地址向后移动一行的字节数
-        pos += ROW_SIZE;    //  光标需要保持在内容的相对位置，所以也向后移动一行的字节数
-    }
-    //  缓冲区空间不足，将当前屏幕内容复制到缓冲区开头
-    else{
+    if(screen + SCR_SIZE + ROW_SIZE >= MEM_END){
         memcpy((void *)MEM_BASE, (void *)screen, SCR_SIZE);
         pos -= screen - MEM_BASE;   //  光标跟着内容一起搬回缓冲区开头
         screen = MEM_BASE;          //  重置屏幕起始地址为缓冲区开头
     }
-    // y--;    //  光标会上滚一行
+    u32 *ptr = (u32 *)(screen + SCR_SIZE);  //  当前屏幕内容的末尾地址，转为u32*方便一次写2个字符（4字节）
+    //  将新增的一行清空（填充空格）
+    for(size_t i=0; i<WIDTH; i++){
+        *ptr++ = erase;
+    }
+    screen += ROW_SIZE; //  原来的第二行内容现在变成第一行，所以屏幕起始地址向后移动一行的字节数
+    pos += ROW_SIZE;    //  光标需要保持在内容的相对位置，所以也向后移动一行的字节数
     set_screen(); 
 }
 
