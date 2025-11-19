@@ -10,6 +10,6 @@ _start:
     ; mov byte [0xb81E6],'o'
     ; mov byte [0xb81E8],'d'
     call kernel_init
-    xchg bx, bx
-    int 0x80
+    ; xchg bx, bx
+    ; int 0x80
     jmp $
