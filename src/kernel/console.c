@@ -164,6 +164,7 @@ void console_write(char *buf, u32 count){
         case ESC:
             break;
         case BEL:
+            start_beep();
             break;
         case BS:
             command_bs();

@@ -47,7 +47,9 @@ $(BUILD)/kernel.bin: \
 	$(BUILD)/kernel/interrupt.o \
 	$(BUILD)/kernel/handler.o \
 	$(BUILD)/lib/stdlib.o \
-	$(BUILD)/kernel/clock.o
+	$(BUILD)/kernel/clock.o \
+	$(BUILD)/kernel/time.o \
+	$(BUILD)/kernel/rtc.o
 	$(shell mkdir -p $(dir $@))
 	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT)
 
@@ -88,7 +90,10 @@ qemu: $(BUILD)/os.img
 	qemu-system-i386 \
 	-m 32M \
 	-boot c \
-	-hda $<
+	-drive file=$<,index=0,media=disk,format=raw \
+	-audiodev pa,id=hda \
+	-machine pcspk-audiodev=hda \
+	-rtc base=localtime \
 
 .PHONY: qemug
 qemug: $(BUILD)/os.img
@@ -97,6 +102,9 @@ qemug: $(BUILD)/os.img
 	-s -S \
 	-m 32M \
 	-boot c \
-	-hda $<
+	-drive file=$<,index=0,media=disk,format=raw \
+	-audiodev pa,id=hda \
+	-machine pcspk-audiodev=hda \
+	-rtc base=localtime \
 
 test: $(BUILD)/os.img
