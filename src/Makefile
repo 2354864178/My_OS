@@ -49,7 +49,8 @@ $(BUILD)/kernel.bin: \
 	$(BUILD)/lib/stdlib.o \
 	$(BUILD)/kernel/clock.o \
 	$(BUILD)/kernel/time.o \
-	$(BUILD)/kernel/rtc.o
+	$(BUILD)/kernel/rtc.o \
+	$(BUILD)/kernel/memory.o
 	$(shell mkdir -p $(dir $@))
 	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT)
 

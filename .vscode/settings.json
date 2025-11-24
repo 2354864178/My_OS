@@ -5,7 +5,8 @@
     "types.h": "c",
     "global.h": "c",
     "interrupt.h": "c",
-    "onix.h": "c"
+    "onix.h": "c",
+    "assert.h": "c"
   },
   "C_Cpp_Runner.msvcBatchPath": ""
 }
