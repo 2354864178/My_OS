@@ -30,7 +30,7 @@ void start_beep()
     {
         outb(SPEAKER_REG, inb(SPEAKER_REG) | 3);
     }
-    // DEBUGK("beeping jiffies %d ...\n", jiffies);
+    DEBUGK("PC speaker BB\n", jiffies);
     beeping = jiffies + 5;
 }
 
