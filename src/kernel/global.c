@@ -16,6 +16,6 @@ void gdt_init()
     gdt_ptr.base = (u32)&gdt;
     gdt_ptr.limit = sizeof(gdt) - 1;
     // DEBUGK("pointer_t : %d \n", sizeof(pointer_t));
-    BMB;
+    // BMB;
     asm volatile("lgdt gdt_ptr\n");
 }

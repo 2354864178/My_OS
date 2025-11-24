@@ -1,3 +1,5 @@
+#include <onix/debug.h>
+
 extern void clock_init();
 extern void console_init();
 extern void gdt_init();
@@ -12,13 +14,19 @@ void kernel_init(){
     // BMB;
     // console_init();
     // gdt_init();
+    memory_map_init();
+    mapping_init();
     interrupt_init();
-    clock_init();
+    // clock_init();
     // time_init();
     // rtc_init();
     // set_alarm(2);
-    memory_map_init();
-    memory_test();
-    asm volatile("sti");
+    
+
+    BMB;
+    char* ptr = (char *)(0x100000 * 20);
+    ptr[0] = 'a';
+
+    // asm volatile("sti");
     hang();
 }

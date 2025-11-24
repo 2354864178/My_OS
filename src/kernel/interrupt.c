@@ -189,7 +189,7 @@ void idt_init(){
 
     idt_ptr.base = (u32)idt;
     idt_ptr.limit = sizeof(idt) - 1;
-    BMB;
+    // BMB;
     asm volatile("lidt idt_ptr\n");
 }
 

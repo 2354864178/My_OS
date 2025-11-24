@@ -66,12 +66,6 @@ void memory_init(u32 magic, u32 addr)
 
     LOGK("Total pages %d\n", total_pages);
     LOGK("Free pages %d\n", free_pages);
-
-    // if (memory_size < KERNEL_MEMORY_SIZE)
-    // {
-    //     panic("System memory is %dM too small, at least %dM needed\n",
-    //           memory_size / MEMORY_BASE, KERNEL_MEMORY_SIZE / MEMORY_BASE);
-    // }
 }
 
 static u32 start_page = 0;   // 可分配物理内存起始位置
@@ -140,8 +134,69 @@ static void put_page(u32 addr)
     LOGK("PUT page 0x%p\n", addr);
 }
 
-void memory_test(){
-    u32 pages[10];
-    for(size_t i=0; i<10; i++) pages[i] = get_page();
-    for(size_t i=0; i<10; i++) put_page(pages[i]);
+// void memory_test(){
+//     u32 pages[10];
+//     for(size_t i=0; i<10; i++) pages[i] = get_page();
+//     for(size_t i=0; i<10; i++) put_page(pages[i]);
+// }
+
+// 得到 cr3 寄存器
+u32 get_cr3(){
+    asm volatile("movl %cr3, %eax\n");  // 直接将 mov eax, cr3，返回值在 eax 中
+}
+
+// 设置 cr3 寄存器，参数是页目录的地址
+void set_cr3(u32 pde)
+{
+    ASSERT_PAGE(pde);
+    asm volatile("movl %%eax, %%cr3\n" ::"a"(pde));
+}
+
+// 将 cr0 寄存器最高位 PG 置为 1，启用分页
+static void enable_page()
+{
+    // 0b1000_0000_0000_0000_0000_0000_0000_0000
+    // 0x80000000
+    asm volatile(
+        "movl %cr0, %eax\n"
+        "orl $0x80000000, %eax\n"
+        "movl %eax, %cr0\n");
+}
+
+// 初始化页表项
+static void entry_init(page_entry_t *entry, u32 index)
+{
+    *(u32 *)entry = 0;
+    entry->present = 1;
+    entry->write = 1;
+    entry->user = 1;
+    entry->index = index;
+}
+
+#define KERNEL_PAGE_DIR 0x200000
+#define KERNEL_PAGE_ENTRY 0x201000
+
+// 初始化内存映射
+void mapping_init()
+{
+    page_entry_t *pde = (page_entry_t *)KERNEL_PAGE_DIR;    // 初始化页目录表，PDE[0]指向页表
+    memset(pde, 0, PAGE_SIZE);  // PDE的index=0x201 → 页表地址=0x201000
+
+    entry_init(&pde[0], IDX(KERNEL_PAGE_ENTRY));
+
+    page_entry_t *pte = (page_entry_t *)KERNEL_PAGE_ENTRY;  // 初始化页表，1024个PTE对应虚拟地址0~4MB
+    page_entry_t *entry;
+    memset(pte, 0, PAGE_SIZE);
+
+    for (size_t tidx = 0; tidx < 1024; tidx++){
+        entry = &pte[tidx];
+        entry_init(entry, tidx);    // PTE的index=tidx → 物理页地址=tidx<<12
+        memory_map[tidx] = 1;       // 设置物理内存数组，该页被占用
+    }
+
+    BMB;
+    set_cr3((u32)pde);  // 设置 cr3 寄存器
+    BMB;
+    
+    enable_page();      // 启用分页
 }
