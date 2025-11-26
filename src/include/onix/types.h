@@ -15,6 +15,8 @@
 
 #define _packed __attribute__((packed))                         // 用于定义特殊的结构体(取消内存对齐)
 #define _ofp __attribute__((optimize("omit-frame-pointer")))    // 用于省略函数的栈帧
+#define _inline __attribute__((always_inline)) inline           // 同时触发标准 C 的内联建议和GCC 的强制内联要求，确保编译器必须把函数内联到调用处
+                                                                // 针对内核中短小、高频、性能敏感的函数，消除函数调用开销；
 
 // 有符号整数类型（明确位宽，适配硬件操作和数值计算）
 typedef unsigned int size_t;
@@ -30,5 +32,6 @@ typedef unsigned int u32;
 typedef unsigned long long u64;
 
 typedef u32 time_t;     // 时间戳类型：定义为32位无符号整数，存储"从1970-01-01 00:00:00到当前的秒数"
+typedef u32 idx_t;
 
 #endif      // 头文件保护宏结束：与开头ONIX_TYPES_H对应，标记头文件内容结束

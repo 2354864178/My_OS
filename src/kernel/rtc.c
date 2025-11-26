@@ -55,40 +55,40 @@ void rtc_handler(int vector)
 // 设置 secs 秒后发生实时时钟中断
 void set_alarm(u32 secs)
 {
-    LOGK("beeping after %d seconds\n", secs);
+    LOGK("beeping after %d seconds\n", secs);   // 打印闹钟提示：告知用户将在secs秒后触发闹钟（调试/用户反馈用）
 
     tm time;
-    time_read(&time);
+    time_read(&time);           // 读取当前系统时间（二进制格式，已由time_read完成BCD→二进制转换）
 
-    u8 sec = secs % 60;
-    secs /= 60;
-    u8 min = secs % 60;
-    secs /= 60;
-    u32 hour = secs;
+    u8 sec = secs % 60;     // 拆分出"额外秒数"（0~59）
+    secs /= 60;             // 剩余秒数转换为分钟单位
+    u8 min = secs % 60;     // 拆分出"额外分钟数"（0~59）
+    secs /= 60;             // 剩余分钟数转换为小时单位
+    u32 hour = secs;        // 拆分出"额外小时数"（无上限，后续会处理24小时循环）
 
     time.tm_sec += sec;
     if (time.tm_sec >= 60)
     {
-        time.tm_sec %= 60;
-        time.tm_min += 1;
+        time.tm_sec %= 60;  // 秒数取模60，保留0~59范围
+        time.tm_min += 1;   // 秒满60，向分钟进1
     }
 
     time.tm_min += min;
     if (time.tm_min >= 60)
     {
-        time.tm_min %= 60;
-        time.tm_hour += 1;
+        time.tm_min %= 60;  // 分钟数取模60，保留0~59范围
+        time.tm_hour += 1;  // 分满60，向小时进1
     }
 
     time.tm_hour += hour;
     if (time.tm_hour >= 24)
     {
-        time.tm_hour %= 24;
+        time.tm_hour %= 24; // 小时数取模24，保留0~23范围（符合24小时制）
     }
 
-    cmos_write(CMOS_HOUR, bin_to_bcd(time.tm_hour));
-    cmos_write(CMOS_MINUTE, bin_to_bcd(time.tm_min));
-    cmos_write(CMOS_SECOND, bin_to_bcd(time.tm_sec));
+    cmos_write(CMOS_HOUR, bin_to_bcd(time.tm_hour));    // 写入目标小时（BCD格式）
+    cmos_write(CMOS_MINUTE, bin_to_bcd(time.tm_min));   // 写入目标分钟（BCD格式）
+    cmos_write(CMOS_SECOND, bin_to_bcd(time.tm_sec));   // 写入目标秒（BCD格式）
 
     cmos_write(CMOS_B, 0b00100010); // 打开闹钟中断
     cmos_read(CMOS_C);              // 读 C 寄存器，以允许 CMOS 中断
