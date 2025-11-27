@@ -27,17 +27,11 @@ $(BUILD)/%.o: $(SRC)/%.c
 	$(shell mkdir -p $(dir $@))
 	gcc $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
 
-# $(BUILD)/lib/%.o: $(SRC)/lib/%.c
-# 	$(shell mkdir -p $(dir $@))
-# 	gcc $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
-
 $(BUILD)/kernel.bin: \
 	$(BUILD)/kernel/start.o \
 	$(BUILD)/kernel/main.o \
 	$(BUILD)/kernel/io.o \
-	$(BUILD)/lib/string.o \
 	$(BUILD)/kernel/console.o \
-	$(BUILD)/lib/vsprintf.o \
 	$(BUILD)/kernel/printk.o \
 	$(BUILD)/kernel/assert.o \
 	$(BUILD)/kernel/debug.o \
@@ -46,11 +40,14 @@ $(BUILD)/kernel.bin: \
 	$(BUILD)/kernel/task.o \
 	$(BUILD)/kernel/interrupt.o \
 	$(BUILD)/kernel/handler.o \
-	$(BUILD)/lib/stdlib.o \
 	$(BUILD)/kernel/clock.o \
 	$(BUILD)/kernel/time.o \
 	$(BUILD)/kernel/rtc.o \
-	$(BUILD)/kernel/memory.o
+	$(BUILD)/kernel/memory.o \
+	$(BUILD)/lib/string.o \
+	$(BUILD)/lib/vsprintf.o \
+	$(BUILD)/lib/stdlib.o \
+	$(BUILD)/lib/bitmap.o \
 	$(shell mkdir -p $(dir $@))
 	ld -m elf_i386 -static $^ -o $@ -Ttext $(ENTRYPOINT)
 
@@ -83,7 +80,7 @@ bochsg: $(BUILD)/os.img
 .PHONY: bochs
 bochs: $(BUILD)/os.img
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0" \
-	../bochs/bin/bochs -q -f ../bochs/bochsrc
+	../bochs/bin/bochs -q -f ../bochs/bochsrc -unlock
 
 .PHONY: qemu
 qemu: $(BUILD)/os.img

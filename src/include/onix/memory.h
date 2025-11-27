@@ -23,7 +23,9 @@ typedef struct page_entry_t
 } page_entry_t;
 #pragma pack() 
 
-u32 get_cr3();  // 得到 cr3 寄存器
+u32 get_cr3();          // 得到 cr3 寄存器
 void set_cr3(u32 pde);  // 设置 cr3 寄存器，参数是页目录的地址
+u32 alloc_kpage(u32 count);             // 分配 count 个连续的内核页
+void free_kpage(u32 vaddr, u32 count);  // 释放 count 个连续的内核页
 
 #endif

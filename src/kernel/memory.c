@@ -2,6 +2,7 @@
 #include <onix/debug.h>
 #include <onix/assert.h>
 #include <onix/memory.h>
+#include <onix/bitmap.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -21,7 +22,10 @@ static u32 KERNEL_PAGE_TABLE[] = {  // 内核页表索引
     0x3000,
 };
 
-#define KERNEL_MEMORY_SIZE (0x100000 * sizeof(KERNEL_PAGE_TABLE))  
+#define KERNEL_MAP_BITS 0x4000      // 内核内存位图缓冲区起始地址
+#define KERNEL_MEMORY_SIZE (0x100000 * sizeof(KERNEL_PAGE_TABLE)) // 内核内存大小
+
+bitmap_t kernel_map; // 内核内存位图
 
 typedef struct ards_t
 {
@@ -110,10 +114,10 @@ void memory_map_init()
 
     LOGK("Total pages %d free pages %d\n", total_pages, free_pages);    // 打印系统总物理页数和当前空闲页数
 
-    // // 初始化内核虚拟内存位图，需要 8 位对齐
-    // u32 length = (IDX(KERNEL_RAMDISK_MEM) - IDX(MEMORY_BASE)) / 8;
-    // bitmap_init(&kernel_map, (u8 *)KERNEL_MAP_BITS, length, IDX(MEMORY_BASE));
-    // bitmap_scan(&kernel_map, memory_map_pages);
+    // 初始化内核虚拟内存位图，需要 8 位对齐
+    u32 length = (IDX(KERNEL_MEMORY_SIZE) - IDX(MEMORY_BASE)) / 8;  // 计算内核内存位图长度，单位字节
+    bitmap_init(&kernel_map, (u8 *)KERNEL_MAP_BITS, length, IDX(MEMORY_BASE)); // 初始化内核内存位图结构体
+    bitmap_scan(&kernel_map, memory_map_pages); // 将内核内存位图中前 memory_map_pages 位标记为已用，表示这些页已被映射表占用。
 }
 
 // 分配一页物理内存，从start_page开始查找系统中第一个空闲物理页，标记其为已占用、更新空闲页数并返回该页的物理地址。
@@ -218,7 +222,7 @@ void mapping_init()
     entry_init(entry, IDX(KERNEL_PAGE_DIR));
 
     set_cr3((u32)pde);  // 设置 cr3 寄存器
-    BMB;
+    // BMB;
     enable_page();      // 分页有效
 }
 
@@ -238,28 +242,58 @@ void flush_tlb(u32 vaddr){
                  : "memory");
 }
 
+// 从位图中扫描 count 个连续的页
+static u32 scan_page(bitmap_t *map, u32 count)
+{
+    assert(count > 0);
+    int32 index = bitmap_scan(map, count);          // 从位图中找到 count 个连续的空闲位（0），返回起始位索引
+
+    if (index == EOF) panic("Scan page fail!!!");   // 未找到足够连续空闲页时，触发内核错误
+
+    u32 addr = PAGE(index);     // 将起始位索引转换为对应的页基地址
+    LOGK("Scan page 0x%p count %d\n", addr, count); 
+    return addr; 
+}
+
+// 与 scan_page 相对，重置相应的页
+static void reset_page(bitmap_t *map, u32 addr, u32 count)
+{
+    ASSERT_PAGE(addr);
+    assert(count > 0);
+    u32 index = IDX(addr);   // 将页基地址转换为对应的页索引
+
+    for (size_t i = 0; i < count; i++) {
+        assert(bitmap_test(map, index + i));    // 验证要释放的页是已占用状态，避免重复释放或释放空闲页。
+        bitmap_set(map, index + i, 0);          // 将对应位图位置0，标记为未占用
+    }
+}
+
+// 分配 count 个连续的内核页
+u32 alloc_kpage(u32 count)
+{
+    assert(count > 0); 
+    u32 vaddr = scan_page(&kernel_map, count); // 从内核内存位图中扫描 count 个连续的空闲页，返回起始页基地址
+    LOGK("ALLOC kernel pages 0x%p count %d\n", vaddr, count); 
+    return vaddr;
+}
+
+// 释放 count 个连续的内核页
+void free_kpage(u32 vaddr, u32 count)
+{
+    ASSERT_PAGE(vaddr);
+    assert(count > 0);
+    reset_page(&kernel_map, vaddr, count);      // 重置内核内存位图中对应的 count 个页，标记为未占用
+    LOGK("FREE  kernel pages 0x%p count %d\n", vaddr, count);
+}
+
 void memory_test(){
-    BMB;
-
-    u32 vaddr = 0x4000000;  // 测试用虚拟地址（0x4000000 = 64MB，属于内核高地址区）
-    u32 paddr = 0x1400000;  // 初始映射的物理地址（0x1400000 = 20MB，在1MB+可用内存范围内）
-    u32 table = 0x900000;   // 自定义页表的物理地址（0x900000 = 9MB，需是4KB对齐的空闲物理页）
-
-    page_entry_t *pde = get_pde();              // 获取页目录虚拟地址（0xfffff000，自映射地址）
-    page_entry_t *dentry = &pde[DIDX(vaddr)];   // 计算vaddr对应的页目录索引（高10位），取出对应PDE项
-    entry_init(dentry, IDX(table));             // 初始化PDE：绑定到自定义页表table的物理页索引（IDX(table)将物理地址转为页索引）
-
-    page_entry_t *pte = get_pte(vaddr);         // 根据vaddr找到对应的页表（此处因已配置PDE，直接指向table对应的物理页）
-    page_entry_t *tentry = &pte[TIDX(vaddr)];   // 计算vaddr对应的页表索引（中间10位），取出对应PTE项
-    entry_init(tentry, IDX(paddr));             // 初始化PTE：绑定到物理页paddr的页索引，设置present=1（存在）、write=1（可写）、user=1（用户态可访问）
-
-    BMB;
-    char *ptr = (char*)(0x4000000);
-    ptr[0] = 'a';                               // 写入'a'到虚拟地址0x4000000 → 实际写入物理地址0x1400000的第0字节
-
-    BMB;
-    entry_init(tentry, IDX(0x1500000));         // 更新PTE的index字段，绑定新的物理页索引
-    flush_tlb(vaddr);                           // 刷新TLB（地址转换缓存）：CPU会缓存PTE内容，修改后必须刷新，否则仍访问旧物理页
-    BMB;
-    ptr[2] = 'b';                               // 写入'b'到虚拟地址0x4000000 → 实际写入物理地址0x1500000的第2字节
+    u32 *pages = (u32 *)(0x200000);
+    u32 count = 0x6fe;
+    for (size_t i = 0; i < count; i++) {
+        pages[i] = alloc_kpage(1);
+        LOGK("0x%x\n", i);
+    }
+    for (size_t i = 0; i < count; i++){
+        free_kpage(pages[i], 1);
+    }
 }
