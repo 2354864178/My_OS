@@ -2,6 +2,7 @@
 #include <onix/io.h>
 #include <onix/string.h>
 #include <onix/debug.h>
+#include <onix/interrupt.h>
 
 #define CRT_ADDR_REG 0x3D4 // CRT(6845)索引寄存器
 #define CRT_DATA_REG 0x3D5 // CRT(6845)数据寄存器
@@ -152,6 +153,7 @@ static void command_bs(){
 }
 
 void console_write(char *buf, u32 count){
+    bool intr_flag = interrupt_disable();   // 关闭中断，返回之前的中断状态
     char ch;
     while(count--){
         ch = *buf++;
@@ -205,6 +207,7 @@ void console_write(char *buf, u32 count){
     //  字符对应的处理函数command_bs等只负责数值计算，光标设置在所有数值计算完成后统一进行
     //  这样每次console_write函数只操作一次硬件，代码简洁性和执行效率的妥协
     set_cursor();
+    set_interrupt_state(intr_flag); // 恢复之前的中断状态
 }
 
 void console_init(){

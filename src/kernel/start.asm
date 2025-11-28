@@ -25,5 +25,6 @@ _start:
     ; xchg bx, bx
     call kernel_init
     ; xchg bx, bx
-    ; int 0x80
+    mov eax, 0 
+    int 0x80
     jmp $

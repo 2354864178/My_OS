@@ -41,7 +41,6 @@ task_t *task_search(task_state_t state){
 
         if (task == NULL || task->ticks < t->ticks || t->jiffies < task->jiffies)
             task = t;;                      // 选择剩余时间片更多或上次执行时间更早的任务
-        // if (t->state == state) return t;    // 找到匹配状态的任务则返回其指针
     }
     return task;
 }
@@ -66,6 +65,10 @@ void schedule(){
     if (current->state == TASK_RUNNING) { 
         current->state = TASK_READY;        // 如果当前仍然被标记为运行中，将当前任务标记为就绪
     } 
+
+    if(!current->ticks){ 
+        current->ticks = current->priority; // 如果当前任务的时间片用完，重置时间片为其优先级值
+    }
 
     next->state = TASK_RUNNING;     // 将选择的下一个任务标记为运行中
     if (next == current) return;    // 如果下一个任务就是当前任务，无需切换，直接返回
@@ -135,9 +138,9 @@ u32 thread_c(){
 void task_init(){
     task_setup();  // 初始化任务系统
 
-    task_create(thread_a, "thread_a", 5, KERNEL_USER); // 创建线程 A，优先级 3
+    task_create(thread_a, "thread_a", 5, KERNEL_USER); // 创建线程 A，优先级 5
     task_create(thread_b, "thread_b", 5, KERNEL_USER); // 创建线程 B，优先级 5
-    task_create(thread_c, "thread_c", 5, KERNEL_USER); // 创建线程 C，优先级 8
+    task_create(thread_c, "thread_c", 5, KERNEL_USER); // 创建线程 C，优先级 5
 
     printk("Task init done!\n");
 }

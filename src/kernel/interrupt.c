@@ -20,6 +20,7 @@ pointer_t idt_ptr;
 
 handler_t handler_table[IDT_SIZE];
 extern handler_t handler_entry_table[ENTRY_SIZE];
+extern syscall_handler();
 
 extern void interrupt_handler();
 
@@ -51,27 +52,17 @@ static char *messages[] = {
 // 通知中断控制器，中断处理结束
 void send_eoi(int vector)
 {
-    if (vector >= 0x20 && vector < 0x28)
-    {
-        outb(PIC_M_CTRL, PIC_EOI);
+    if (vector >= 0x20 && vector < 0x28){
+        outb(PIC_M_CTRL, PIC_EOI);  // 向主片发送结束信号
     }
-    if (vector >= 0x28 && vector < 0x30)
-    {
-        outb(PIC_M_CTRL, PIC_EOI);
-        outb(PIC_S_CTRL, PIC_EOI);
+    if (vector >= 0x28 && vector < 0x30){
+        outb(PIC_M_CTRL, PIC_EOI);  // 向主片发送结束信号
+        outb(PIC_S_CTRL, PIC_EOI);  // 向从片发送结束信号
     }
 }
 
-// // 注册异常处理函数
-// void set_exception_handler(u32 intr, handler_t handler)
-// {
-//     assert(intr >= 0 && intr <= 17);
-//     handler_table[intr] = handler;
-// }
-
 // 注册中断处理函数
-void set_interrupt_handler(u32 irq, handler_t handler)
-{
+void set_interrupt_handler(u32 irq, handler_t handler){
     assert(irq >= 0 && irq < 16);
     handler_table[IRQ_MASTER_NR + irq] = handler;
 }
@@ -79,24 +70,15 @@ void set_interrupt_handler(u32 irq, handler_t handler)
 void set_interrupt_mask(u32 irq, bool enable)
 {
     assert(irq >= 0 && irq < 16);
-    u16 port;
-    if (irq < 8)
-    {
-        port = PIC_M_DATA;
+    u16 port;   // 端口号
+    if (irq < 8) port = PIC_M_DATA; // 主片
+    else {
+        port = PIC_S_DATA;          // 从片
+        irq -= 8;       // 调整 irq 编号
     }
-    else
-    {
-        port = PIC_S_DATA;
-        irq -= 8;
-    }
-    if (enable)
-    {
-        outb(port, inb(port) & ~(1 << irq));
-    }
-    else
-    {
-        outb(port, inb(port) | (1 << irq));
-    }
+
+    if (enable) outb(port, inb(port) & ~(1 << irq));    // 允许该中断
+    else outb(port, inb(port) | (1 << irq));            // 屏蔽该中断 
 }
 
 
@@ -125,14 +107,9 @@ void exception_handler(
     u32 vector0, u32 error, u32 eip, u32 cs, u32 eflags)
 {
     char *message = NULL;
-    if (vector < 22)
-    {
-        message = messages[vector];
-    }
-    else
-    {
-        message = messages[15];
-    }
+    if (vector < 22) message = messages[vector];    // 获取异常信息字符串
+
+    else message = messages[15];    // 15 是缺页异常，其他异常未定义
 
     printk("\nEXCEPTION : %s \n", message);
     printk("   VECTOR : 0x%02X\n", vector);
@@ -195,11 +172,11 @@ void default_handler(int vector)
 void idt_init(){
     for (size_t i = 0; i < IDT_SIZE; i++)
     {
-        gate_t *gate = &idt[i];
-        handler_t handler = handler_entry_table[i];
+        gate_t *gate = &idt[i]; // 获取 IDT 中的第 i 个门描述符
+        handler_t handler = handler_entry_table[i]; // 获取对应的中断处理函数地址
 
-        gate->offset0 = (u32)handler & 0xffff;
-        gate->offset1 = ((u32)handler >> 16) & 0xffff;
+        gate->offset0 = (u32)handler & 0xffff;          // 段内偏移 0 ~ 15 位
+        gate->offset1 = ((u32)handler >> 16) & 0xffff;  // 段内偏移 16 ~ 31 位
         gate->selector = 1 << 3; // 代码段
         gate->reserved = 0;      // 保留不用
         gate->type = 0b1110;     // 中断门
@@ -208,18 +185,26 @@ void idt_init(){
         gate->present = 1;       // 有效
     }
 
-    for (size_t i = 0; i < 0x20; i++)
-    {
+    for (size_t i = 0; i < 0x20; i++) {
         handler_table[i] = exception_handler;
     }
 
-    for (size_t i = 0x20; i < ENTRY_SIZE; i++)
-    {
+    for (size_t i = 0x20; i < ENTRY_SIZE; i++) {
         handler_table[i] = default_handler;
     }
 
-    idt_ptr.base = (u32)idt;
-    idt_ptr.limit = sizeof(idt) - 1;
+    gate_t *syscall_gate = &idt[0x80];
+    syscall_gate->offset0 = (u32)syscall_handler & 0xffff;
+    syscall_gate->offset1 = ((u32)syscall_handler >> 16) & 0xffff;
+    syscall_gate->selector = 1 << 3; // 代码段
+    syscall_gate->reserved = 0;      // 保留不用
+    syscall_gate->type = 0b1110;     // 中断门
+    syscall_gate->segment = 0;       // 系统段
+    syscall_gate->DPL = 3;           // 用户态
+    syscall_gate->present = 1;       // 有效
+
+    idt_ptr.base = (u32)idt;            // IDT 表地址
+    idt_ptr.limit = sizeof(idt) - 1; 
     // BMB;
     asm volatile("lidt idt_ptr\n");
 }
