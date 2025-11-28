@@ -1,0 +1,13 @@
+"filename", "language", "C", "Makefile", "C++", "Assembler file", "comment", "blank", "total"
+"/home/ysy/code/Os_wrtie/src/Makefile", "Makefile", 0, 1, 0, 0, -3, -1, -3
+"/home/ysy/code/Os_wrtie/src/include/onix/interrupt.h", "C", 3, 0, 0, 0, 0, 1, 4
+"/home/ysy/code/Os_wrtie/src/include/onix/memory.h", "C", 7, 0, 0, 0, 0, 2, 9
+"/home/ysy/code/Os_wrtie/src/include/onix/task.h", "C++", 0, 0, 24, 0, 0, 3, 27
+"/home/ysy/code/Os_wrtie/src/kernel/clock.c", "C", 6, 0, 0, 0, -2, 3, 7
+"/home/ysy/code/Os_wrtie/src/kernel/interrupt.c", "C", 25, 0, 0, 0, 3, 3, 31
+"/home/ysy/code/Os_wrtie/src/kernel/main.c", "C", 1, 0, 0, 0, -6, -2, -7
+"/home/ysy/code/Os_wrtie/src/kernel/memory.c", "C", 13, 0, 0, 0, 13, 1, 27
+"/home/ysy/code/Os_wrtie/src/kernel/schedule.asm", "Assembler file", 0, 0, 0, 2, 0, 2, 4
+"/home/ysy/code/Os_wrtie/src/kernel/start.asm", "Assembler file", 0, 0, 0, 4, 0, 1, 5
+"/home/ysy/code/Os_wrtie/src/kernel/task.c", "C", 63, 0, 0, 0, 4, 19, 86
+"Total", "-", 118, 1, 24, 6, 9, 32, 190

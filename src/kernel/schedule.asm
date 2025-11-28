@@ -1,3 +1,7 @@
+[bits 32]
+
+section .text; 代码段
+
 global task_switch
 task_switch:
     push ebp

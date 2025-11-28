@@ -15,13 +15,6 @@
 #define PAGE(idx) ((u32)idx << 12)             // 获取页索引 idx 对应的页开始的位置
 #define ASSERT_PAGE(addr) assert((addr & 0xfff) == 0)
 
-#define KERNEL_PAGE_DIR 0x1000      // 内核页目录索引
-
-static u32 KERNEL_PAGE_TABLE[] = {  // 内核页表索引
-    0x2000,
-    0x3000,
-};
-
 #define KERNEL_MAP_BITS 0x4000      // 内核内存位图缓冲区起始地址
 #define KERNEL_MEMORY_SIZE (0x100000 * sizeof(KERNEL_PAGE_TABLE)) // 内核内存大小
 
@@ -286,14 +279,14 @@ void free_kpage(u32 vaddr, u32 count)
     LOGK("FREE  kernel pages 0x%p count %d\n", vaddr, count);
 }
 
-void memory_test(){
-    u32 *pages = (u32 *)(0x200000);
-    u32 count = 0x6fe;
-    for (size_t i = 0; i < count; i++) {
-        pages[i] = alloc_kpage(1);
-        LOGK("0x%x\n", i);
-    }
-    for (size_t i = 0; i < count; i++){
-        free_kpage(pages[i], 1);
-    }
-}
+// void memory_test(){
+//     u32 *pages = (u32 *)(0x200000);
+//     u32 count = 0x6fe;
+//     for (size_t i = 0; i < count; i++) {
+//         pages[i] = alloc_kpage(1);
+//         LOGK("0x%x\n", i);
+//     }
+//     for (size_t i = 0; i < count; i++){
+//         free_kpage(pages[i], 1);
+//     }
+// }

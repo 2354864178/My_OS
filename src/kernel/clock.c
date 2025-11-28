@@ -34,10 +34,8 @@ void start_beep()
     beeping = jiffies + 5;
 }
 
-void stop_beep()
-{
-    if (beeping &&  jiffies >beeping)
-    {
+void stop_beep() {
+    if (beeping &&  jiffies >beeping) {
         outb(SPEAKER_REG, inb(SPEAKER_REG) & 0xfc);
         beeping = 0;
     }
@@ -45,14 +43,23 @@ void stop_beep()
 
 void clock_handler(int vector)
 {
-    assert(vector == 0x20);
-    send_eoi(vector); // 发送中断处理结束
+    assert(vector == 0x20); // 时钟中断向量号 0x20
 
-    // if(jiffies % 200 ==0) start_beep();
+    send_eoi(vector);   // 发送中断处理结束
+    stop_beep();        // 停止蜂鸣器
 
-    jiffies++;
-    // DEBUGK("clock jiffies %d ...\n", jiffies);
-    stop_beep();
+    jiffies++;          // 全局时钟节拍计数加一
+
+    task_t *task = running_task();      // 获取当前运行任务指针
+    assert(task->magic == ONIX_MAGIC);  // 检查任务魔数，防止栈溢出
+
+    task->jiffies = jiffies;            // 更新任务的 jiffies 字段
+    task->ticks--;                      // 当前任务时间片减一
+
+    if (!task->ticks) {                 // 若时间片用完
+        task->ticks = task->priority;   // 重置时间片为优先级值
+        schedule();                     // 进行任务调度
+    }
 }
 
 void pit_init()
@@ -68,8 +75,7 @@ void pit_init()
     outb(PIT_CHAN2_REG, (u8)(BEEP_COUNTER >> 8));
 }
 
-void clock_init()
-{
+void clock_init(){
     pit_init();
     set_interrupt_handler(IRQ_CLOCK, clock_handler);
     set_interrupt_mask(IRQ_CLOCK, true);

@@ -1,0 +1,43 @@
+Date : 2025-11-28 17:26:19
+Directory : /home/ysy/code/Os_wrtie
+Total : 11 files,  149 codes, 9 comments, 32 blanks, all 190 lines
+
+Languages
++----------------+------------+------------+------------+------------+------------+
+| language       | files      | code       | comment    | blank      | total      |
++----------------+------------+------------+------------+------------+------------+
+| C              |          7 |        118 |         12 |         27 |        157 |
+| C++            |          1 |         24 |          0 |          3 |         27 |
+| Assembler file |          2 |          6 |          0 |          3 |          9 |
+| Makefile       |          1 |          1 |         -3 |         -1 |         -3 |
++----------------+------------+------------+------------+------------+------------+
+
+Directories
++------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                 | files      | code       | comment    | blank      | total      |
++------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                    |         11 |        149 |          9 |         32 |        190 |
+| src                                                  |         11 |        149 |          9 |         32 |        190 |
+| src (Files)                                          |          1 |          1 |         -3 |         -1 |         -3 |
+| src/include                                          |          3 |         34 |          0 |          6 |         40 |
+| src/include/onix                                     |          3 |         34 |          0 |          6 |         40 |
+| src/kernel                                           |          7 |        114 |         12 |         27 |        153 |
++------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++------------------------------------------------------+----------------+------------+------------+------------+------------+
+| filename                                             | language       | code       | comment    | blank      | total      |
++------------------------------------------------------+----------------+------------+------------+------------+------------+
+| /home/ysy/code/Os_wrtie/src/Makefile                 | Makefile       |          1 |         -3 |         -1 |         -3 |
+| /home/ysy/code/Os_wrtie/src/include/onix/interrupt.h | C              |          3 |          0 |          1 |          4 |
+| /home/ysy/code/Os_wrtie/src/include/onix/memory.h    | C              |          7 |          0 |          2 |          9 |
+| /home/ysy/code/Os_wrtie/src/include/onix/task.h      | C++            |         24 |          0 |          3 |         27 |
+| /home/ysy/code/Os_wrtie/src/kernel/clock.c           | C              |          6 |         -2 |          3 |          7 |
+| /home/ysy/code/Os_wrtie/src/kernel/interrupt.c       | C              |         25 |          3 |          3 |         31 |
+| /home/ysy/code/Os_wrtie/src/kernel/main.c            | C              |          1 |         -6 |         -2 |         -7 |
+| /home/ysy/code/Os_wrtie/src/kernel/memory.c          | C              |         13 |         13 |          1 |         27 |
+| /home/ysy/code/Os_wrtie/src/kernel/schedule.asm      | Assembler file |          2 |          0 |          2 |          4 |
+| /home/ysy/code/Os_wrtie/src/kernel/start.asm         | Assembler file |          4 |          0 |          1 |          5 |
+| /home/ysy/code/Os_wrtie/src/kernel/task.c            | C              |         63 |          4 |         19 |         86 |
+| Total                                                |                |        149 |          9 |         32 |        190 |
++------------------------------------------------------+----------------+------------+------------+------------+------------+

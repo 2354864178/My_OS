@@ -1,33 +1,24 @@
 #include <onix/debug.h>
+#include <onix/types.h>
 
-extern void clock_init();
-extern void console_init();
-extern void gdt_init();
-extern void interrupt_init();
-extern void time_init();
-extern void rtc_init();
-extern void hang();
 extern void memory_map_init();
 extern void mapping_init();
-extern void memory_test();
+extern void interrupt_init();
+extern void clock_init();
+extern void time_init();
+extern void rtc_init();
+extern void task_init();
+extern void hang();
 
 void kernel_init(){
-    // BMB;
-    // console_init();
-    // gdt_init();
-    // DEBUGK("Memory map page count \n"); 
     memory_map_init();
     mapping_init();
     interrupt_init();
-    // clock_init();
+    clock_init();
     // time_init();
     // rtc_init();
-    // set_alarm(2);
-    
+    task_init();
+    set_interrupt_state(true);
 
-    BMB;
-    memory_test();
-
-    // asm volatile("sti");
     hang();
 }
