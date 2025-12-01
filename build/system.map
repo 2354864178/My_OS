@@ -18,10 +18,10 @@
 0001059f T console_init
 000105b7 T printk
 000105fc t spin
-00010617 T assertion_failure
-0001064e T panic
-000106a5 T debugk
-000106e6 T gdt_init
+00010618 T assertion_failure
+0001064f T panic
+000106a6 T debugk
+000106e7 T gdt_init
 00010750 T task_switch
 00010769 T get_free_task
 000107c7 T task_search

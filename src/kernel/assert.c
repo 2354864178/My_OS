@@ -7,15 +7,13 @@
 static u8 buf[1024];
 
 // 强制阻塞
-static void spin(char *name)
-{
+static void spin(char *name){
     printk("spinning in %s ...\n", name);
     while (true)
         ;
 }
 
-void assertion_failure(char *exp, char *file, char *base, int line)
-{
+void assertion_failure(char *exp, char *file, char *base, int line){
     printk(
         "\n--> assert(%s) failed!!!\n"
         "--> file: %s \n"

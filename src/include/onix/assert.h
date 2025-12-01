@@ -1,7 +1,7 @@
 #ifndef ONIX_ASSERT_H
 #define ONIX_ASSERT_H
 
-void assertion_failure(char *exp, char *file, char *base, int line);
+void assertion_failure(char *exp, char *file, char *base, int line);    
 
 #define assert(exp) \
     if (exp)        \

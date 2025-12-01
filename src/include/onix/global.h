@@ -3,7 +3,7 @@
 
 #include <onix/types.h>
 
-#define GDT_SIZE 128
+#define GDT_SIZE 128    
 
 // 全局描述符
 // unsigned char 本身是 8 位的整数类型（1 字节），但在结构体中，它可以作为 “容器”，通过位域语法（成员名 : 位数）将这 8 位分割成多个独立的 “子成员”，每个子成员占用指定的位数。
@@ -31,7 +31,7 @@ typedef struct selector_t
 {
     u8 RPL : 2; // Request Privilege Level
     u8 TI : 1;  // Table Indicator
-    u16 index : 13;
+    u16 index : 13; 
 } selector_t;
 
 // 全局描述符表指针

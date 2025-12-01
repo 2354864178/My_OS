@@ -5,39 +5,37 @@
 #include <onix/task.h>
 // #include <onix/timer.h>
 
-#define PIT_CHAN0_REG 0X40
-#define PIT_CHAN2_REG 0X42
-#define PIT_CTRL_REG 0X43
+#define PIT_CHAN0_REG 0X40  // 计数器 0 端口
+#define PIT_CHAN2_REG 0X42  // 用于蜂鸣器
+#define PIT_CTRL_REG 0X43   // 8253/8254 控制寄存器
 
-#define HZ 100
-#define OSCILLATOR 1193182
-#define CLOCK_COUNTER (OSCILLATOR / HZ)
-#define JIFFY (1000 / HZ)
+#define HZ 100              // 时钟中断频率
+#define OSCILLATOR 1193182  // 8253/8254 时钟芯片的输入频率
+#define CLOCK_COUNTER (OSCILLATOR / HZ) // 计数器初值
+#define JIFFY (1000 / HZ)   // 每个时钟节拍的毫秒数
 
-#define SPEAKER_REG 0x61
-#define BEEP_HZ 440
-#define BEEP_COUNTER (OSCILLATOR / BEEP_HZ)
+#define SPEAKER_REG 0x61    // 蜂鸣器端口
+#define BEEP_HZ 440         // 蜂鸣器频率
+#define BEEP_COUNTER (OSCILLATOR / BEEP_HZ) // 蜂鸣器计数器初值
 // #define BEEP_MS 100
 
-u32 volatile jiffies = 0;
-u32 jiffy = JIFFY;
+u32 volatile jiffies = 0;   // 全局时钟节拍计数
+u32 jiffy = JIFFY;          // 每个时钟节拍的毫秒数
 
 bool volatile beeping = 0;
 
 void start_beep()
 {
-    if (!beeping)
-    {
-        outb(SPEAKER_REG, inb(SPEAKER_REG) | 3);
-    }
+    if (!beeping) outb(SPEAKER_REG, inb(SPEAKER_REG) | 3);  // 打开蜂鸣器 
+
     DEBUGK("PC speaker BB\n", jiffies);
     beeping = jiffies + 5;
 }
 
 void stop_beep() {
     if (beeping &&  jiffies >beeping) {
-        outb(SPEAKER_REG, inb(SPEAKER_REG) & 0xfc);
-        beeping = 0;
+        outb(SPEAKER_REG, inb(SPEAKER_REG) & 0xfc); // 关闭蜂鸣器
+        beeping = 0;    // 重置标志
     }
 }
 
@@ -65,14 +63,14 @@ void clock_handler(int vector)
 void pit_init()
 {
     // 配置计数器 0 时钟
-    outb(PIT_CTRL_REG, 0b00110100);
-    outb(PIT_CHAN0_REG, CLOCK_COUNTER & 0xff);
-    outb(PIT_CHAN0_REG, (CLOCK_COUNTER >> 8) & 0xff);
+    outb(PIT_CTRL_REG, 0b00110100);                     // 方式 2, 16 位二进制, 读写低高字节
+    outb(PIT_CHAN0_REG, CLOCK_COUNTER & 0xff);          // 计数器低 8 位
+    outb(PIT_CHAN0_REG, (CLOCK_COUNTER >> 8) & 0xff);   // 计数器高 8 位
 
     // 配置计数器 2 蜂鸣器
-    outb(PIT_CTRL_REG, 0b10110110);
-    outb(PIT_CHAN2_REG, (u8)BEEP_COUNTER);
-    outb(PIT_CHAN2_REG, (u8)(BEEP_COUNTER >> 8));
+    outb(PIT_CTRL_REG, 0b10110110);                     // 方式 3, 16 位二进制, 读写低高字节
+    outb(PIT_CHAN2_REG, (u8)BEEP_COUNTER);              // 计数器低 8 位
+    outb(PIT_CHAN2_REG, (u8)(BEEP_COUNTER >> 8));       // 计数器高 8 位
 }
 
 void clock_init(){

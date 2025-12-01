@@ -7,7 +7,7 @@
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
-#define ENTRY_SIZE 0x30
+#define ENTRY_SIZE 0x30 // 中断处理函数数量
 
 #define PIC_M_CTRL 0x20 // 主片的控制端口
 #define PIC_M_DATA 0x21 // 主片的数据端口
@@ -15,14 +15,13 @@
 #define PIC_S_DATA 0xa1 // 从片的数据端口
 #define PIC_EOI 0x20    // 通知中断控制器中断结束
 
-gate_t idt[IDT_SIZE];
-pointer_t idt_ptr;
+gate_t idt[IDT_SIZE];   // 中断描述符表
+pointer_t idt_ptr;      // 中断描述符表指针
 
-handler_t handler_table[IDT_SIZE];
-extern handler_t handler_entry_table[ENTRY_SIZE];
-extern syscall_handler();
-
-extern void interrupt_handler();
+handler_t handler_table[IDT_SIZE];                  // 中断处理函数表
+extern handler_t handler_entry_table[ENTRY_SIZE];   // 中断处理函数入口表
+extern syscall_handler();                           // 系统调用处理函数入口
+extern void interrupt_handler();                    // 中断处理函数入口
 
 static char *messages[] = {
     "#DE Divide Error\0",
@@ -64,7 +63,7 @@ void send_eoi(int vector)
 // 注册中断处理函数
 void set_interrupt_handler(u32 irq, handler_t handler){
     assert(irq >= 0 && irq < 16);
-    handler_table[IRQ_MASTER_NR + irq] = handler;
+    handler_table[IRQ_MASTER_NR + irq] = handler;   // 注册中断处理函数
 }
 
 void set_interrupt_mask(u32 irq, bool enable)

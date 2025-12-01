@@ -12,15 +12,15 @@
 #define CMOS_ADDR 0x70 // CMOS 地址寄存器
 #define CMOS_DATA 0x71 // CMOS 数据寄存器
 
-#define CMOS_SECOND 0x01
-#define CMOS_MINUTE 0x03
-#define CMOS_HOUR 0x05
+#define CMOS_SECOND 0x01    // 秒
+#define CMOS_MINUTE 0x03    // 分
+#define CMOS_HOUR 0x05      // 时
 
-#define CMOS_A 0x0a
-#define CMOS_B 0x0b
+#define CMOS_A 0x0a     // 寄存器 A
+#define CMOS_B 0x0b     // 寄存器 B
 #define CMOS_C 0x0c
 #define CMOS_D 0x0d
-#define CMOS_NMI 0x80
+#define CMOS_NMI 0x80   // 非屏蔽中断位
 
 // 读 cmos 寄存器的值
 u8 cmos_read(u8 addr)
@@ -67,22 +67,19 @@ void set_alarm(u32 secs)
     u32 hour = secs;        // 拆分出"额外小时数"（无上限，后续会处理24小时循环）
 
     time.tm_sec += sec;
-    if (time.tm_sec >= 60)
-    {
+    if (time.tm_sec >= 60) {
         time.tm_sec %= 60;  // 秒数取模60，保留0~59范围
         time.tm_min += 1;   // 秒满60，向分钟进1
     }
 
     time.tm_min += min;
-    if (time.tm_min >= 60)
-    {
+    if (time.tm_min >= 60) {
         time.tm_min %= 60;  // 分钟数取模60，保留0~59范围
         time.tm_hour += 1;  // 分满60，向小时进1
     }
 
     time.tm_hour += hour;
-    if (time.tm_hour >= 24)
-    {
+    if (time.tm_hour >= 24) {
         time.tm_hour %= 24; // 小时数取模24，保留0~23范围（符合24小时制）
     }
 
