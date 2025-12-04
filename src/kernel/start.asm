@@ -7,24 +7,18 @@ extern gdt_init
 
 global _start
 _start:
-    ; mov byte [0xb81E0],'3'
-    ; mov byte [0xb81E2],'2'
-    ; mov byte [0xb81E4],'m'
-    ; mov byte [0xb81E6],'o'
-    ; mov byte [0xb81E8],'d'
-    ; mov esp, 0x100000
 
     push ebx;
     push eax;
 
-    call console_init
+    call console_init   ; 控制台初始化
+    call gdt_init       ; 全局描述符表初始化
+    call memory_init    ; 内存管理初始化
+    ;  pop eax;
+    ;  pop ebx;
+    call kernel_init    ; 内核初始化
+
     ; xchg bx, bx
-    call gdt_init
-    ; xchg bx, bx
-    call memory_init
-    ; xchg bx, bx
-    call kernel_init
-    ; xchg bx, bx
-    mov eax, 0 
-    int 0x80
+    ; mov eax, 0 
+    ; int 0x80
     jmp $

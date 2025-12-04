@@ -45,6 +45,10 @@ task_t *task_search(task_state_t state){
     return task;
 }
 
+void task_yield(){ 
+    schedule();    // 调用调度函数
+}
+
 task_t *running_task(){                 // 获取当前运行的任务指针
     asm volatile(
         "movl %esp, %eax\n"             // 将当前栈指针 esp 的值存入 eax 寄存器
@@ -118,6 +122,7 @@ u32 thread_a(){
     set_interrupt_state(true);
     while(true){
         printk("Thread A running...\n");
+        yield();
     }
 }
 
@@ -125,6 +130,7 @@ u32 thread_b(){
     set_interrupt_state(true);
     while(true){
         printk("Thread B running...\n");
+        yield();
     }
 }
 
@@ -132,6 +138,7 @@ u32 thread_c(){
     set_interrupt_state(true);
     while(true){
         printk("Thread C running...\n");
+        yield();
     }
 }
 

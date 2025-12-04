@@ -46,4 +46,5 @@ typedef struct task_frame_t{
 task_t *running_task(); // 获取当前运行的任务指针
 void schedule();
 
+void task_yield();
 #endif
