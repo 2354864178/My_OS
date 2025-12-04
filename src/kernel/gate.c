@@ -2,6 +2,7 @@
 #include <onix/assert.h>
 #include <onix/debug.h>
 #include <onix/syscall.h>
+#include <onix/task.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -18,8 +19,16 @@ static void syscall_default(){      // 默认系统调用处理函数
     panic("Default syscall handler called!");
 }
 
+task_t *task = NULL;    // 测试系统调用使用的任务指针
 static u32 syscall_test(){          // 测试系统调用函数
-    LOGK("Syscall test called!\n");
+    if(!task){
+        task = running_task();      // 获取当前运行的任务指针
+        task_block(task, NULL, TASK_BLOCKED);   // 强制阻塞当前任务
+    }
+    else{
+        task_unlock(task);          // 解锁任务
+        task = NULL;                // 重置任务指针
+    }
     return 255;
 }
 

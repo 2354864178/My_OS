@@ -49,6 +49,7 @@ void clock_handler(int vector)
     jiffies++;          // 全局时钟节拍计数加一
 
     task_t *task = running_task();      // 获取当前运行任务指针
+    // printk("Clock tick: %d\n", task->magic);
     assert(task->magic == ONIX_MAGIC);  // 检查任务魔数，防止栈溢出
 
     task->jiffies = jiffies;            // 更新任务的 jiffies 字段

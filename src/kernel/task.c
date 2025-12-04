@@ -6,12 +6,14 @@
 #include <onix/interrupt.h>
 #include <onix/memory.h>
 #include <onix/string.h>
+#include <onix/list.h>
 
 extern bitmap_t kernel_map;             // 内核内存位图
 extern void task_switch(task_t *next);  // 任务切换汇编函数
 
 #define TASK_NR 64                  // 最大任务数
 static task_t *task_table[TASK_NR]; // 任务表
+static list_t block_list;           // 任务阻塞链表
 
 // 返回一个空闲任务结构的指针
 task_t *get_free_task() { 
@@ -47,6 +49,39 @@ task_t *task_search(task_state_t state){
 
 void task_yield(){ 
     schedule();    // 调用调度函数
+}
+
+void task_block(task_t *task, list_t *blist, task_state_t state){
+    // task: 要阻塞的任务指针
+    // blist: 任务阻塞链表指针，若为 NULL 则不加入任何链表
+    // state: 任务阻塞后的状态
+    assert(!get_interrupt_state());     // 禁止中断时调用
+    assert(task->magic == ONIX_MAGIC);  // 校验任务结构的魔数以检测损坏
+    assert(task->node.next == NULL && task->node.prev == NULL);    // 任务节点不应在任何链表中
+    
+    if(blist == NULL){
+        blist =  &block_list;   // 使用全局阻塞链表
+    }
+    list_push(blist, &task->node);      // 将任务节点加入阻塞链表
+
+    assert(state != TASK_RUNNING && state != TASK_READY); // 阻塞状态不能为运行或就绪状态
+
+    task->state = state;                // 设置任务状态为指定状态
+
+    task_t *current = running_task();   // 获取当前运行任务指针
+    if(current == task) schedule();     // 若阻塞当前任务则进行调度
+}
+
+void task_unlock(task_t *task){
+    // task: 要解锁的任务指针
+    assert(!get_interrupt_state());     // 禁止中断时调用
+    assert(task->magic == ONIX_MAGIC);  // 校验任务结构的魔数以检测损坏
+
+    list_remove(&task->node);           // 从阻塞链表中移除任务节点
+
+    assert(task->node.next == NULL && task->node.prev == NULL);    // 确保任务节点已从链表中移除
+
+    task->state = TASK_READY;           // 设置任务状态为就绪
 }
 
 task_t *running_task(){                 // 获取当前运行的任务指针
@@ -122,7 +157,7 @@ u32 thread_a(){
     set_interrupt_state(true);
     while(true){
         printk("Thread A running...\n");
-        yield();
+        test();
     }
 }
 
@@ -130,7 +165,7 @@ u32 thread_b(){
     set_interrupt_state(true);
     while(true){
         printk("Thread B running...\n");
-        yield();
+        test();
     }
 }
 
@@ -138,11 +173,12 @@ u32 thread_c(){
     set_interrupt_state(true);
     while(true){
         printk("Thread C running...\n");
-        yield();
+        test();
     }
 }
 
 void task_init(){
+    list_init(&block_list); // 初始化任务阻塞链表
     task_setup();  // 初始化任务系统
 
     task_create(thread_a, "thread_a", 5, KERNEL_USER); // 创建线程 A，优先级 5
