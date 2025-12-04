@@ -14,6 +14,7 @@ extern void task_switch(task_t *next);  // 任务切换汇编函数
 #define TASK_NR 64                  // 最大任务数
 static task_t *task_table[TASK_NR]; // 任务表
 static list_t block_list;           // 任务阻塞链表
+static task_t *idle_task;           // 空闲任务指针
 
 // 返回一个空闲任务结构的指针
 task_t *get_free_task() { 
@@ -44,6 +45,10 @@ task_t *task_search(task_state_t state){
         if (task == NULL || task->ticks < t->ticks || t->jiffies < task->jiffies)
             task = t;;                      // 选择剩余时间片更多或上次执行时间更早的任务
     }
+    if(task == NULL && state == TASK_READY){
+        task = idle_task;                   // 若无就绪任务则返回空闲任务
+    }
+
     return task;
 }
 
@@ -55,6 +60,7 @@ void task_block(task_t *task, list_t *blist, task_state_t state){
     // task: 要阻塞的任务指针
     // blist: 任务阻塞链表指针，若为 NULL 则不加入任何链表
     // state: 任务阻塞后的状态
+
     assert(!get_interrupt_state());     // 禁止中断时调用
     assert(task->magic == ONIX_MAGIC);  // 校验任务结构的魔数以检测损坏
     assert(task->node.next == NULL && task->node.prev == NULL);    // 任务节点不应在任何链表中
@@ -116,6 +122,11 @@ void schedule(){
 
 // 创建一个新任务并初始化其任务结构体
 static task_t *task_create(target_t target, const char *name, u32 priority, u32 uid){
+    // target: 任务入口函数指针
+    // name: 任务名称
+    // priority: 任务优先级
+    // uid: 任务所属用户 ID
+
     task_t *task = get_free_task(); // 分配一个空闲任务结构体
     memset(task, 0, PAGE_SIZE);     // 清空任务结构体内存
 
@@ -153,37 +164,41 @@ static void task_setup(){
     memset(task_table, 0, sizeof(task_table)); // 清空任务表
 }
 
-u32 thread_a(){
-    set_interrupt_state(true);
-    while(true){
-        printk("Thread A running...\n");
-        test();
-    }
-}
+// u32 thread_a(){
+//     set_interrupt_state(true);
+//     while(true){
+//         printk("Thread A running...\n");
+//         test();
+//     }
+// }
 
-u32 thread_b(){
-    set_interrupt_state(true);
-    while(true){
-        printk("Thread B running...\n");
-        test();
-    }
-}
+// u32 thread_b(){
+//     set_interrupt_state(true);
+//     while(true){
+//         printk("Thread B running...\n");
+//         test();
+//     }
+// }
 
-u32 thread_c(){
-    set_interrupt_state(true);
-    while(true){
-        printk("Thread C running...\n");
-        test();
-    }
-}
+// u32 thread_c(){
+//     set_interrupt_state(true);
+//     while(true){
+//         printk("Thread C running...\n");
+//         test();
+//     }
+// }
+extern void idle_thread();
+extern void init_thread();
 
 void task_init(){
     list_init(&block_list); // 初始化任务阻塞链表
     task_setup();  // 初始化任务系统
+    idle_task = task_create(idle_thread, "idle", 1, KERNEL_USER);   // 创建空闲任务
+    task_create(init_thread, "init", 5, NORMAL_USER);               // 创建初始化任务
 
-    task_create(thread_a, "thread_a", 5, KERNEL_USER); // 创建线程 A，优先级 5
-    task_create(thread_b, "thread_b", 5, KERNEL_USER); // 创建线程 B，优先级 5
-    task_create(thread_c, "thread_c", 5, KERNEL_USER); // 创建线程 C，优先级 5
+    // task_create(thread_a, "thread_a", 5, KERNEL_USER); // 创建线程 A，优先级 5
+    // task_create(thread_b, "thread_b", 5, KERNEL_USER); // 创建线程 B，优先级 5
+    // task_create(thread_c, "thread_c", 5, KERNEL_USER); // 创建线程 C，优先级 5
 
     printk("Task init done!\n");
 }

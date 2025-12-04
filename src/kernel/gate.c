@@ -32,9 +32,9 @@ static u32 syscall_test(){          // 测试系统调用函数
     return 255;
 }
 
-extern void task_yield();        // 任务让出 CPU 的系统调用接口
+extern void task_yield();       // 任务让出 CPU 的系统调用接口
 
-void syscall_init(){        // 初始化系统调用处理函数表
+void syscall_init(){            // 初始化系统调用处理函数表
     for (int i = 0; i < SYSCALL_SIZE; i++) {
         syscall_table[i] = (handler_t)syscall_default;  // 默认指向默认处理函数
     }
