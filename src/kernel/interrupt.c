@@ -23,7 +23,7 @@ extern handler_t handler_entry_table[ENTRY_SIZE];   // 中断处理函数入口�
 extern syscall_handler();                           // 系统调用处理函数入口
 extern void interrupt_handler();                    // 中断处理函数入口
 
-static char *messages[] = {
+static char *messages[] = {     // 异常信息字符串数组
     "#DE Divide Error\0",
     "#DB RESERVED\0",
     "--  NMI Interrupt\0",

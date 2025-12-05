@@ -8,12 +8,16 @@
 #include <onix/string.h>
 #include <onix/list.h>
 
+#define TASK_NR 64                  // 最大任务数
+
+extern u32 volatile jiffies;            // 全局时钟节拍计数
+extern u32 jiffy;                       // 每个时钟节拍的毫秒数
 extern bitmap_t kernel_map;             // 内核内存位图
 extern void task_switch(task_t *next);  // 任务切换汇编函数
-
-#define TASK_NR 64                  // 最大任务数
+                
 static task_t *task_table[TASK_NR]; // 任务表
 static list_t block_list;           // 任务阻塞链表
+static list_t sleep_list;           // 任务睡眠链表
 static task_t *idle_task;           // 空闲任务指针
 
 // 返回一个空闲任务结构的指针
@@ -90,6 +94,49 @@ void task_unlock(task_t *task){
     task->state = TASK_READY;           // 设置任务状态为就绪
 }
 
+void task_sleep(u32 ms){
+    // ms: 睡眠时间，单位毫秒
+    assert(!get_interrupt_state());     // 禁止中断时调用
+
+    u32 ticks = ms / jiffy;                 // 计算需要的时钟节拍数
+    ticks = ticks ? ticks : 1;              // 最少睡眠一个时钟节拍
+
+    task_t *current = running_task();       // 获取当前运行任务指针
+    current->ticks = jiffies+ticks;              // 更新任务的 jiffies 字段
+
+    list_t *list = &sleep_list;             // 使用全局睡眠链表
+    list_node_t *anchor = &list->tail;   // 获取当前任务的链表节点
+    
+    // 在睡眠链表中找到合适的插入位置，保持链表按唤醒时间排序
+    for(list_node_t *ptr = list->head.next; ptr != &list->tail; ptr = ptr->next){
+        task_t *task = element_entry(task_t, node, ptr); // 获取任务指针
+
+        if(current->ticks < task->ticks){
+            anchor = ptr;    // 找到插入位置的前一个节点
+            break;
+        }
+    }
+    list_insert_before(anchor, &current->node); // 插入任务节点到睡眠链表
+    current->state = TASK_SLEEPING;             // 设置任务状态为睡眠
+    schedule();                                 // 进行任务调度
+}
+
+void task_wakeup(){
+    // 唤醒睡眠时间到期的任务
+    assert(!get_interrupt_state());     // 禁止中断时调用
+
+    list_t *list = &sleep_list;         // 使用全局睡眠链表
+    list_node_t *ptr = list->head.next; // 从链表头开始遍历
+    while(ptr != &list->tail){
+        task_t *task = element_entry(task_t, node, ptr);    // 获取任务指针
+        if(task->ticks > jiffies) break;                    // 若任务的唤醒时间未到则停止遍历
+
+        ptr = ptr->next; ;  // 继续处理下一个节点
+        task->ticks = 0;    // 重置任务的 ticks 字段
+        task_unlock(task);  // 解锁任务
+    }
+}
+
 task_t *running_task(){                 // 获取当前运行的任务指针
     asm volatile(
         "movl %esp, %eax\n"             // 将当前栈指针 esp 的值存入 eax 寄存器
@@ -164,41 +211,19 @@ static void task_setup(){
     memset(task_table, 0, sizeof(task_table)); // 清空任务表
 }
 
-// u32 thread_a(){
-//     set_interrupt_state(true);
-//     while(true){
-//         printk("Thread A running...\n");
-//         test();
-//     }
-// }
-
-// u32 thread_b(){
-//     set_interrupt_state(true);
-//     while(true){
-//         printk("Thread B running...\n");
-//         test();
-//     }
-// }
-
-// u32 thread_c(){
-//     set_interrupt_state(true);
-//     while(true){
-//         printk("Thread C running...\n");
-//         test();
-//     }
-// }
 extern void idle_thread();
 extern void init_thread();
+extern void test_thread();
 
 void task_init(){
     list_init(&block_list); // 初始化任务阻塞链表
-    task_setup();  // 初始化任务系统
+    list_init(&sleep_list); // 初始化任务睡眠链表
+
+    task_setup();           // 初始化任务系统
+
     idle_task = task_create(idle_thread, "idle", 1, KERNEL_USER);   // 创建空闲任务
     task_create(init_thread, "init", 5, NORMAL_USER);               // 创建初始化任务
-
-    // task_create(thread_a, "thread_a", 5, KERNEL_USER); // 创建线程 A，优先级 5
-    // task_create(thread_b, "thread_b", 5, KERNEL_USER); // 创建线程 B，优先级 5
-    // task_create(thread_c, "thread_c", 5, KERNEL_USER); // 创建线程 C，优先级 5
+    task_create(test_thread, "test", 5, KERNEL_USER);               // 创建测试任务
 
     printk("Task init done!\n");
 }

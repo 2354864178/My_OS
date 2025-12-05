@@ -9,7 +9,7 @@ void idle_thread(){
     set_interrupt_state(true);  // 允许中断
     u32 count=0;
     while(true){
-        LOGK("Idle thread running... %d\n", count++);
+        // LOGK("Idle thread running... %d\n", count++);
         asm volatile(
             "std\n"     // 开中断
             "hlt\n"     // 进入休眠状态（关闭CPU），等待下一个中断
@@ -24,6 +24,16 @@ void init_thread(){
     u32 count=0;
     while(true){
         LOGK("Init thread running... %d\n", count++);
-        test();    // 调用测试系统调用
+        // test();    // 调用测试系统调用
+        sleep(500);    // 睡眠 2000 毫秒
+    }
+}
+
+void test_thread(){
+    set_interrupt_state(true);  // 允许中断
+    u32 count=0;
+    while(true){
+        LOGK("Test thread running... %d\n", count++);
+        sleep(709);    // 睡眠 1000 毫秒
     }
 }

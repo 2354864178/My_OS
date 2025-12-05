@@ -9,7 +9,7 @@
 
 #define TASK_NAME_LEN 16
 
-typedef u32 target_t(); // 任务入口函数类型
+typedef void target_t(); // 任务入口函数类型
 
 typedef enum task_state_t
 {
@@ -22,10 +22,11 @@ typedef enum task_state_t
     TASK_DIED,     // 死亡
 } task_state_t;
 
+// 任务控制块结构体PCB
 typedef struct task_t
 {
     u32 *stack;                 // 内核栈
-    list_node_t node;      // 任务阻塞节点
+    list_node_t node;           // 任务阻塞节点
     task_state_t state;         // 任务状态
     u32 priority;               // 任务优先级
     int ticks;                  // 剩余时间片
@@ -51,4 +52,8 @@ void schedule();
 void task_yield();
 void task_block(task_t *task, list_t *blist, task_state_t state);
 void task_unlock(task_t *task);
+
+void task_sleep(u32 ms);
+void task_wakeup();
+
 #endif

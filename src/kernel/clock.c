@@ -39,12 +39,16 @@ void stop_beep() {
     }
 }
 
+extern void task_wakeup();
+
 void clock_handler(int vector)
 {
     assert(vector == 0x20); // 时钟中断向量号 0x20
 
     send_eoi(vector);   // 发送中断处理结束
     stop_beep();        // 停止蜂鸣器
+
+    task_wakeup();      // 唤醒睡眠任务
 
     jiffies++;          // 全局时钟节拍计数加一
 
