@@ -156,9 +156,9 @@ bool get_interrupt_state()
 void set_interrupt_state(bool state)
 {
     if (state)
-        asm volatile("sti\n");
+        asm volatile("sti\n");  // 设置 IF 位，允许外中断
     else
-        asm volatile("cli\n");
+        asm volatile("cli\n");  // 清除 IF 位，屏蔽外中断
 }
 
 void default_handler(int vector)

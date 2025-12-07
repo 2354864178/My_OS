@@ -218,7 +218,6 @@ extern void test_thread();
 void task_init(){
     list_init(&block_list); // 初始化任务阻塞链表
     list_init(&sleep_list); // 初始化任务睡眠链表
-
     task_setup();           // 初始化任务系统
 
     idle_task = task_create(idle_thread, "idle", 1, KERNEL_USER);   // 创建空闲任务

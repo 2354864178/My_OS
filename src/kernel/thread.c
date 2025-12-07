@@ -1,8 +1,11 @@
 #include <onix/interrupt.h>
 #include <onix/syscall.h>
 #include <onix/debug.h>
+#include <onix/mutex.h>
+#include <onix/task.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
+mutex_t mutex; // 全局互斥锁
 
 // 空闲线程函数
 void idle_thread(){
@@ -20,12 +23,15 @@ void idle_thread(){
 
 // 初始化测试线程函数
 void init_thread(){
+    mutex_init(&mutex);         // 初始化全局互斥锁
     set_interrupt_state(true);  // 允许中断
     u32 count=0;
     while(true){
+        mutex_lock(&mutex);
         LOGK("Init thread running... %d\n", count++);
+        mutex_unlock(&mutex);
         // test();    // 调用测试系统调用
-        sleep(500);    // 睡眠 2000 毫秒
+        // sleep(500);    // 睡眠 2000 毫秒
     }
 }
 
@@ -33,7 +39,9 @@ void test_thread(){
     set_interrupt_state(true);  // 允许中断
     u32 count=0;
     while(true){
+        mutex_lock(&mutex);
         LOGK("Test thread running... %d\n", count++);
-        sleep(709);    // 睡眠 1000 毫秒
+        mutex_unlock(&mutex);
+        // sleep(709);    // 睡眠 1000 毫秒
     }
 }
