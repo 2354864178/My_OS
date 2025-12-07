@@ -5,7 +5,8 @@
 #include <onix/task.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
-mutex_t mutex; // 全局互斥锁
+raw_mutex_t mutex;   // 全局不可重入互斥锁
+reentrant_mutex_t lock; // 全局可重入互斥锁
 
 // 空闲线程函数
 void idle_thread(){
@@ -23,14 +24,14 @@ void idle_thread(){
 
 // 初始化测试线程函数
 void init_thread(){
-    mutex_init(&mutex);         // 初始化全局互斥锁
+    // raw_mutex_init(&mutex);         // 初始化全局互斥锁
+    reentrant_mutex_init(&lock);   // 初始化全局可重入互斥锁
     set_interrupt_state(true);  // 允许中断
     u32 count=0;
     while(true){
-        mutex_lock(&mutex);
+        reentrant_mutex_lock(&lock);
         LOGK("Init thread running... %d\n", count++);
-        mutex_unlock(&mutex);
-        // test();    // 调用测试系统调用
+        reentrant_mutex_unlock(&lock);
         // sleep(500);    // 睡眠 2000 毫秒
     }
 }
@@ -39,9 +40,9 @@ void test_thread(){
     set_interrupt_state(true);  // 允许中断
     u32 count=0;
     while(true){
-        mutex_lock(&mutex);
+        reentrant_mutex_lock(&lock);
         LOGK("Test thread running... %d\n", count++);
-        mutex_unlock(&mutex);
+        reentrant_mutex_unlock(&lock);
         // sleep(709);    // 睡眠 1000 毫秒
     }
 }
