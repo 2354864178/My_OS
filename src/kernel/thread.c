@@ -31,8 +31,8 @@ void init_thread(){
     while(true){
         reentrant_mutex_lock(&lock);
         LOGK("Init thread running... %d\n", count++);
+        sleep(500);
         reentrant_mutex_unlock(&lock);
-        // sleep(500);    // 睡眠 2000 毫秒
     }
 }
 
@@ -42,7 +42,7 @@ void test_thread(){
     while(true){
         reentrant_mutex_lock(&lock);
         LOGK("Test thread running... %d\n", count++);
+        sleep(500);
         reentrant_mutex_unlock(&lock);
-        // sleep(709);    // 睡眠 1000 毫秒
     }
 }

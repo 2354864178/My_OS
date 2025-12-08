@@ -22,7 +22,7 @@ typedef enum task_state_t
     TASK_DIED,     // 死亡
 } task_state_t;
 
-// 任务控制块结构体PCB
+// 任务控制块结构体TCB
 typedef struct task_t
 {
     u32 *stack;                 // 内核栈

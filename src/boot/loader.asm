@@ -92,7 +92,7 @@ protect_mode:
 	mov eax, 0x20251117
 	mov ebx, ards_count
 
-    jmp dword code_selecter:0x10000
+    jmp dword code_selecter:0x10040
 
     ud2
 

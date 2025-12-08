@@ -3,7 +3,13 @@
 
 #include <onix/types.h>
 
-#define GDT_SIZE 128    
+#define GDT_SIZE 128   
+
+#define KERNEL_CODE_IDX 1   // 代码段选择子索引
+#define KERNEL_DATA_IDX 2   // 数据段选择子索引
+
+#define KERNEL_CODE_SELECTOR (KERNEL_CODE_IDX << 3) // 选择子 = 索引 << 3
+#define KERNEL_DATA_SELECTOR (KERNEL_DATA_IDX << 3) // 选择子 = 索引 << 3
 
 // 全局描述符
 // unsigned char 本身是 8 位的整数类型（1 字节），但在结构体中，它可以作为 “容器”，通过位域语法（成员名 : 位数）将这 8 位分割成多个独立的 “子成员”，每个子成员占用指定的位数。

@@ -3,6 +3,7 @@
 #include <onix/assert.h>
 #include <onix/memory.h>
 #include <onix/bitmap.h>
+#include <onix/multiboot2.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -37,8 +38,7 @@ static u32 free_pages = 0;  // 空闲内存页数
 void memory_init(u32 magic, u32 addr)
 {
     // LOGK("Received magic: 0x%p\n", magic);  // 打印接收的魔数
-    u32 count;  
-    ards_t *ptr;
+    u32 count = 0;  
 
     // 验证加载器合法性（魔数匹配）
     if (magic == ONIX_MAGIC){
@@ -56,6 +56,29 @@ void memory_init(u32 magic, u32 addr)
                 memory_base = (u32)ptr->base;
                 memory_size = (u32)ptr->size;
             }
+        }
+    }
+    else if(magic == MULTIBOOT2_MAGIC){
+        u32 total_size = *(u32 *)addr;                  // 多重引导2信息总大小
+        multi_tag_t *tag = (multi_tag_t *)(addr + 8);   // 第一个标签起始地址
+
+        LOGK("Multiboot2 total size 0x%p\n", total_size);   // 打印多重引导2信息总大小
+        while (tag->type != MULTIBOOT_TAG_TYPE_END) {       // 遍历标签列表，直到遇到结束标签
+            if (tag->type == MULTIBOOT_TAG_TYPE_MMAP)  break;   // 找到内存映射标签，跳出循环
+            tag = (multi_tag_t *)((u32)tag + ((tag->size + 7) & ~7)); // 下一个标签，8字节对齐
+        }
+        multi_tag_mmap_t *mtag = (multi_tag_mmap_t *)tag;   // 强制转换为内存映射标签结构体指针
+        multi_mmap_entry_t *entry = mtag->entries;          // 第一个内存映射条目
+        while((u32)entry < (u32)tag + tag->size){           // 遍历所有内存映射条目
+            LOGK("Memory base 0x%x size 0x%p type %d\n", (u32)entry->addr, (u32)entry->len, (u32)entry->type);
+
+            count++;
+            // 筛选：只保留“可用区域”中最大的那个（内核需要连续大内存）
+            if (entry->type == ZONE_VALID && entry->len > memory_size) {
+                memory_base = (u32)entry->addr; // 可用内存基地址
+                memory_size = (u32)entry->len;  // 可用内存大小
+            }
+            entry = (multi_mmap_entry_t *)((u32)entry + mtag->entry_size); // 下一个内存映射条目
         }
     }
     else{
