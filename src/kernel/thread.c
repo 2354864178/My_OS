@@ -22,27 +22,33 @@ void idle_thread(){
     }
 }
 
+extern
+
 // 初始化测试线程函数
 void init_thread(){
     // raw_mutex_init(&mutex);         // 初始化全局互斥锁
-    reentrant_mutex_init(&lock);   // 初始化全局可重入互斥锁
-    set_interrupt_state(true);  // 允许中断
-    u32 count=0;
-    while(true){
-        reentrant_mutex_lock(&lock);
-        // LOGK("Init thread running... %d\n", count++);
-        sleep(500);
-        reentrant_mutex_unlock(&lock);
+    set_interrupt_state(true);
+    u32 counter = 0;
+
+    char ch;
+    while (true)
+    {
+        bool intr = interrupt_disable();
+        keyboard_read(&ch, 1);
+        printk("%c", ch);
+
+        set_interrupt_state(intr);
     }
 }
 
 void test_thread(){
     set_interrupt_state(true);  // 允许中断
+    reentrant_mutex_init(&lock);
     u32 count=0;
     while(true){
         reentrant_mutex_lock(&lock);
         // LOGK("Test thread running... %d\n", count++);
-        sleep(500);
+        // sleep(500);
         reentrant_mutex_unlock(&lock);
     }
 }

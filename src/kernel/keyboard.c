@@ -4,6 +4,8 @@
 #include <onix/debug.h>
 #include <onix/mutex.h>
 #include <onix/fifo.h>
+#include <onix/task.h>
+#include <onix/mutex.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -16,6 +18,13 @@
 #define INV 0 // 不可见字符
 
 #define CODE_PRINT_SCREEN_DOWN 0xB7 // Print Screen 按键按下扫描码
+
+static reentrant_mutex_t lock;    // 锁
+static task_t *waiter; // 等待输入的任务
+
+#define BUFFER_SIZE 64        // 输入缓冲区大小
+static char buf[BUFFER_SIZE]; // 输入缓冲区
+static fifo_t fifo;           // 循环队列
 
 // 键盘扫描码枚举类型
 typedef enum{
@@ -322,7 +331,29 @@ void keyboard_handler(int vector){
     else ch = keymap[makecode][shift];  // 根据 shift 状态选择字符
     if(ch == INV) return;               // 不可见字符，直接返回
 
-    LOGK("keyboard input 0x%c\n", ch);
+    // LOGK("keyboard input 0x%c\n", ch);
+
+    fifo_put(&fifo, ch);
+    if (waiter != NULL){
+        task_unlock(waiter);
+        waiter = NULL;
+    }
+}
+
+u32 keyboard_read(char *buf, u32 count)
+{
+    reentrant_mutex_lock(&lock);    // 加锁
+    int nr = 0;
+    while (nr < count)
+    {
+        while (fifo_empty(&fifo)){
+            waiter = running_task();  // 如果队列没有数据，就阻塞进行等待。
+            task_block(waiter, NULL, TASK_WAITING); // 阻塞当前任务，等待键盘输入
+        }
+        buf[nr++] = fifo_get(&fifo);    // 从缓冲区获取一个字符
+    }
+    reentrant_mutex_unlock(&lock);  // 解锁
+    return count;
 }
 
 void keyboard_init(){
@@ -331,10 +362,14 @@ void keyboard_init(){
     numlock_state = false;
     extcode_state = false;
 
+    fifo_init(&fifo, buf, BUFFER_SIZE);
+    reentrant_mutex_init(&lock);
+    waiter = NULL;
+
     set_leds();
 
-    set_interrupt_handler(IRQ_KEYBOARD, keyboard_handler); // 注册键盘中断服务例程
-    set_interrupt_mask(IRQ_KEYBOARD, true);                // 使能键盘中断
+    set_interrupt_handler(IRQ_KEYBOARD, keyboard_handler);  // 设置键盘中断处理函数
+    set_interrupt_mask(IRQ_KEYBOARD, true);                 // 允许键盘中断
 }
 
 
