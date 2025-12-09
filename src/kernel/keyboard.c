@@ -10,6 +10,9 @@
 #define KEYBOARD_DATA_PORT 0x60 // 键盘数据端口
 #define KEYBOARD_CTRL_PORT 0x64 // 键盘控制端口
 
+#define KEYBOARD_CMD_LED 0xED // 设置 LED 状态
+#define KEYBOARD_CMD_ACK 0xFA // ACK
+
 #define INV 0 // 不可见字符
 
 #define CODE_PRINT_SCREEN_DOWN 0xB7 // Print Screen 按键按下扫描码
@@ -226,6 +229,39 @@ static bool extcode_state;  // 扩展码状态
 #define alt_state (keymap[KEY_ALT_L][2] || keymap[KEY_ALT_L][3])        // ALT 键状态
 #define shift_state (keymap[KEY_SHIFT_L][2] || keymap[KEY_SHIFT_R][2])  // SHIFT 键状态
 
+// 等待键盘控制器准备就绪
+static void keyboard_wait()
+{
+    u8 state;
+    do{
+        state = inb(KEYBOARD_CTRL_PORT);
+    } while (state & 0x02);         // 读取键盘缓冲区，直到为空
+}
+
+// 等待键盘控制器发送 ACK 确认
+static void keyboard_ack()
+{
+    u8 state;
+    do{
+        state = inb(KEYBOARD_DATA_PORT);    // 读取键盘数据端口
+    } while (state != KEYBOARD_CMD_ACK);    // 直到收到 ACK 确认
+}
+
+static void set_leds()
+{
+    u8 leds = (capslock_state << 2) | (numlock_state << 1) | scrlock_state;
+    keyboard_wait();
+    
+    outb(KEYBOARD_DATA_PORT, KEYBOARD_CMD_LED); // 设置 LED 命令
+    keyboard_ack();
+
+    keyboard_wait();
+    
+    outb(KEYBOARD_DATA_PORT, leds);             // 设置 LED 灯状态
+    keyboard_ack();
+}
+
+
 void keyboard_handler(int vector){
     assert(vector == 0x21);
     send_eoi(vector);                       // 发送中断处理完成信号
@@ -256,22 +292,22 @@ void keyboard_handler(int vector){
     // 处理按键按下事件
     keymap[makecode][ext] = true; // 更新按键状态
 
-    // // 是否需要设置 LED 灯
-    // bool led = false;
-    // if (makecode == KEY_NUMLOCK){
-    //     numlock_state = !numlock_state;
-    //     led = true;
-    // }
-    // else if (makecode == KEY_CAPSLOCK){
-    //     capslock_state = !capslock_state;
-    //     led = true;
-    // }
-    // else if (makecode == KEY_SCRLOCK){
-    //     scrlock_state = !scrlock_state;
-    //     led = true;
-    // }
+    // 是否需要设置 LED 灯
+    bool led = false;
+    if (makecode == KEY_NUMLOCK){
+        numlock_state = !numlock_state;
+        led = true;
+    }
+    else if (makecode == KEY_CAPSLOCK){
+        capslock_state = !capslock_state;
+        led = true;
+    }
+    else if (makecode == KEY_SCRLOCK){
+        scrlock_state = !scrlock_state;
+        led = true;
+    }
 
-    // if(led) set_leds();
+    if(led) set_leds();
 
     // 处理普通按键输入
     bool shift = false;
@@ -294,6 +330,8 @@ void keyboard_init(){
     scrlock_state = false;
     numlock_state = false;
     extcode_state = false;
+
+    set_leds();
 
     set_interrupt_handler(IRQ_KEYBOARD, keyboard_handler); // 注册键盘中断服务例程
     set_interrupt_mask(IRQ_KEYBOARD, true);                // 使能键盘中断
