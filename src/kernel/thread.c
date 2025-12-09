@@ -30,7 +30,7 @@ void init_thread(){
     u32 count=0;
     while(true){
         reentrant_mutex_lock(&lock);
-        LOGK("Init thread running... %d\n", count++);
+        // LOGK("Init thread running... %d\n", count++);
         sleep(500);
         reentrant_mutex_unlock(&lock);
     }
@@ -41,7 +41,7 @@ void test_thread(){
     u32 count=0;
     while(true){
         reentrant_mutex_lock(&lock);
-        LOGK("Test thread running... %d\n", count++);
+        // LOGK("Test thread running... %d\n", count++);
         sleep(500);
         reentrant_mutex_unlock(&lock);
     }

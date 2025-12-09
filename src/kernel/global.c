@@ -38,6 +38,6 @@ void gdt_init()
     desc->granularity = 1;              // 4KB粒度
     desc->type = 0x2;                   // 可写、不可执行
 
-    gdt_ptr.limit = sizeof(gdt) - 1; // 全局描述符表大小
-    gdt_ptr.base = (u32)&gdt;         // 全局描述符表地址
+    gdt_ptr.limit = sizeof(gdt) - 1;    // 全局描述符表大小
+    gdt_ptr.base = (u32)&gdt;           // 全局描述符表地址
 }

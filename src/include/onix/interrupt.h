@@ -28,6 +28,7 @@
 // #define INTR_VE 20  // 虚拟化异常
 // #define INTR_CP 21  // 控制保护异常
 
+// IRQ 中断向量号
 #define IRQ_CLOCK 0      // 时钟
 #define IRQ_KEYBOARD 1   // 键盘
 #define IRQ_CASCADE 2    // 8259 从片控制器
