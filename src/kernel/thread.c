@@ -22,23 +22,21 @@ void idle_thread(){
     }
 }
 
-extern
-
-// 初始化测试线程函数
-void init_thread(){
-    // raw_mutex_init(&mutex);         // 初始化全局互斥锁
-    set_interrupt_state(true);
+static void real_init_thread(){
     u32 counter = 0;
 
     char ch;
-    while (true)
-    {
-        bool intr = interrupt_disable();
-        keyboard_read(&ch, 1);
-        printk("%c", ch);
-
-        set_interrupt_state(intr);
+    while (true) {
+        BMB;
+        // LOGK("Init thread running... %d\n", counter++);
+        sleep(1000);
     }
+}
+
+// 初始化测试线程函数
+void init_thread(){
+    char temp[100];         // 临时缓冲区
+    task_to_user_mode(real_init_thread);    // 切换到用户态运行
 }
 
 void test_thread(){
@@ -47,8 +45,8 @@ void test_thread(){
     u32 count=0;
     while(true){
         reentrant_mutex_lock(&lock);
-        // LOGK("Test thread running... %d\n", count++);
-        // sleep(500);
+        LOGK("Test thread running... %d\n", count++);
+        sleep(500);
         reentrant_mutex_unlock(&lock);
     }
 }

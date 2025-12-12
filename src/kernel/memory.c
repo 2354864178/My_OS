@@ -285,8 +285,7 @@ static void reset_page(bitmap_t *map, u32 addr, u32 count)
 }
 
 // 分配 count 个连续的内核页
-u32 alloc_kpage(u32 count)
-{
+u32 alloc_kpage(u32 count){
     assert(count > 0); 
     u32 vaddr = scan_page(&kernel_map, count); // 从内核内存位图中扫描 count 个连续的空闲页，返回起始页基地址
     LOGK("ALLOC kernel pages 0x%p count %d\n", vaddr, count); 
@@ -294,8 +293,7 @@ u32 alloc_kpage(u32 count)
 }
 
 // 释放 count 个连续的内核页
-void free_kpage(u32 vaddr, u32 count)
-{
+void free_kpage(u32 vaddr, u32 count){
     ASSERT_PAGE(vaddr);
     assert(count > 0);
     reset_page(&kernel_map, vaddr, count);      // 重置内核内存位图中对应的 count 个页，标记为未占用

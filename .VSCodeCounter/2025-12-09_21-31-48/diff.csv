@@ -1,0 +1,30 @@
+"filename", "language", "C", "Assembler file", "Makefile", "Properties", "C++", "comment", "blank", "total"
+"/home/ysy/code/Os_wrtie/build/iso/boot/grub/grub.cfg", "Properties", 0, 0, 0, 5, 0, 0, 1, 6
+"/home/ysy/code/Os_wrtie/src/Makefile", "Makefile", 0, 0, 20, 0, 0, 5, 8, 33
+"/home/ysy/code/Os_wrtie/src/include/onix/fifo.h", "C++", 0, 0, 0, 0, 16, 0, 4, 20
+"/home/ysy/code/Os_wrtie/src/include/onix/global.h", "C", 4, 0, 0, 0, 0, 0, 2, 6
+"/home/ysy/code/Os_wrtie/src/include/onix/interrupt.h", "C", 0, 0, 0, 0, 0, 1, 0, 1
+"/home/ysy/code/Os_wrtie/src/include/onix/multiboot2.h", "C++", 0, 0, 0, 0, 29, 3, 9, 41
+"/home/ysy/code/Os_wrtie/src/include/onix/mutex.h", "C++", 0, 0, 0, 0, 20, 3, 8, 31
+"/home/ysy/code/Os_wrtie/src/kernel/console.c", "C", -2, 0, 0, 0, 0, 2, 0, 0
+"/home/ysy/code/Os_wrtie/src/kernel/global.c", "C", 21, 0, 0, 0, 0, -3, 4, 22
+"/home/ysy/code/Os_wrtie/src/kernel/keyboard.c", "C", 325, 0, 0, 0, 0, 13, 40, 378
+"/home/ysy/code/Os_wrtie/src/kernel/main.c", "C", 2, 0, 0, 0, 0, 0, 0, 2
+"/home/ysy/code/Os_wrtie/src/kernel/memory.c", "C", 20, 0, 0, 0, 0, 1, 2, 23
+"/home/ysy/code/Os_wrtie/src/kernel/mutex.c", "C", 59, 0, 0, 0, 0, 8, 18, 85
+"/home/ysy/code/Os_wrtie/src/kernel/start.asm", "Assembler file", 0, 32, 0, 0, 0, 0, 7, 39
+"/home/ysy/code/Os_wrtie/src/kernel/task.c", "C", 0, 0, 0, 0, 0, 0, -1, -1
+"/home/ysy/code/Os_wrtie/src/kernel/thread.c", "C", 10, 0, 0, 0, 0, 2, 3, 15
+"/home/ysy/code/Os_wrtie/src/lib/fifo.c", "C", 38, 0, 0, 0, 0, 0, 7, 45
+"/home/ysy/code/Os_wrtie/src/test/call.asm", "Assembler file", 0, -16, 0, 0, 0, 0, -9, -25
+"/home/ysy/code/Os_wrtie/src/test/makefile", "Makefile", 0, 0, -14, 0, 0, -8, -4, -26
+"/home/ysy/code/Os_wrtie/src/test/param.c", "C", -10, 0, 0, 0, 0, 0, -2, -12
+"/home/ysy/code/Os_wrtie/src/test/param.s", "Assembler file", 0, -30, 0, 0, 0, 0, -1, -31
+"/home/ysy/code/Os_wrtie/src/test/types.c", "C", -27, 0, 0, 0, 0, 0, -5, -32
+"/home/ysy/code/Os_wrtie/src/utils/grub.cfg", "Properties", 0, 0, 0, 5, 0, 0, 1, 6
+"/home/ysy/code/Os_wrtie/test/call.asm", "Assembler file", 0, 16, 0, 0, 0, 0, 9, 25
+"/home/ysy/code/Os_wrtie/test/makefile", "Makefile", 0, 0, 14, 0, 0, 8, 4, 26
+"/home/ysy/code/Os_wrtie/test/param.c", "C", 10, 0, 0, 0, 0, 0, 2, 12
+"/home/ysy/code/Os_wrtie/test/param.s", "Assembler file", 0, 30, 0, 0, 0, 0, 1, 31
+"/home/ysy/code/Os_wrtie/test/types.c", "C", 27, 0, 0, 0, 0, 0, 5, 32
+"Total", "-", 477, 32, 20, 10, 65, 35, 113, 752

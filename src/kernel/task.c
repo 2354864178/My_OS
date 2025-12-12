@@ -7,6 +7,7 @@
 #include <onix/memory.h>
 #include <onix/string.h>
 #include <onix/list.h>
+#include <onix/global.h>
 
 #define TASK_NR 64                  // 最大任务数
 
@@ -14,6 +15,7 @@ extern u32 volatile jiffies;            // 全局时钟节拍计数
 extern u32 jiffy;                       // 每个时钟节拍的毫秒数
 extern bitmap_t kernel_map;             // 内核内存位图
 extern void task_switch(task_t *next);  // 任务切换汇编函数
+extern tss_t tss;                       // 任务状态段
                 
 static task_t *task_table[TASK_NR]; // 任务表
 static list_t block_list;           // 任务阻塞链表
@@ -137,6 +139,15 @@ void task_wakeup(){
     }
 }
 
+// 激活任务
+void task_activate(task_t *task){
+    assert(task->magic == ONIX_MAGIC);
+
+    if (task->uid != KERNEL_USER){
+        tss.esp0 = (u32)task + PAGE_SIZE; // 获取用户进程的内核栈，因为只有用户进行做特权级切换会用到，内核进程时用不到的
+    }
+}
+
 task_t *running_task(){                 // 获取当前运行的任务指针
     asm volatile(
         "movl %esp, %eax\n"             // 将当前栈指针 esp 的值存入 eax 寄存器
@@ -164,6 +175,7 @@ void schedule(){
 
     next->state = TASK_RUNNING;     // 将选择的下一个任务标记为运行中
     if (next == current) return;    // 如果下一个任务就是当前任务，无需切换，直接返回
+    task_activate(next);            // 激活下一个任务的内存空间等资源
     task_switch(next);              // 执行上下文切换到下一个任务
 }
 
@@ -209,6 +221,45 @@ static void task_setup(){
     task->ticks = 1;                // 初始化时间片为1
 
     memset(task_table, 0, sizeof(task_table)); // 清空任务表
+}
+
+// 调用该函数的地方不能有任何局部变量
+// 调用前栈顶需要准备足够的空间
+void task_to_user_mode(target_t target)
+{
+    task_t *task = running_task();      
+    u32 addr = (u32)task + PAGE_SIZE; // 计算任务栈顶地址
+    addr -= sizeof(intr_frame_t);     // 为中断帧留出空间
+    intr_frame_t *frame = (intr_frame_t *)(addr); // 在栈顶创建中断帧
+
+    frame->vector = 0x20;               // 中断向量号
+    frame->edi = 1;                     // 初始化 edi 寄存器值
+    frame->esi = 2;                     // 初始化 esi 寄存器值
+    frame->ebp = 3;                     // 初始化 ebp 寄存器值
+    frame->esp_dummy = 4;               // esp 占位
+    frame->ebx = 5;                     // 初始化 ebx 寄存器值
+    frame->edx = 6;                     // 初始化 edx 寄存器值
+    frame->ecx = 7;                     // 初始化 ecx 寄存器值
+    frame->eax = 8;                     // 初始化 eax 寄存器值
+
+    frame->gs = 0;                     // 设置 GS 段选择子为空
+    frame->ds = USER_DATA_SELECTOR;    // 设置数据段选择子
+    frame->es = USER_DATA_SELECTOR;    // 设置附加段选择子
+    frame->fs = USER_DATA_SELECTOR;    // 设置 FS 段选择子
+    frame->ss = USER_DATA_SELECTOR;    // 设置栈段选择子
+    frame->cs = USER_CODE_SELECTOR;    // 设置代码段选择子
+
+    frame->error = ONIX_MAGIC;         // 错误码，设置魔数以便后续校验结构完整性
+
+    u32 stack3 = alloc_kpage(1);                     // 为用户栈分配一页用户内存
+    frame->eip = (u32)target;                       // 设置指令指针为目标函数地址
+    frame->eflags = ((0 << 12) | 0b10 | 1 << 9);    // 设置标志寄存器，启用中断
+    frame->esp = stack3 + PAGE_SIZE;                // 设置用户栈指针
+
+    asm volatile(
+        "movl %0, %%esp\n"                          // 设置栈指针 esp 指向中断帧
+        "jmp interrupt_exit\n" :: "m"(frame)        // 跳转到中断退出处理程序，切换到用户模式
+    );
 }
 
 extern void idle_thread();

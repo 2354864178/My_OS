@@ -1,0 +1,109 @@
+Date : 2025-12-09 21:31:48
+Directory : /home/ysy/code/Os_wrtie
+Total : 63 files,  3522 codes, 394 comments, 808 blanks, all 4724 lines
+
+Languages
++----------------+------------+------------+------------+------------+------------+
+| language       | files      | code       | comment    | blank      | total      |
++----------------+------------+------------+------------+------------+------------+
+| C              |         33 |      2,513 |        302 |        522 |      3,337 |
+| Assembler file |          8 |        589 |          0 |        153 |        742 |
+| C++            |         15 |        254 |          9 |         90 |        353 |
+| Makefile       |          2 |        130 |         13 |         28 |        171 |
+| Ini            |          1 |         26 |          0 |          1 |         27 |
+| Properties     |          4 |         10 |         70 |         14 |         94 |
++----------------+------------+------------+------------+------------+------------+
+
+Directories
++----------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                     | files      | code       | comment    | blank      | total      |
++----------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                        |         63 |      3,522 |        394 |        808 |      4,724 |
+| bochs                                                    |          2 |          0 |         70 |         12 |         82 |
+| bochs/share                                              |          2 |          0 |         70 |         12 |         82 |
+| bochs/share/doc                                          |          2 |          0 |         70 |         12 |         82 |
+| bochs/share/doc/bochs                                    |          2 |          0 |         70 |         12 |         82 |
+| build                                                    |          1 |          5 |          0 |          1 |          6 |
+| build/iso                                                |          1 |          5 |          0 |          1 |          6 |
+| build/iso/boot                                           |          1 |          5 |          0 |          1 |          6 |
+| build/iso/boot/grub                                      |          1 |          5 |          0 |          1 |          6 |
+| src                                                      |         55 |      3,420 |        316 |        774 |      4,510 |
+| src (Files)                                              |          2 |        142 |          5 |         25 |        172 |
+| src/boot                                                 |          2 |        256 |          0 |         70 |        326 |
+| src/include                                              |         23 |        423 |         44 |        140 |        607 |
+| src/include/onix                                         |         23 |        423 |         44 |        140 |        607 |
+| src/kernel                                               |         20 |      1,870 |        155 |        407 |      2,432 |
+| src/lib                                                  |          7 |        724 |        112 |        131 |        967 |
+| src/utils                                                |          1 |          5 |          0 |          1 |          6 |
+| test                                                     |          5 |         97 |          8 |         21 |        126 |
++----------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++----------------------------------------------------------+----------------+------------+------------+------------+------------+
+| filename                                                 | language       | code       | comment    | blank      | total      |
++----------------------------------------------------------+----------------+------------+------------+------------+------------+
+| /home/ysy/code/Os_wrtie/bochs/share/doc/bochs/slirp.conf | Properties     |          0 |         49 |          8 |         57 |
+| /home/ysy/code/Os_wrtie/bochs/share/doc/bochs/vnet.conf  | Properties     |          0 |         21 |          4 |         25 |
+| /home/ysy/code/Os_wrtie/build/iso/boot/grub/grub.cfg     | Properties     |          5 |          0 |          1 |          6 |
+| /home/ysy/code/Os_wrtie/src/Makefile                     | Makefile       |        116 |          5 |         24 |        145 |
+| /home/ysy/code/Os_wrtie/src/boot/boot.asm                | Assembler file |        102 |          0 |         26 |        128 |
+| /home/ysy/code/Os_wrtie/src/boot/loader.asm              | Assembler file |        154 |          0 |         44 |        198 |
+| /home/ysy/code/Os_wrtie/src/bx_enh_dbg.ini               | Ini            |         26 |          0 |          1 |         27 |
+| /home/ysy/code/Os_wrtie/src/include/onix/assert.h        | C              |         10 |          0 |          4 |         14 |
+| /home/ysy/code/Os_wrtie/src/include/onix/bitmap.h        | C++            |         15 |          0 |          9 |         24 |
+| /home/ysy/code/Os_wrtie/src/include/onix/console.h       | C              |          7 |          0 |          4 |         11 |
+| /home/ysy/code/Os_wrtie/src/include/onix/debug.h         | C              |          6 |          1 |          6 |         13 |
+| /home/ysy/code/Os_wrtie/src/include/onix/fifo.h          | C++            |         16 |          0 |          4 |         20 |
+| /home/ysy/code/Os_wrtie/src/include/onix/global.h        | C              |         40 |          5 |          9 |         54 |
+| /home/ysy/code/Os_wrtie/src/include/onix/interrupt.h     | C              |         43 |         26 |         10 |         79 |
+| /home/ysy/code/Os_wrtie/src/include/onix/io.h            | C++            |          8 |          0 |          4 |         12 |
+| /home/ysy/code/Os_wrtie/src/include/onix/list.h          | C++            |         30 |          2 |         12 |         44 |
+| /home/ysy/code/Os_wrtie/src/include/onix/memory.h        | C              |         32 |          0 |          6 |         38 |
+| /home/ysy/code/Os_wrtie/src/include/onix/multiboot2.h    | C++            |         29 |          3 |          9 |         41 |
+| /home/ysy/code/Os_wrtie/src/include/onix/mutex.h         | C++            |         20 |          3 |          8 |         31 |
+| /home/ysy/code/Os_wrtie/src/include/onix/onix.h          | C              |          5 |          0 |          3 |          8 |
+| /home/ysy/code/Os_wrtie/src/include/onix/printk.h        | C++            |          4 |          0 |          2 |          6 |
+| /home/ysy/code/Os_wrtie/src/include/onix/rtc.h           | C++            |          6 |          0 |          2 |          8 |
+| /home/ysy/code/Os_wrtie/src/include/onix/stdarg.h        | C++            |          7 |          0 |          4 |         11 |
+| /home/ysy/code/Os_wrtie/src/include/onix/stdio.h         | C++            |          6 |          0 |          3 |          9 |
+| /home/ysy/code/Os_wrtie/src/include/onix/stdlib.h        | C++            |         16 |          0 |          9 |         25 |
+| /home/ysy/code/Os_wrtie/src/include/onix/string.h        | C++            |         18 |          0 |          4 |         22 |
+| /home/ysy/code/Os_wrtie/src/include/onix/syscall.h       | C++            |         12 |          0 |          4 |         16 |
+| /home/ysy/code/Os_wrtie/src/include/onix/task.h          | C++            |         47 |          1 |         11 |         59 |
+| /home/ysy/code/Os_wrtie/src/include/onix/time.h          | C++            |         20 |          0 |          5 |         25 |
+| /home/ysy/code/Os_wrtie/src/include/onix/types.h         | C              |         26 |          3 |          8 |         37 |
+| /home/ysy/code/Os_wrtie/src/kernel/assert.c              | C              |         31 |          3 |          8 |         42 |
+| /home/ysy/code/Os_wrtie/src/kernel/clock.c               | C              |         61 |          5 |         20 |         86 |
+| /home/ysy/code/Os_wrtie/src/kernel/console.c             | C              |        171 |         26 |         25 |        222 |
+| /home/ysy/code/Os_wrtie/src/kernel/debug.c               | C              |         11 |          0 |          2 |         13 |
+| /home/ysy/code/Os_wrtie/src/kernel/gate.c                | C              |         37 |          0 |          9 |         46 |
+| /home/ysy/code/Os_wrtie/src/kernel/global.c              | C              |         35 |          2 |          7 |         44 |
+| /home/ysy/code/Os_wrtie/src/kernel/handler.asm           | Assembler file |        166 |          0 |         33 |        199 |
+| /home/ysy/code/Os_wrtie/src/kernel/interrupt.c           | C              |        173 |         11 |         31 |        215 |
+| /home/ysy/code/Os_wrtie/src/kernel/io.asm                | Assembler file |         50 |          0 |         19 |         69 |
+| /home/ysy/code/Os_wrtie/src/kernel/keyboard.c            | C              |        325 |         13 |         40 |        378 |
+| /home/ysy/code/Os_wrtie/src/kernel/main.c                | C              |         23 |          2 |          3 |         28 |
+| /home/ysy/code/Os_wrtie/src/kernel/memory.c              | C              |        218 |         40 |         58 |        316 |
+| /home/ysy/code/Os_wrtie/src/kernel/mutex.c               | C              |         59 |          8 |         18 |         85 |
+| /home/ysy/code/Os_wrtie/src/kernel/printk.c              | C              |         14 |          0 |          3 |         17 |
+| /home/ysy/code/Os_wrtie/src/kernel/rtc.c                 | C              |         72 |         12 |         22 |        106 |
+| /home/ysy/code/Os_wrtie/src/kernel/schedule.asm          | Assembler file |         20 |          0 |          9 |         29 |
+| /home/ysy/code/Os_wrtie/src/kernel/start.asm             | Assembler file |         51 |          0 |         12 |         63 |
+| /home/ysy/code/Os_wrtie/src/kernel/task.c                | C              |        162 |         16 |         51 |        229 |
+| /home/ysy/code/Os_wrtie/src/kernel/thread.c              | C              |         41 |          6 |          8 |         55 |
+| /home/ysy/code/Os_wrtie/src/kernel/time.c                | C              |        150 |         11 |         29 |        190 |
+| /home/ysy/code/Os_wrtie/src/lib/bitmap.c                 | C              |         55 |          8 |         19 |         82 |
+| /home/ysy/code/Os_wrtie/src/lib/fifo.c                   | C              |         38 |          0 |          7 |         45 |
+| /home/ysy/code/Os_wrtie/src/lib/list.c                   | C              |         97 |         13 |         23 |        133 |
+| /home/ysy/code/Os_wrtie/src/lib/stdlib.c                 | C              |         45 |          6 |         10 |         61 |
+| /home/ysy/code/Os_wrtie/src/lib/string.c                 | C              |        176 |          2 |         16 |        194 |
+| /home/ysy/code/Os_wrtie/src/lib/syscall.c                | C              |         28 |          2 |          6 |         36 |
+| /home/ysy/code/Os_wrtie/src/lib/vsprintf.c               | C              |        285 |         81 |         50 |        416 |
+| /home/ysy/code/Os_wrtie/src/utils/grub.cfg               | Properties     |          5 |          0 |          1 |          6 |
+| /home/ysy/code/Os_wrtie/test/call.asm                    | Assembler file |         16 |          0 |          9 |         25 |
+| /home/ysy/code/Os_wrtie/test/makefile                    | Makefile       |         14 |          8 |          4 |         26 |
+| /home/ysy/code/Os_wrtie/test/param.c                     | C              |         10 |          0 |          2 |         12 |
+| /home/ysy/code/Os_wrtie/test/param.s                     | Assembler file |         30 |          0 |          1 |         31 |
+| /home/ysy/code/Os_wrtie/test/types.c                     | C              |         27 |          0 |          5 |         32 |
+| Total                                                    |                |      3,522 |        394 |        808 |      4,724 |
++----------------------------------------------------------+----------------+------------+------------+------------+------------+
