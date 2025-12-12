@@ -28,6 +28,7 @@ static void real_init_thread(){
     char ch;
     while (true) {
         BMB;
+        printf("Init thread running... %d\n", counter++);
         // LOGK("Init thread running... %d\n", counter++);
         sleep(1000);
     }
@@ -46,7 +47,7 @@ void test_thread(){
     while(true){
         reentrant_mutex_lock(&lock);
         LOGK("Test thread running... %d\n", count++);
-        sleep(500);
+        sleep(1000);
         reentrant_mutex_unlock(&lock);
     }
 }
