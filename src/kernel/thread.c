@@ -3,6 +3,7 @@
 #include <onix/debug.h>
 #include <onix/mutex.h>
 #include <onix/task.h>
+#include <onix/arena.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 raw_mutex_t mutex;   // 全局不可重入互斥锁
@@ -28,9 +29,9 @@ static void real_init_thread(){
     char ch;
     while (true) {
         BMB;
-        printf("Init thread running... %d\n", counter++);
+        // sleep(1000);
+        // printf("Init thread running... %d\n", counter++);
         // LOGK("Init thread running... %d\n", counter++);
-        sleep(1000);
     }
 }
 
@@ -41,13 +42,21 @@ void init_thread(){
 }
 
 void test_thread(){
-    set_interrupt_state(true);  // 允许中断
-    reentrant_mutex_init(&lock);
-    u32 count=0;
-    while(true){
-        reentrant_mutex_lock(&lock);
-        LOGK("Test thread running... %d\n", count++);
-        sleep(1000);
-        reentrant_mutex_unlock(&lock);
+    set_interrupt_state(true);
+    u32 counter = 0;
+    while(true) {
+        void *ptr = kmalloc(1200);
+        LOGK("kmalloc 0x%p....\n", ptr);
+        kfree(ptr);
+
+        ptr = kmalloc(1024);
+        LOGK("kmalloc 0x%p....\n", ptr);
+        kfree(ptr);
+
+        ptr = kmalloc(54);
+        LOGK("kmalloc 0x%p....\n", ptr);
+        kfree(ptr);
+
+        sleep(5000);
     }
 }

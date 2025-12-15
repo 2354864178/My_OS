@@ -7,7 +7,8 @@
     "interrupt.h": "c",
     "onix.h": "c",
     "assert.h": "c",
-    "memory.h": "c"
+    "memory.h": "c",
+    "random": "c"
   },
   "C_Cpp_Runner.msvcBatchPath": ""
 }
