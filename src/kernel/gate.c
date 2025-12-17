@@ -20,15 +20,16 @@ static void syscall_default(){      // 默认系统调用处理函数
 }
 
 task_t *task = NULL;    // 测试系统调用使用的任务指针
-static u32 syscall_test(){          // 测试系统调用函数
-    if(!task){
-        task = running_task();      // 获取当前运行的任务指针
-        task_block(task, NULL, TASK_BLOCKED);   // 强制阻塞当前任务
-    }
-    else{
-        task_unlock(task);          // 解锁任务
-        task = NULL;                // 重置任务指针
-    }
+static u32 sys_test(){          // 测试系统调用函数
+    BMB;
+
+    link_page(0x1600000); // 为测试任务分配一页内存作为内核栈
+    char *ptr = (char *)0x1600000;
+    ptr[3] = 'A';    // 测试写内存
+    BMB;
+    unlink_page(0x1600000); // 释放测试任务的内核栈内存
+    BMB;
+
     return 255;
 }
 
@@ -48,7 +49,7 @@ void syscall_init(){            // 初始化系统调用处理函数表
         syscall_table[i] = (handler_t)syscall_default;  // 默认指向默认处理函数
     }
 
-    syscall_table[SYS_NR_TEST] = (handler_t)syscall_test;   // 注册测试系统调用处理函数
+    syscall_table[SYS_NR_TEST] = (handler_t)sys_test;   // 注册测试系统调用处理函数
     syscall_table[SYS_NR_SLEEP] = (handler_t)task_sleep;    // 注册任务睡眠的系统调用处理函数
     syscall_table[SYS_NR_YIELD] = (handler_t)task_yield;    // 注册任务让出 CPU 的系统调用处理函数
     syscall_table[SYS_NR_WRITE] = (handler_t)sys_write;     // 注册写数据的系统调用处理函数

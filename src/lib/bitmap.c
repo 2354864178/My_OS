@@ -5,9 +5,9 @@
 
 // 构造位图
 void bitmap_make(bitmap_t *map, char *bits, u32 length, u32 offset){
-    map->bits = bits;
-    map->length = length;
-    map->offset = offset;
+    map->bits = bits;       // 位图数组指针，每一位表示一个资源的使用状态
+    map->length = length;   // 位图数组长度
+    map->offset = offset;   // 位图起始偏移，表示第一个位对应的资源索引
 }
 
 // 位图初始化，全部置为 0

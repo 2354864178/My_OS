@@ -4,7 +4,12 @@
 #define PAGE_SIZE 0x1000     // 一页的大小 4K
 #define MEMORY_BASE 0x100000 // 1M，可用内存开始的位置
 
+#define KERNEL_MEMORY_SIZE 0x800000 // 内核内存大小 8M
+#define USER_STACK_TOP 0x8000000    // 用户栈顶地址 128M
+
 #define KERNEL_PAGE_DIR 0x1000      // 内核页目录索引
+
+#define PDE_MASK 0xFFC00000         // 页目录偏移掩码
 
 static u32 KERNEL_PAGE_TABLE[] = {  // 内核页表索引
     0x2000,

@@ -227,7 +227,12 @@ static void task_setup(){
 // 调用前栈顶需要准备足够的空间
 void task_to_user_mode(target_t target)
 {
-    task_t *task = running_task();      
+    task_t *task = running_task();
+    
+    task->vmap = kmalloc(sizeof(bitmap_t)); // 为任务分配虚拟内存位图结构体
+    void *buf = (void *)alloc_kpage(1);     // 为位图缓冲区分配一页内存
+    bitmap_init(task->vmap, buf, PAGE_SIZE, KERNEL_MEMORY_SIZE/PAGE_SIZE); // 初始化虚拟内存位图
+    
     u32 addr = (u32)task + PAGE_SIZE; // 计算任务栈顶地址
     addr -= sizeof(intr_frame_t);     // 为中断帧留出空间
     intr_frame_t *frame = (intr_frame_t *)(addr); // 在栈顶创建中断帧
@@ -251,7 +256,7 @@ void task_to_user_mode(target_t target)
 
     frame->error = ONIX_MAGIC;         // 错误码，设置魔数以便后续校验结构完整性
 
-    u32 stack3 = alloc_kpage(1);                     // 为用户栈分配一页用户内存
+    u32 stack3 = alloc_kpage(1);                    // 为用户栈分配一页用户内存
     frame->eip = (u32)target;                       // 设置指令指针为目标函数地址
     frame->eflags = ((0 << 12) | 0b10 | 1 << 9);    // 设置标志寄存器，启用中断
     frame->esp = stack3 + PAGE_SIZE;                // 设置用户栈指针

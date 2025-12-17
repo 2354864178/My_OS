@@ -29,7 +29,8 @@ static void real_init_thread(){
     char ch;
     while (true) {
         BMB;
-        // sleep(1000);
+        test();
+        sleep(1000);
         // printf("Init thread running... %d\n", counter++);
         // LOGK("Init thread running... %d\n", counter++);
     }
@@ -45,18 +46,18 @@ void test_thread(){
     set_interrupt_state(true);
     u32 counter = 0;
     while(true) {
-        void *ptr = kmalloc(1200);
-        LOGK("kmalloc 0x%p....\n", ptr);
-        kfree(ptr);
+        // void *ptr = kmalloc(1200);
+        // LOGK("kmalloc 0x%p....\n", ptr);
+        // kfree(ptr);
 
-        ptr = kmalloc(1024);
-        LOGK("kmalloc 0x%p....\n", ptr);
-        kfree(ptr);
+        // ptr = kmalloc(1024);
+        // LOGK("kmalloc 0x%p....\n", ptr);
+        // kfree(ptr);
 
-        ptr = kmalloc(54);
-        LOGK("kmalloc 0x%p....\n", ptr);
-        kfree(ptr);
+        // ptr = kmalloc(54);
+        // LOGK("kmalloc 0x%p....\n", ptr);
+        // kfree(ptr);
 
-        sleep(5000);
+        sleep(2000);
     }
 }

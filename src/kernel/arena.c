@@ -62,7 +62,7 @@ void *kmalloc(size_t size){
     // 找到合适的描述符
     for (size_t i = 0; i < DESC_COUNT; i++) {
         desc = &descriptors[i];                 // 获取当前描述符指针
-        if(size <= desc->block_size) break;   // 找到合适的描述符就跳出循环
+        if(size <= desc->block_size) break;     // 找到合适的描述符就跳出循环
 
     }
 
@@ -98,7 +98,7 @@ void *kmalloc(size_t size){
 void kfree(void *ptr){
     // assert(ptr);     // 指针不能为空
     arena_t *arena = get_block_arena(ptr);  // 根据块指针获取 arena 指针
-    block_t *block = (block_t *)ptr;        // 转换块指针类型
+    block_t *block = (block_t *)ptr;                // 转换块指针类型
     // assert(arena->magic == ONIX_MAGIC);     // 校验 arena 魔数
     assert(arena->large == 1 || arena->large == 0); // 校验 large 字段
 

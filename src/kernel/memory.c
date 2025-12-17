@@ -4,6 +4,8 @@
 #include <onix/memory.h>
 #include <onix/bitmap.h>
 #include <onix/multiboot2.h>
+#include <onix/task.h>
+#include <onix/string.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -123,8 +125,7 @@ void memory_map_init()
 
     // 前 1M 的内存位置 以及 物理内存数组已占用的页，已被占用
     start_page = IDX(MEMORY_BASE) + memory_map_pages;   // 计算已占用物理页的总数量，作为后续标记占用的边界
-    for (size_t i = 0; i < start_page; i++) 
-    {
+    for (size_t i = 0; i < start_page; i++) {
         memory_map[i] = 1;  // 标记所有已占用的物理页为1（占用状态）。
     }
 
@@ -248,8 +249,21 @@ static page_entry_t *get_pde(){
 }
 
 // 获取虚拟地址 vaddr 对应的页表
-static page_entry_t *get_pte(u32 vaddr){
-    return (page_entry_t *) (0xffc00000 | (DIDX(vaddr) << 12)); // 0xffc00000 是 DIDX=1022 对应的虚拟地址基址（1022<<22=0xff800000？需精准计算：1022<<22=0xff800000，加上页表索引偏移）
+static page_entry_t *get_pte(u32 vaddr, bool create){
+    page_entry_t *pde = get_pde();      // 找到页目录
+    u32 idx = DIDX(vaddr);              // 找到页目录的索引，即页表的入口
+    page_entry_t *entry = &pde[idx];    // 找到页表的入口位置
+    assert(create || (!create && entry->present));                      // 判断要么页表存在，要么不存在但create为true
+    page_entry_t *table = (page_entry_t *)(PDE_MASK | (idx << 12));     // 找到可以修改的页表
+
+    // 如果页表不存在且需要创建
+    if (!entry->present) {
+        LOGK("Get and create page table entry for 0x%p\n", vaddr);
+        u32 page = get_page();          // 获取一页物理内存
+        entry_init(entry, IDX(page));   // 初始化并链接到entry上
+        memset(table, 0, PAGE_SIZE);    // 清空新页表
+    }
+    return table;    // 返回该虚拟地址对应的页表
 }
 
 // 刷新虚拟地址 vaddr 的 块表 TLB
@@ -298,6 +312,50 @@ void free_kpage(u32 vaddr, u32 count){
     assert(count > 0);
     reset_page(&kernel_map, vaddr, count);      // 重置内核内存位图中对应的 count 个页，标记为未占用
     LOGK("FREE  kernel pages 0x%p count %d\n", vaddr, count);
+}
+
+// 链接虚拟地址 vaddr 到 一个物理页
+void link_page(u32 vaddr){
+    ASSERT_PAGE(vaddr);   // 判断虚拟地址为页开始的位置，即最后三位为0
+    page_entry_t *pte = get_pte(vaddr, true);   // 获取vaddr对应的页表
+    page_entry_t *entry = &pte[TIDX(vaddr)];    // 获取vaddr页框的入口
+    task_t *task = running_task();              // 获取当前的进程
+    bitmap_t *map = task->vmap;                 // 当前进程的虚拟位图
+    u32 index = IDX(vaddr);                     // 获取vaddr对应的位图索引，标记这一页是否被占用
+
+    if (entry->present) {
+        assert(bitmap_test(map, index));  // 判断位图中这一位是否为1
+        return; // 页面已存在，说明该虚拟地址已经被映射，直接返回
+    }
+    assert(!bitmap_test(map, index));  
+    bitmap_set(map, index, true);       // 更新虚拟内存位图，标记该页为已占用
+    u32 paddr = get_page();             // 分配一页物理内存
+    entry_init(entry, IDX(paddr));      // 初始化页表项，建立映射关系
+    flush_tlb(vaddr);                   // 刷新该虚拟地址对应的 TLB
+    LOGK("LINK from 0x%p to 0x%p\n", vaddr, paddr);
+}
+
+// 解除虚拟地址 vaddr 对应的物理页映射
+void unlink_page(u32 vaddr){
+    ASSERT_PAGE(vaddr);         // 判断虚拟地址为页开始的位置，即最后三位为0
+    page_entry_t *pte = get_pte(vaddr, true);   // 获取vaddr对应的页表 
+    page_entry_t *entry = &pte[TIDX(vaddr)];    // 获取vaddr页框的入口
+    task_t *task = running_task();          // 获取当前的进程
+    bitmap_t *map = task->vmap;             // 当前进程的虚拟位图
+    u32 index = IDX(vaddr);                 // 获取vaddr对应的位图索引，标记这一页是否被占用
+
+    if (!entry->present){
+        assert(!bitmap_test(map, index));
+        return; // 页面不存在，说明该虚拟地址没有被映射，直接返回
+    }
+    assert(entry->present && bitmap_test(map, index));  // 页面存在，且位图中该页被标记为已占用
+    entry->present = false;             // 取消页表项的存在标志    
+    bitmap_set(map, index, false);      // 更新虚拟内存位图，标记该页为未占用
+    u32 paddr = PAGE(entry->index);     // 获取该页表项对应的物理页地址
+    DEBUGK("UNLINK from 0x%p to 0x%p\n", vaddr, paddr);
+   
+    put_page(paddr);    // 函数内部做了判断物理内存是否被多次引用
+    flush_tlb(vaddr);   // 刷新该虚拟地址对应的 TLB
 }
 
 // void memory_test(){
