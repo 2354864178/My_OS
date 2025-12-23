@@ -5,7 +5,10 @@
 #define MEMORY_BASE 0x100000 // 1M，可用内存开始的位置
 
 #define KERNEL_MEMORY_SIZE 0x800000 // 内核内存大小 8M
+
 #define USER_STACK_TOP 0x8000000    // 用户栈顶地址 128M
+#define USER_STACK_SIZE 0x200000    // 用户栈最大 2M
+#define USER_STACK_BOTTOM (USER_STACK_TOP - USER_STACK_SIZE)  // 用户栈底地址 128M - 2M
 
 #define KERNEL_PAGE_DIR 0x1000      // 内核页目录索引
 
@@ -35,6 +38,22 @@ typedef struct page_entry_t
 } page_entry_t;
 #pragma pack() 
 
+#pragma pack(1) 
+typedef struct page_error_code_t {
+    u8 present : 1; 
+    u8 write : 1;
+    u8 user : 1;
+    u8 reserved0 : 1;
+    u8 fetch : 1;
+    u8 protection : 1;
+    u8 shadow : 1;
+    u16 reserved1 : 8;
+    u8 sgx : 1;
+    u16 reserved2;
+} page_error_code_t;
+#pragma pack()
+
+u32 get_cr2();          // 得到 cr2 寄存器
 u32 get_cr3();          // 得到 cr3 寄存器
 void set_cr3(u32 pde);  // 设置 cr3 寄存器，参数是页目录的地址
 u32 alloc_kpage(u32 count);             // 分配 count 个连续的内核页

@@ -142,9 +142,11 @@ void task_wakeup(){
 // 激活任务
 void task_activate(task_t *task){
     assert(task->magic == ONIX_MAGIC);
-
+    if(task->pde != get_cr3()){
+        set_cr3(task->pde);                 // 切换到任务的页目录
+    }
     if (task->uid != KERNEL_USER){
-        tss.esp0 = (u32)task + PAGE_SIZE; // 获取用户进程的内核栈，因为只有用户进行做特权级切换会用到，内核进程时用不到的
+        tss.esp0 = (u32)task + PAGE_SIZE;   // 获取用户进程的内核栈，因为只有用户进行做特权级切换会用到，内核进程时用不到的
     }
 }
 
@@ -233,6 +235,9 @@ void task_to_user_mode(target_t target)
     void *buf = (void *)alloc_kpage(1);     // 为位图缓冲区分配一页内存
     bitmap_init(task->vmap, buf, PAGE_SIZE, KERNEL_MEMORY_SIZE/PAGE_SIZE); // 初始化虚拟内存位图
     
+    task->pde = (u32)copy_pde();            // 复制当前任务的页目录作为新任务的页目录
+    set_cr3(task->pde);                     // 切换到新任务的页目录
+
     u32 addr = (u32)task + PAGE_SIZE; // 计算任务栈顶地址
     addr -= sizeof(intr_frame_t);     // 为中断帧留出空间
     intr_frame_t *frame = (intr_frame_t *)(addr); // 在栈顶创建中断帧
@@ -259,7 +264,7 @@ void task_to_user_mode(target_t target)
     u32 stack3 = alloc_kpage(1);                    // 为用户栈分配一页用户内存
     frame->eip = (u32)target;                       // 设置指令指针为目标函数地址
     frame->eflags = ((0 << 12) | 0b10 | 1 << 9);    // 设置标志寄存器，启用中断
-    frame->esp = stack3 + PAGE_SIZE;                // 设置用户栈指针
+    frame->esp = USER_STACK_TOP;                    // 设置用户栈指针为用户栈顶地址
 
     asm volatile(
         "movl %0, %%esp\n"                          // 设置栈指针 esp 指向中断帧

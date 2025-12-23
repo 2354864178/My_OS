@@ -20,8 +20,9 @@ pointer_t idt_ptr;      // 中断描述符表指针
 
 handler_t handler_table[IDT_SIZE];                  // 中断处理函数表
 extern handler_t handler_entry_table[ENTRY_SIZE];   // 中断处理函数入口表
-extern syscall_handler();                           // 系统调用处理函数入口
+extern void syscall_handler();                      // 系统调用处理函数入口
 extern void interrupt_handler();                    // 中断处理函数入口
+extern void page_fault_handler();                   // 缺页异常处理函数入口
 
 static char *messages[] = {     // 异常信息字符串数组
     "#DE Divide Error\0",
@@ -187,6 +188,8 @@ void idt_init(){
     for (size_t i = 0; i < 0x20; i++) {
         handler_table[i] = exception_handler;
     }
+
+    handler_table[0x0e] = page_fault_handler; // 缺页异常单独处理
 
     for (size_t i = 0x20; i < ENTRY_SIZE; i++) {
         handler_table[i] = default_handler;

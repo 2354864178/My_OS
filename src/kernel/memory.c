@@ -172,6 +172,10 @@ static void put_page(u32 addr)
     LOGK("PUT page 0x%p\n", addr);
 }
 
+u32 get_cr2(){
+    asm volatile("movl %cr2, %eax\n");  // 直接将 mov eax, cr2，返回值在 eax 中
+}
+
 // 得到 cr3 寄存器
 u32 get_cr3(){
     asm volatile("movl %cr3, %eax\n");  // 直接将 mov eax, cr3，返回值在 eax 中
@@ -247,6 +251,17 @@ void mapping_init()
 static page_entry_t *get_pde(){
     return (page_entry_t *)(0xfffff000);    // // 自映射对应的虚拟地址
 }
+
+// 复制当前任务的页目录
+page_entry_t *copy_pde() {
+    task_t *task = running_task();
+    page_entry_t *pde = (page_entry_t *)alloc_kpage(1); // 分配一页作为新的页目录
+    memcpy(pde, (void *)task->pde, PAGE_SIZE);
+    page_entry_t *entry = &pde[1023];                   // 将最后一个页表指向页目录自己，方便修改
+    entry_init(entry, IDX(pde));                        // 初始化该页目录项
+    return pde;
+}
+
 
 // 获取虚拟地址 vaddr 对应的页表
 static page_entry_t *get_pte(u32 vaddr, bool create){
@@ -358,6 +373,29 @@ void unlink_page(u32 vaddr){
     flush_tlb(vaddr);   // 刷新该虚拟地址对应的 TLB
 }
 
+void page_fault_handler(
+    u32 vector,     // 中断向量号
+    u32 edi, u32 esi, u32 ebp, u32 esp,     // 通用寄存器
+    u32 ebx, u32 edx, u32 ecx, u32 eax,     // 通用寄存器
+    u32 gs, u32 fs, u32 es, u32 ds,         // 段寄存器
+    u32 vector0, u32 error, u32 eip, u32 cs, u32 eflags // 中断信息
+){
+    assert(vector == 0x0e);     // 缺页异常中断号 14 (0x0e)
+    u32 vaddr = get_cr2();      // 获取导致缺页异常的线性地址
+    LOGK("Page fault at address 0x%p, eip 0x%p, error code 0x%p\n", vaddr, eip, error);
+    page_error_code_t *code = (page_error_code_t *)&error;  // 解析错误代码
+    
+    task_t *task = running_task();
+    assert(KERNEL_MEMORY_SIZE <= vaddr && vaddr < USER_STACK_TOP); // 缺页地址必须在内核内存和用户栈顶之间
+    
+    // 仅当页面不存在且访问地址在用户栈范围内时，才进行页面链接操作
+    if(!code->present && (vaddr > USER_STACK_BOTTOM)){
+        u32 page = PAGE(IDX(vaddr));    // 计算出对应的页对齐地址
+        link_page(page);                // 链接该页
+        return;
+    }
+    panic("Page fault can not be handled!!!");
+}
 // void memory_test(){
 //     u32 *pages = (u32 *)(0x200000);
 //     u32 count = 0x6fe;

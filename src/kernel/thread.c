@@ -23,16 +23,21 @@ void idle_thread(){
     }
 }
 
+// 递归测试函数
+void test_recursion(){
+    char tmp[0x400];    // 分配一些栈空间以观察栈变化
+    test_recursion();   // 递归调用自身
+}
+
 static void real_init_thread(){
     u32 counter = 0;
 
     char ch;
     while (true) {
-        BMB;
-        test();
         sleep(1000);
-        // printf("Init thread running... %d\n", counter++);
-        // LOGK("Init thread running... %d\n", counter++);
+        BMB;
+        printf("Init thread running... %d\n", counter++);
+        test_recursion();
     }
 }
 
