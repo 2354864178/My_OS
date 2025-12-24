@@ -51,11 +51,13 @@ void syscall_init(){            // 初始化系统调用处理函数表
         syscall_table[i] = (handler_t)syscall_default;  // 默认指向默认处理函数
     }
 
-    syscall_table[SYS_NR_TEST] = (handler_t)sys_test;   // 注册测试系统调用处理函数
+    syscall_table[SYS_NR_TEST] = (handler_t)sys_test;       // 注册测试系统调用处理函数
     syscall_table[SYS_NR_SLEEP] = (handler_t)task_sleep;    // 注册任务睡眠的系统调用处理函数
     syscall_table[SYS_NR_YIELD] = (handler_t)task_yield;    // 注册任务让出 CPU 的系统调用处理函数
     syscall_table[SYS_NR_WRITE] = (handler_t)sys_write;     // 注册写数据的系统调用处理函数
     syscall_table[SYS_NR_BRK] = (handler_t)sys_brk;         // 注册 brk 系统调用处理函数
+    syscall_table[SYS_NR_GETPID] = (handler_t)sys_getpid;   // 注册获取进程ID的系统调用处理函数
+    syscall_table[SYS_NR_GETPPID] = (handler_t)sys_getppid; // 注册获取父进程ID的系统调用处理函数
     LOGK("Syscall init done!\n");
 }
 

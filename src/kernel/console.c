@@ -12,6 +12,9 @@
 #define CRT_CURSOR_H 0xE     // 光标位置 - 高位
 #define CRT_CURSOR_L 0xF     // 光标位置 - 低位
 
+// COM1 串口端口基址
+#define COM1_PORT 0x3F8
+
 #define MEM_BASE 0xB8000              // 显卡内存起始位置
 #define MEM_SIZE 0x4000               // 显卡内存大小
 #define MEM_END (MEM_BASE + MEM_SIZE) // 显卡内存结束位置
@@ -38,6 +41,7 @@ static u32 pos;     //  当前光标的内存位置
 static u32 x, y;    //  当前光标的坐标（80x25）
 static u8 attr = 7; //  字符的样式
 static u16 erase = 0x0720;  //  空格（删除后插入空格）
+static bool serial_ready = false; // 串口是否已初始化
 
 //  获取 VGA 文本模式下当前屏幕显示缓冲区起始地址
 static void get_screen(){
@@ -121,6 +125,33 @@ static void command_cr(){
     // set_cursor();
 }
 
+// 简易串口初始化：8N1, 波特率 115200
+static void serial_init(){
+    // 关闭中断
+    outb(COM1_PORT + 1, 0x00);
+    // 设定波特率除数锁存
+    outb(COM1_PORT + 3, 0x80);
+    outb(COM1_PORT + 0, 0x01); // 除数低字节：1 -> 115200
+    outb(COM1_PORT + 1, 0x00); // 除数高字节
+    // 8 数据位，1 停止位，无校验
+    outb(COM1_PORT + 3, 0x03);
+    // 启用 FIFO，清空，14 字节阈值
+    outb(COM1_PORT + 2, 0xC7);
+    // 打开 DTR/RTS，允许中断（虽未用中断）
+    outb(COM1_PORT + 4, 0x0B);
+    serial_ready = true;
+}
+
+// 串口发送单字符，轮询发送寄存器空闲
+static inline void serial_putc(char c){
+    if(!serial_ready) serial_init();
+    // 等待发送保持寄存器空
+    for(int i = 0; i < 100000; i++){
+        if(inb(COM1_PORT + 5) & 0x20) break;
+    }
+    outb(COM1_PORT + 0, c);
+}
+
 // 光标换行\n
 static void command_lf(){
     // 当前行不是最后一行，直接换行到下一行
@@ -157,6 +188,7 @@ void console_write(char *buf, u32 count){
     char ch;
     while(count--){
         ch = *buf++;
+        serial_putc(ch); // 镜像输出到串口，便于抓取日志
         switch (ch)
         {
         case NUL:
@@ -211,6 +243,7 @@ void console_write(char *buf, u32 count){
 }
 
 void console_init(){
+    serial_init();
     get_screen();
     // BMB;
     get_cursor();

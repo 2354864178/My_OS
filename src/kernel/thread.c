@@ -28,16 +28,8 @@ static void real_init_thread(){
     BMB;
     char ch;
     while (true) {
-        printf("Init thread running... %d\n", counter++);
-        char *ptr = (char *)0x900000;
-        brk(ptr);
-        ptr -= 0x1000;
-        ptr[3] = 0xff;
-
-        brk((char *)0x800000);
-        sleep(5000);
-        // BMB;
-        // test_recursion();
+        printf("Init thread %d, %d, %d... \n", getpid(), getppid(), counter++);
+        sleep(1000);
     }
 }
 
@@ -62,7 +54,7 @@ void test_thread(){
         // ptr = kmalloc(54);
         // LOGK("kmalloc 0x%p....\n", ptr);
         // kfree(ptr);
-
+        printf("Test thread %d, %d, %d... \n", getpid(), getppid(), counter++);
         sleep(2000);
     }
 }

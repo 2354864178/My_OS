@@ -25,15 +25,28 @@ static task_t *idle_task;           // 空闲任务指针
 
 // 返回一个空闲任务结构的指针
 task_t *get_free_task() { 
-    for (int i = 0; i < TASK_NR; i++) // 遍历任务表寻找空闲槽，i 为索引
-    { 
+    // 遍历任务表寻找空闲槽，i 为索引
+    for (int i = 0; i < TASK_NR; i++) { 
         if (task_table[i] == NULL) { 
-            task_table[i] = (task_t *)alloc_kpage(1);   // 为任务分配一页内核页并存入表中
+            task_t *task = (task_t *)alloc_kpage(1);    // 为任务分配一页内核页并存入表中
+            memset(task, 0, sizeof(task_t));            // 清空任务结构体
+            task->pid = i;                              // 设置任务ID为索引值
+            task_table[i] = task;                       // 存入任务表   
             return task_table[i];                       // 返回新分配的任务指针
         } 
     } 
     panic("No Free Task!!!"); // 若无空闲任务则触发 panic
 } 
+
+pid_t sys_getpid(){
+    task_t *current = running_task();   // 获取当前运行任务指针
+    return current->pid;                // 返回当前任务的进程ID
+}
+
+pid_t sys_getppid(){
+    task_t *current = running_task();   // 获取当前运行任务指针
+    return current->ppid;               // 返回当前任务的父进程ID
+}
 
 // 根据任务状态搜索任务，返回第一个匹配状态的任务指针，若无匹配则返回 NULL
 task_t *task_search(task_state_t state){
@@ -190,7 +203,6 @@ static task_t *task_create(target_t target, const char *name, u32 priority, u32 
     // uid: 任务所属用户 ID
 
     task_t *task = get_free_task(); // 分配一个空闲任务结构体
-    memset(task, 0, PAGE_SIZE);     // 清空任务结构体内存
 
     u32 stack = (u32)task + PAGE_SIZE;  // 计算任务栈顶（任务结构体起始地址 + 一页大小）
     stack -= sizeof(task_frame_t);      // 为任务帧留出空间，调整栈指针

@@ -120,6 +120,7 @@ QEMU = qemu-system-i386 \
 	-audiodev pa,id=hda \
 	-machine pcspk-audiodev=hda \
 	-rtc base=localtime \
+	-serial stdio \
 
 QEMU_DISK:= -boot c \
 	-drive file=$(BUILD)/os.img,if=ide,index=0,media=disk,format=raw
@@ -130,17 +131,20 @@ QEMU_CDROW:= -boot d \
 QEMU_DEBUG:= -s -S
 
 .PHONY: qemu
-qemu: $(BUILD)/os.img
+qemu:
+	$(MAKE) -B $(BUILD)/os.img
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
 	$(QEMU) $(QEMU_DISK)
 
 .PHONY: qemug
-qemug: $(BUILD)/os.img
+qemug:
+	$(MAKE) -B $(BUILD)/os.img
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
 	$(QEMU) $(QEMU_DISK) $(QEMU_DEBUG)
 
 .PHONY: qemub
-qemub: $(BUILD)/kernel.iso
+qemub:
+	$(MAKE) -B $(BUILD)/kernel.iso
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
 	$(QEMU) $(QEMU_CDROW) #$(QEMU_DEBUG)
 

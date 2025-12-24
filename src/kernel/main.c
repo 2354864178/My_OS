@@ -24,6 +24,7 @@ void kernel_init(){
     keyboard_init();
     task_init();
     syscall_init();
+    
     set_interrupt_state(true);
 
     hang();

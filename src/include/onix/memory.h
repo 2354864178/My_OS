@@ -46,4 +46,8 @@ void free_kpage(u32 vaddr, u32 count);  // 释放 count 个连续的内核页
 page_entry_t *copy_pde();       // 复制页目录
 int32 sys_brk(void *addr); 
 
+// 用户/内核页映射操作
+void link_page(u32 vaddr);      // 将用户/内核虚拟地址链接到新物理页（按需创建页表）
+void unlink_page(u32 vaddr);    // 解除虚拟地址与物理页的映射
+
 #endif
