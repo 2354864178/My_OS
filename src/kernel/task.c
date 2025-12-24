@@ -1,6 +1,7 @@
 #include <onix/task.h>
 #include <onix/printk.h>
 #include <onix/debug.h>
+#include <onix/arena.h>
 #include <onix/bitmap.h>
 #include <onix/assert.h>
 #include <onix/interrupt.h>
@@ -211,6 +212,7 @@ static task_t *task_create(target_t target, const char *name, u32 priority, u32 
     task->uid = uid;                            // 设置任务所属用户ID
     task->vmap = &kernel_map;                   // 设置任务使用的虚拟内存位图为内核内存位图
     task->pde = KERNEL_PAGE_DIR;                // 设置任务的页目录地址为内核页目录地址
+    task->brk = KERNEL_MEMORY_SIZE;             // 初始化进程堆内存最高地址
     task->magic = ONIX_MAGIC;                   // 设置魔数以便后续校验结构完整性
 
     return task;

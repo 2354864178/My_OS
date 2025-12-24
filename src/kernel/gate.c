@@ -3,6 +3,8 @@
 #include <onix/debug.h>
 #include <onix/syscall.h>
 #include <onix/task.h>
+#include <onix/memory.h>
+
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -23,11 +25,11 @@ task_t *task = NULL;    // 测试系统调用使用的任务指针
 static u32 sys_test(){          // 测试系统调用函数
     BMB;
 
-    link_page(0x1600000); // 为测试任务分配一页内存作为内核栈
-    char *ptr = (char *)0x1600000;
-    ptr[3] = 'A';    // 测试写内存
-    BMB;
-    unlink_page(0x1600000); // 释放测试任务的内核栈内存
+    // link_page(0x1600000); // 为测试任务分配一页内存作为内核栈
+    // char *ptr = (char *)0x1600000;
+    // ptr[3] = 'A';    // 测试写内存
+    // BMB;
+    // unlink_page(0x1600000); // 释放测试任务的内核栈内存
     BMB;
 
     return 255;
@@ -53,6 +55,7 @@ void syscall_init(){            // 初始化系统调用处理函数表
     syscall_table[SYS_NR_SLEEP] = (handler_t)task_sleep;    // 注册任务睡眠的系统调用处理函数
     syscall_table[SYS_NR_YIELD] = (handler_t)task_yield;    // 注册任务让出 CPU 的系统调用处理函数
     syscall_table[SYS_NR_WRITE] = (handler_t)sys_write;     // 注册写数据的系统调用处理函数
+    syscall_table[SYS_NR_BRK] = (handler_t)sys_brk;         // 注册 brk 系统调用处理函数
     LOGK("Syscall init done!\n");
 }
 

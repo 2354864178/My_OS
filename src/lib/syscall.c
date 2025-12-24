@@ -12,7 +12,7 @@ static _inline u32 _syscall0(u32 nr)
 }
 
 // 内联汇编实现带一个参数的系统调用
-static _inline void _syscall1(u32 nr, u32 arg1)
+static _inline u32 _syscall1(u32 nr, u32 arg1)
 {
     u32 ret;
     asm volatile(
@@ -56,4 +56,8 @@ void sleep(u32 ms){
 
 int32 write(fd_t fd, char *buf, u32 len){
     return _syscall3(SYS_NR_WRITE, fd, (u32)buf, len);
+}
+
+int32 brk(void *addr){
+    return _syscall1(SYS_NR_BRK, (u32)addr);
 }

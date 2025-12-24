@@ -1,0 +1,8 @@
+"filename", "language", "C", "comment", "blank", "total"
+"/home/ysy/code/Os_wrtie/src/include/onix/memory.h", "C", 20, 0, 4, 24
+"/home/ysy/code/Os_wrtie/src/kernel/gate.c", "C", -1, 0, 2, 1
+"/home/ysy/code/Os_wrtie/src/kernel/interrupt.c", "C", 2, 0, 1, 3
+"/home/ysy/code/Os_wrtie/src/kernel/memory.c", "C", 80, 5, 11, 96
+"/home/ysy/code/Os_wrtie/src/kernel/task.c", "C", 8, 0, 2, 10
+"/home/ysy/code/Os_wrtie/src/kernel/thread.c", "C", -2, 7, 1, 6
+"Total", "-", 107, 12, 21, 140

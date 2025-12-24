@@ -262,6 +262,28 @@ page_entry_t *copy_pde() {
     return pde;
 }
 
+int32 sys_brk(void *addr){
+    LOGK("task brk 0x%p\n", addr);
+    u32 brk = (u32)addr;
+    ASSERT_PAGE(brk);                         // 判断brk是否是页开始的位置
+    task_t *task = running_task();
+    assert(task->uid != KERNEL_USER);         // 判断是否是用户
+    assert(KERNEL_MEMORY_SIZE < brk < USER_STACK_BOTTOM);  // 判断brk是否属于用户内存空间
+    u32 old_brk = task->brk;   // 获取进程当前的堆内存边界
+
+    // 如果当前边界大于新申请的边界，那就释放内存映射
+    if (old_brk > brk) {
+        for (; brk < old_brk; brk += PAGE_SIZE) {
+            unlink_page(brk);
+        }
+    }
+    else if (IDX(brk - old_brk) > free_pages) {     // 如果新的增加brk大于了剩余的空闲页，就返回-1,没有可用内存了。
+        return -1;    // out of memory
+    }
+
+    task->brk = brk;
+    return 0;
+}
 
 // 获取虚拟地址 vaddr 对应的页表
 static page_entry_t *get_pte(u32 vaddr, bool create){
@@ -373,6 +395,21 @@ void unlink_page(u32 vaddr){
     flush_tlb(vaddr);   // 刷新该虚拟地址对应的 TLB
 }
 
+#pragma pack(1) 
+typedef struct page_error_code_t {
+    u8 present : 1; 
+    u8 write : 1;
+    u8 user : 1;
+    u8 reserved0 : 1;
+    u8 fetch : 1;
+    u8 protection : 1;
+    u8 shadow : 1;
+    u16 reserved1 : 8;
+    u8 sgx : 1;
+    u16 reserved2;
+} page_error_code_t;
+#pragma pack()
+
 void page_fault_handler(
     u32 vector,     // 中断向量号
     u32 edi, u32 esi, u32 ebp, u32 esp,     // 通用寄存器
@@ -389,7 +426,7 @@ void page_fault_handler(
     assert(KERNEL_MEMORY_SIZE <= vaddr && vaddr < USER_STACK_TOP); // 缺页地址必须在内核内存和用户栈顶之间
     
     // 仅当页面不存在且访问地址在用户栈范围内时，才进行页面链接操作
-    if(!code->present && (vaddr > USER_STACK_BOTTOM)){
+    if(!code->present && (vaddr < task->brk || vaddr >= USER_STACK_BOTTOM)){
         u32 page = PAGE(IDX(vaddr));    // 计算出对应的页对齐地址
         link_page(page);                // 链接该页
         return;

@@ -38,25 +38,12 @@ typedef struct page_entry_t
 } page_entry_t;
 #pragma pack() 
 
-#pragma pack(1) 
-typedef struct page_error_code_t {
-    u8 present : 1; 
-    u8 write : 1;
-    u8 user : 1;
-    u8 reserved0 : 1;
-    u8 fetch : 1;
-    u8 protection : 1;
-    u8 shadow : 1;
-    u16 reserved1 : 8;
-    u8 sgx : 1;
-    u16 reserved2;
-} page_error_code_t;
-#pragma pack()
-
 u32 get_cr2();          // 得到 cr2 寄存器
 u32 get_cr3();          // 得到 cr3 寄存器
 void set_cr3(u32 pde);  // 设置 cr3 寄存器，参数是页目录的地址
 u32 alloc_kpage(u32 count);             // 分配 count 个连续的内核页
 void free_kpage(u32 vaddr, u32 count);  // 释放 count 个连续的内核页
+page_entry_t *copy_pde();       // 复制页目录
+int32 sys_brk(void *addr); 
 
 #endif
