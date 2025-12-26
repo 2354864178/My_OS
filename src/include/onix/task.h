@@ -89,5 +89,6 @@ void task_to_user_mode(target_t target);
 
 pid_t sys_getpid();
 pid_t sys_getppid();
+pid_t task_fork();
 
 #endif

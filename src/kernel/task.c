@@ -12,16 +12,17 @@
 
 #define TASK_NR 64                  // 最大任务数
 
-extern u32 volatile jiffies;            // 全局时钟节拍计数
 extern u32 jiffy;                       // 每个时钟节拍的毫秒数
-extern bitmap_t kernel_map;             // 内核内存位图
-extern void task_switch(task_t *next);  // 任务切换汇编函数
 extern tss_t tss;                       // 任务状态段
-                
-static task_t *task_table[TASK_NR]; // 任务表
+extern u32 volatile jiffies;            // 全局时钟节拍计数
+extern bitmap_t kernel_map;             // 内核内存位图
+extern void interrupt_exit();           // 中断退出处理程序
+extern void task_switch(task_t *next);  // 任务切换汇编函数
+
 static list_t block_list;           // 任务阻塞链表
 static list_t sleep_list;           // 任务睡眠链表
 static task_t *idle_task;           // 空闲任务指针
+static task_t *task_table[TASK_NR]; // 任务表
 
 // 返回一个空闲任务结构的指针
 task_t *get_free_task() { 
@@ -228,6 +229,47 @@ static task_t *task_create(target_t target, const char *name, u32 priority, u32 
     task->magic = ONIX_MAGIC;                   // 设置魔数以便后续校验结构完整性
 
     return task;
+}
+
+static void task_build_stack(task_t *task){
+    u32 addr = (u32)task + PAGE_SIZE;   // 计算任务栈顶地址
+    addr -= sizeof(intr_frame_t);       // 为中断帧留出空间
+    intr_frame_t *iframe = (intr_frame_t *)(addr);   // 在栈顶创建中断帧
+    iframe->eax = 0;                    // 初始化 eax 寄存器值为0 ，也就是子进程的返回值为0
+    addr -= sizeof(task_frame_t);       // 为任务帧留出空间
+    task_frame_t *frame = (task_frame_t *)addr; // 在中断帧下方创建任务帧
+    frame->ebp = 0xaa55aa55;            // 初始化保存的 ebp 寄存器值
+    frame->ebx = 0xaa55aa55;            // 初始化保存的 ebx 寄存器值
+    frame->edi = 0xaa55aa55;
+    frame->esi = 0xaa55aa55;
+    frame->eip = interrupt_exit;;       // 设置任务的返回地址为中断退出处理程序
+    task->stack = (u32 *)frame;         // 设置任务的栈指针
+}
+
+pid_t task_fork(){
+    task_t *task = running_task();       // 获取当前运行任务指针
+    assert(task->node.next == NULL && task->node.prev == NULL); // 确保当前任务不在任何链表中
+    assert(task->state == TASK_RUNNING); // 确保当前任务处于运行状态
+
+    task_t *child = get_free_task();     // 分配一个空闲任务结构体作为子任务
+    pid_t pid = child->pid;              // 获取子任务的进程ID
+    memcpy(child, task, PAGE_SIZE);      // 复制父任务的任务结构体到子任务结构体
+    
+    child->pid = pid;                    // 设置子任务的进程ID
+    child->ppid = task->pid;             // 设置子任务的父进程ID
+    child->state = TASK_READY;           // 将子任务状态设置为就绪
+    child->ticks = child->priority;      // 重置子任务的时间片为其优先级值
+
+    child->vmap = kmalloc(sizeof(bitmap_t));            // 为子任务分配虚拟内存位图结构体
+    memcpy(child->vmap, task->vmap, sizeof(bitmap_t));  // 复制父任务的虚拟内存位图结构体到子任务
+    void *buf = (void *)alloc_kpage(1);                 // 为位图缓冲区分配一页内存
+    memcpy(buf, task->vmap->bits, PAGE_SIZE);           // 复制父任务的位图缓冲区到子任务
+    child->vmap->bits = buf;                            // 更新子任务的位图缓冲区指针
+
+    child->pde = copy_pde();            // 复制父任务的页目录作为子任务的页目录
+    task_build_stack(child);            // 构建子任务的栈帧
+
+    return child->pid;                  // 返回子任务的进程ID
 }
 
 // 初始化任务系统

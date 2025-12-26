@@ -4,6 +4,7 @@
 #include <onix/mutex.h>
 #include <onix/task.h>
 #include <onix/arena.h>
+#include <onix/stdio.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 raw_mutex_t mutex;   // 全局不可重入互斥锁
@@ -23,12 +24,19 @@ void idle_thread(){
     }
 }
 
-static void real_init_thread(){
+static void user_init_thread(){
     u32 counter = 0;
     BMB;
     char ch;
     while (true) {
-        printf("Init thread %d, %d, %d... \n", getpid(), getppid(), counter++);
+        pid_t pid = fork();
+        if (pid) {
+            printf("Parent thread %d, %d, %d... \n", getpid(), getppid(), counter++);
+        }
+        else{
+            printf("Child thread %d, %d, %d... \n", getpid(), getppid(), counter++);
+        }
+        hang();
         sleep(1000);
     }
 }
@@ -36,7 +44,7 @@ static void real_init_thread(){
 // 初始化测试线程函数
 void init_thread(){
     char temp[100];         // 临时缓冲区
-    task_to_user_mode(real_init_thread);    // 切换到用户态运行
+    task_to_user_mode(user_init_thread);    // 切换到用户态运行
 }
 
 void test_thread(){

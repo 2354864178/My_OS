@@ -1,0 +1,48 @@
+Date : 2025-12-24 22:03:28
+Directory : /home/ysy/code/Os_wrtie
+Total : 14 files,  81 codes, 16 comments, 21 blanks, all 118 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| C        |          9 |         60 |         16 |         11 |         87 |
+| C++      |          2 |         11 |          0 |          4 |         15 |
+| Log      |          2 |          6 |          0 |          6 |         12 |
+| Makefile |          1 |          4 |          0 |          0 |          4 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++----------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                               | files      | code       | comment    | blank      | total      |
++----------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                  |         14 |         81 |         16 |         21 |        118 |
+| build                                              |          2 |          6 |          0 |          6 |         12 |
+| src                                                |         12 |         75 |         16 |         15 |        106 |
+| src (Files)                                        |          1 |          4 |          0 |          0 |          4 |
+| src/include                                        |          4 |          2 |          1 |          5 |          8 |
+| src/include/onix                                   |          4 |          2 |          1 |          5 |          8 |
+| src/kernel                                         |          6 |         60 |         15 |          7 |         82 |
+| src/lib                                            |          1 |          9 |          0 |          3 |         12 |
++----------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++----------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                           | language | code       | comment    | blank      | total      |
++----------------------------------------------------+----------+------------+------------+------------+------------+
+| /home/ysy/code/Os_wrtie/build/debug.log            | Log      |          0 |          0 |          1 |          1 |
+| /home/ysy/code/Os_wrtie/build/serial.log           | Log      |          6 |          0 |          5 |         11 |
+| /home/ysy/code/Os_wrtie/src/Makefile               | Makefile |          4 |          0 |          0 |          4 |
+| /home/ysy/code/Os_wrtie/src/include/onix/memory.h  | C        |        -10 |          1 |          0 |         -9 |
+| /home/ysy/code/Os_wrtie/src/include/onix/syscall.h | C++      |          6 |          0 |          2 |          8 |
+| /home/ysy/code/Os_wrtie/src/include/onix/task.h    | C++      |          5 |          0 |          2 |          7 |
+| /home/ysy/code/Os_wrtie/src/include/onix/types.h   | C        |          1 |          0 |          1 |          2 |
+| /home/ysy/code/Os_wrtie/src/kernel/console.c       | C        |         21 |          9 |          3 |         33 |
+| /home/ysy/code/Os_wrtie/src/kernel/gate.c          | C        |         -1 |          5 |          1 |          5 |
+| /home/ysy/code/Os_wrtie/src/kernel/main.c          | C        |          0 |          0 |          1 |          1 |
+| /home/ysy/code/Os_wrtie/src/kernel/memory.c        | C        |         33 |          1 |          3 |         37 |
+| /home/ysy/code/Os_wrtie/src/kernel/task.c          | C        |         11 |          1 |          2 |         14 |
+| /home/ysy/code/Os_wrtie/src/kernel/thread.c        | C        |         -4 |         -1 |         -3 |         -8 |
+| /home/ysy/code/Os_wrtie/src/lib/syscall.c          | C        |          9 |          0 |          3 |         12 |
+| Total                                              |          |         81 |         16 |         21 |        118 |
++----------------------------------------------------+----------+------------+------------+------------+------------+

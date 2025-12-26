@@ -19,7 +19,6 @@
 #define ASSERT_PAGE(addr) assert((addr & 0xfff) == 0)
 
 #define KERNEL_MAP_BITS 0x4000      // 内核内存位图缓冲区起始地址
-#define KERNEL_MEMORY_SIZE (0x100000 * sizeof(KERNEL_PAGE_TABLE)) // 内核内存大小
 
 bitmap_t kernel_map; // 内核内存位图
 
@@ -252,13 +251,64 @@ static page_entry_t *get_pde(){
     return (page_entry_t *)(0xfffff000);    // // 自映射对应的虚拟地址
 }
 
+// 获取虚拟地址 vaddr 对应的页表
+static page_entry_t *get_pte(u32 vaddr, bool create){
+    page_entry_t *pde = get_pde();      // 找到页目录
+    u32 idx = DIDX(vaddr);              // 找到页目录的索引，即页表的入口
+    page_entry_t *entry = &pde[idx];    // 找到页表的入口位置
+    assert(create || (!create && entry->present));                      // 判断要么页表存在，要么不存在但create为true
+    page_entry_t *table = (page_entry_t *)(PDE_MASK | (idx << 12));     // 找到可以修改的页表
+
+    // 如果页表不存在且需要创建
+    if (!entry->present) {
+        LOGK("Get and create page table entry for 0x%p\n", vaddr);
+        u32 page = get_page();          // 获取一页物理内存
+        entry_init(entry, IDX(page));   // 初始化并链接到entry上
+        memset(table, 0, PAGE_SIZE);    // 清空新页表
+    }
+    return table;    // 返回该虚拟地址对应的页表
+}
+
+// 复制一页内存，返回新页的物理地址
+static u32 copy_page(void *page) {
+    u32 paddr = get_page();     // 获取一个8M以上的物理页，物理地址存储在 paddr 中。
+    // 获取虚拟地址 0x00000000 对应的 页表项。也就是说，我们想 临时把虚拟地址 0 映射到 paddr 所指向的物理页
+    page_entry_t *entry = get_pte(0, false);    // 获取虚拟地址 0x0 对应的页表
+    entry_init(entry, IDX(paddr));              // 初始化该页表项，指向新分配的物理页
+    memcpy((void *)0, (void *)page, PAGE_SIZE); // 将原页内容复制到新页中
+    entry->present = false;                     // 取消映射
+    flush_tlb(0);                           // 刷新 TLB，确保映射关系更新
+    return paddr;
+}
+
 // 复制当前任务的页目录
 page_entry_t *copy_pde() {
     task_t *task = running_task();
+
     page_entry_t *pde = (page_entry_t *)alloc_kpage(1); // 分配一页作为新的页目录
     memcpy(pde, (void *)task->pde, PAGE_SIZE);
+
     page_entry_t *entry = &pde[1023];                   // 将最后一个页表指向页目录自己，方便修改
     entry_init(entry, IDX(pde));                        // 初始化该页目录项
+
+    page_entry_t *dentry;
+    for(size_t didx = 2; didx < 1023; didx++) {         // 复制内核空间的页表项
+        dentry = &pde[didx];                            // 遍历页目录的所有页目录项
+        if(!dentry->present) continue;                  // 如果该页目录项不存在，跳过
+
+        page_entry_t *table = (page_entry_t *)(PDE_MASK | (didx << 12));    // 找到可以修改的页表
+        for(size_t tidx = 0; tidx < 1024; tidx++) {     // 遍历该页表的所有页表项
+            entry = &table[tidx];
+            if(!entry->present) continue;            // 如果该页表项不存在，跳过
+            assert(memory_map[entry->index] >= 1);   // 验证该物理页已被占用
+            entry->write = false;                    // 先将该页表项设置为只读，防止写时错误
+            memory_map[entry->index]++;              // 增加该物理页的引用计数
+            assert(memory_map[entry->index] < 255);  // 引用计数不能溢出
+        }
+        u32 paddr = copy_page(table);                  // 复制该页表对应的物理页
+        dentry->index = IDX(paddr);                    // 更新页目录项，指向新的页表物理地址
+    }
+    set_cr3(task->pde);  // 切换回原任务的页目录
     return pde;
 }
 
@@ -283,24 +333,6 @@ int32 sys_brk(void *addr){
 
     task->brk = brk;
     return 0;
-}
-
-// 获取虚拟地址 vaddr 对应的页表
-static page_entry_t *get_pte(u32 vaddr, bool create){
-    page_entry_t *pde = get_pde();      // 找到页目录
-    u32 idx = DIDX(vaddr);              // 找到页目录的索引，即页表的入口
-    page_entry_t *entry = &pde[idx];    // 找到页表的入口位置
-    assert(create || (!create && entry->present));                      // 判断要么页表存在，要么不存在但create为true
-    page_entry_t *table = (page_entry_t *)(PDE_MASK | (idx << 12));     // 找到可以修改的页表
-
-    // 如果页表不存在且需要创建
-    if (!entry->present) {
-        LOGK("Get and create page table entry for 0x%p\n", vaddr);
-        u32 page = get_page();          // 获取一页物理内存
-        entry_init(entry, IDX(page));   // 初始化并链接到entry上
-        memset(table, 0, PAGE_SIZE);    // 清空新页表
-    }
-    return table;    // 返回该虚拟地址对应的页表
 }
 
 // 刷新虚拟地址 vaddr 的 块表 TLB
@@ -423,8 +455,32 @@ void page_fault_handler(
     page_error_code_t *code = (page_error_code_t *)&error;  // 解析错误代码
     
     task_t *task = running_task();
-    assert(KERNEL_MEMORY_SIZE <= vaddr && vaddr < USER_STACK_TOP); // 缺页地址必须在内核内存和用户栈顶之间
+    assert(KERNEL_MEMORY_SIZE <= vaddr && vaddr <= USER_STACK_TOP); // 缺页地址必须在内核内存和用户栈顶之间
     
+    // 写时复制缺页, task_fork后用户页被设为只读，共享物理页；
+    // 对子进程的写访问会触发页存在但不可写，这是对应处理分支的入口，用于复制独立物理页。
+    if (code->present) {
+        assert(code->write);    // 必须是写访问引起的缺页异常
+        page_entry_t *pte = get_pte(vaddr, false);  // 获取vaddr对应的页表
+        page_entry_t *entry = &pte[TIDX(vaddr)];    // 获取vaddr页框的入口
+        assert(entry->present);                     // 页面必须存在
+        assert(memory_map[entry->index] >= 1);      // 物理页必须被占用
+
+        if(memory_map[entry->index] == 1){      // 仅被一个进程引用,直接提升写权限
+            entry->write = true;
+            LOGK("Write permission granted for address 0x%p\n", vaddr);
+        }
+        else{   // 被多个进程引用，执行写时复制
+            void *page = (void *)PAGE(IDX(vaddr));   // 获取该虚拟地址对应的页开始位置
+            u32 paddr = copy_page(page);             // 复制该页内容到新页
+            memory_map[entry->index]--;              // 减少原物理页的引用计数
+            entry_init(entry, IDX(paddr));           // 更新页表项，指向新的物理页
+            flush_tlb(vaddr);                        // 刷新该虚拟地址对应的 TLB
+            LOGK("Copy-on-write for address 0x%p\n", vaddr);
+        }
+        return;
+    }
+
     // 仅当页面不存在且访问地址在用户栈范围内时，才进行页面链接操作
     if(!code->present && (vaddr < task->brk || vaddr >= USER_STACK_BOTTOM)){
         u32 page = PAGE(IDX(vaddr));    // 计算出对应的页对齐地址
@@ -433,14 +489,4 @@ void page_fault_handler(
     }
     panic("Page fault can not be handled!!!");
 }
-// void memory_test(){
-//     u32 *pages = (u32 *)(0x200000);
-//     u32 count = 0x6fe;
-//     for (size_t i = 0; i < count; i++) {
-//         pages[i] = alloc_kpage(1);
-//         LOGK("0x%x\n", i);
-//     }
-//     for (size_t i = 0; i < count; i++){
-//         free_kpage(pages[i], 1);
-//     }
-// }
+

@@ -11,6 +11,7 @@ typedef enum syscall_t{
     SYS_NR_BRK,
     SYS_NR_GETPID,
     SYS_NR_GETPPID,
+    SYS_NR_FORK,
 } syscall_t;
 
 u32 test();
@@ -22,5 +23,6 @@ int32 brk(void *addr);
 
 pid_t getpid();
 pid_t getppid();
+pid_t fork();
 
 #endif

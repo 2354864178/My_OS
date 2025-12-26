@@ -9,7 +9,9 @@
     "assert.h": "c",
     "memory.h": "c",
     "random": "c",
-    "multiboot2.h": "c"
+    "multiboot2.h": "c",
+    "mutex.h": "c",
+    "stdio.h": "c"
   },
   "C_Cpp_Runner.msvcBatchPath": ""
 }

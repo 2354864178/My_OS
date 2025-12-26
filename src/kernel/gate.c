@@ -58,6 +58,7 @@ void syscall_init(){            // 初始化系统调用处理函数表
     syscall_table[SYS_NR_BRK] = (handler_t)sys_brk;         // 注册 brk 系统调用处理函数
     syscall_table[SYS_NR_GETPID] = (handler_t)sys_getpid;   // 注册获取进程ID的系统调用处理函数
     syscall_table[SYS_NR_GETPPID] = (handler_t)sys_getppid; // 注册获取父进程ID的系统调用处理函数
+    syscall_table[SYS_NR_FORK] = (handler_t)task_fork;      // 注册 fork 系统调用处理函数
     LOGK("Syscall init done!\n");
 }
 
