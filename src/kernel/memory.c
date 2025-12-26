@@ -248,7 +248,7 @@ void mapping_init()
 
 // 获取页目录
 static page_entry_t *get_pde(){
-    return (page_entry_t *)(0xfffff000);    // // 自映射对应的虚拟地址
+    return (page_entry_t *)(0xfffff000);    // 自映射对应的虚拟地址
 }
 
 // 获取虚拟地址 vaddr 对应的页表
@@ -310,6 +310,28 @@ page_entry_t *copy_pde() {
     }
     set_cr3(task->pde);  // 切换回原任务的页目录
     return pde;
+}
+
+// 释放当前任务的页目录
+void free_pde(){
+    task_t *task = running_task();          
+    assert(task->uid != KERNEL_USER);       // 只能用户进程释放自己的页目录
+    page_entry_t *pde = get_pde();          // 获取当前任务的页目录
+
+    for(size_t didx = (sizeof(KERNEL_PAGE_TABLE) / 4); didx < USER_STACK_TOP >> 22; didx++){
+        page_entry_t *dentry = &pde[didx];
+        if(!dentry->present) continue;      // 如果该页目录项不存在，跳过
+        page_entry_t *pte = (page_entry_t *)(PDE_MASK | (didx << 12)); // 找到可以修改的页表(虚拟地址)
+        for (size_t tidx = 0; tidx < 1024; tidx++){
+            page_entry_t *entry = &pte[tidx];
+            if(!entry->present) continue;               // 如果该页表项不存在，跳过
+            assert(memory_map[entry->index] >= 1);      // 验证该物理页已被占用
+            put_page(PAGE(entry->index));               // 释放该物理页 
+        }
+        put_page(PAGE(dentry->index));                  // 释放页表对应的物理页
+    }
+    free_kpage(task->pde, 1);                           // 释放页目录对应的物理页
+    LOGK("free pages %d\n", free_pages);    
 }
 
 int32 sys_brk(void *addr){

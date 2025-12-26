@@ -11,6 +11,7 @@
 #include <onix/global.h>
 
 #define TASK_NR 64                  // 最大任务数
+#define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
 extern u32 jiffy;                       // 每个时钟节拍的毫秒数
 extern tss_t tss;                       // 任务状态段
@@ -270,6 +271,25 @@ pid_t task_fork(){
     task_build_stack(child);            // 构建子任务的栈帧
 
     return child->pid;                  // 返回子任务的进程ID
+}
+
+void task_exit(int status){
+    task_t *task = running_task();
+    assert(task->node.prev == NULL && task->node.next == NULL); // 任务不在任何阻塞队列中
+    assert(task->state == TASK_RUNNING);        // 任务处于运行状态
+    task->state = TASK_DIED;                    // 设置任务状态为死亡
+    task->status = status;                      // 设置任务退出状态码
+    free_pde();                                 // 释放任务的页目录和所有内存映射   
+    free_kpage((u32)task->vmap->bits, 1);       // 释放任务的虚拟内存位图缓冲区
+    kfree(task->vmap);                          // 释放任务的虚拟内存位图结构体
+    for (size_t i = 0; i < TASK_NR; i++) {
+        task_t *child = task_table[i];
+        if (!child) continue;
+        if (child->ppid != task->pid) continue;
+        child->ppid = task->ppid;               // 将子进程的父进程ID设置为当前任务的父进程ID
+    }
+    LOGK("Task %d exit with status %d\n", task->pid, status);
+    schedule();                                 // 调度器切换到下一个任务
 }
 
 // 初始化任务系统

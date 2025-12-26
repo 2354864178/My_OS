@@ -11,7 +11,8 @@
     "random": "c",
     "multiboot2.h": "c",
     "mutex.h": "c",
-    "stdio.h": "c"
+    "stdio.h": "c",
+    "arena.h": "c"
   },
   "C_Cpp_Runner.msvcBatchPath": ""
 }
