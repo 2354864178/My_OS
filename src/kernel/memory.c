@@ -345,8 +345,8 @@ int32 sys_brk(void *addr){
 
     // 如果当前边界大于新申请的边界，那就释放内存映射
     if (old_brk > brk) {
-        for (; brk < old_brk; brk += PAGE_SIZE) {
-            unlink_page(brk);
+        for (u32 addr = brk; addr < old_brk; addr += PAGE_SIZE) {
+            unlink_page(addr);
         }
     }
     else if (IDX(brk - old_brk) > free_pages) {     // 如果新的增加brk大于了剩余的空闲页，就返回-1,没有可用内存了。
