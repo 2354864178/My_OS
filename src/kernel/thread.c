@@ -30,18 +30,18 @@ static void user_init_thread(){
     BMB;
     char ch;
     while (true) {
-        pid_t pid = fork();
-        if (pid) {
-            printf("Parent thread %d, %d, %d... \n", getpid(), getppid(), counter++);
-            sleep(2000);
-            pid_t child = waitpid(pid, &status);
-            printf("waitpid %d done with status %d %d\n", child, status, time());
-        }
-        else{
-            printf("Child thread %d, %d, %d... \n", getpid(), getppid(), counter++);
-            exit(0);
-        }
-        // hang();
+        // pid_t pid = fork();
+        // if (pid) {
+        //     printf("Parent thread %d, %d, %d... \n", getpid(), getppid(), counter++);
+        //     sleep(2000);
+        //     pid_t child = waitpid(pid, &status);
+        //     printf("waitpid %d done with status %d %d\n", child, status, time());
+        // }
+        // else{
+        //     printf("Child thread %d, %d, %d... \n", getpid(), getppid(), counter++);
+        //     exit(0);
+        // }
+        // // hang();
         sleep(1000);
     }
 }
