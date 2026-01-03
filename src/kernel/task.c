@@ -282,14 +282,53 @@ void task_exit(int status){
     free_pde();                                 // 释放任务的页目录和所有内存映射   
     free_kpage((u32)task->vmap->bits, 1);       // 释放任务的虚拟内存位图缓冲区
     kfree(task->vmap);                          // 释放任务的虚拟内存位图结构体
-    for (size_t i = 0; i < TASK_NR; i++) {
+    for (size_t i = 0; i < TASK_NR; i++) {      
         task_t *child = task_table[i];
         if (!child) continue;
         if (child->ppid != task->pid) continue;
         child->ppid = task->ppid;               // 将子进程的父进程ID设置为当前任务的父进程ID
     }
     LOGK("Task %d exit with status %d\n", task->pid, status);
+
+    task_t *parent = task_table[task->ppid]; // 获取父任务指针
+    if(parent->state == TASK_WAITING && 
+       (parent->waitpid == -1 || parent->waitpid == task->pid)){
+        task_unlock(parent);    // 若父任务在等待当前任务则解锁父任务
+    }
+
     schedule();                                 // 调度器切换到下一个任务
+}
+
+pid_t task_waitpid(pid_t pid, int *status){
+    task_t *current = running_task();       // 获取当前运行任务指针
+    task_t *child = NULL;                   // 初始化子任务指针为空
+
+    while(true){
+        int found = 0;                      // 标记是否找到指定的子进程
+        for(size_t i = 0; i < TASK_NR; i++){
+            task_t *child = task_table[i];
+            if (!child) continue;
+            if (child->ppid != current->pid) continue;      // 只检查当前任务的子进程
+            if (pid != -1 && child->pid != pid) continue;   // 如果指定了 pid，则只检查该 pid 的子进程
+
+            if (child->state == TASK_DIED) {
+                task_table[i] = NULL;               // 从任务表中移除已终止的子进程
+                *status = child->status;            // 获取子进程的退出状态码
+                u32 ret = child->pid;               // 保存子进程的 PID                         
+                free_kpage((u32)child, 1);          // 释放子进程的任务结构体内存
+                return ret;                         // 返回已终止子进程的 PID
+            }
+            found = 1; // 找到符合条件的子进程
+        }
+
+        if (found) {
+            current->waitpid = pid; // 设置当前任务的等待 PID
+            task_block(current, NULL, TASK_WAITING); // 阻塞当前任务，等待子进程终止
+            continue;
+        }
+        break; // 没有找到符合条件的子进程，退出循环
+    }
+    return -1; // 没有符合条件的子进程，返回 -1
 }
 
 // 初始化任务系统

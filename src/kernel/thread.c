@@ -26,12 +26,16 @@ void idle_thread(){
 
 static void user_init_thread(){
     u32 counter = 0;
+    int status;
     BMB;
     char ch;
     while (true) {
         pid_t pid = fork();
         if (pid) {
             printf("Parent thread %d, %d, %d... \n", getpid(), getppid(), counter++);
+            sleep(2000);
+            pid_t child = waitpid(pid, &status);
+            printf("waitpid %d done with status %d\n", child, status);
         }
         else{
             printf("Child thread %d, %d, %d... \n", getpid(), getppid(), counter++);

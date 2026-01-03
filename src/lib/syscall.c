@@ -66,6 +66,10 @@ pid_t getpid(){
     return _syscall0(SYS_NR_GETPID);
 }
 
+pid_t waitpid(pid_t pid, int *status){
+    return _syscall2(SYS_NR_WAITPID, pid, (u32)status);
+}
+
 pid_t getppid(){
     return _syscall0(SYS_NR_GETPPID);
 }

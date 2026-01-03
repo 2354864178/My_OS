@@ -348,7 +348,7 @@ u32 keyboard_read(char *buf, u32 count)
     {
         while (fifo_empty(&fifo)){
             waiter = running_task();  // 如果队列没有数据，就阻塞进行等待。
-            task_block(waiter, NULL, TASK_WAITING); // 阻塞当前任务，等待键盘输入
+            task_block(waiter, NULL, TASK_BLOCKED); // 阻塞当前任务，等待键盘输入
         }
         buf[nr++] = fifo_get(&fifo);    // 从缓冲区获取一个字符
     }

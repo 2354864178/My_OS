@@ -35,6 +35,7 @@ typedef struct task_t
     u32 uid;                    // 用户 id
     pid_t pid;                  // 任务 id
     pid_t ppid;                 // 父任务 id
+    pid_t waitpid;              // 等待的子任务 id
     u32 pde;                    // 页目录物理地址
     struct bitmap_t *vmap;      // 进程虚拟内存位图
     u32 brk;                    // 进程堆内存最高地址
@@ -92,5 +93,6 @@ pid_t sys_getpid();
 pid_t sys_getppid();
 pid_t task_fork();
 void task_exit(int status);
+pid_t task_waitpid(pid_t pid, int *status);
 
 #endif
