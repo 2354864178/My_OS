@@ -46,6 +46,8 @@ int32 sys_write(fd_t fd, char *buf, u32 len){
     return 0;
 }
 
+extern time_t sys_time(); // 声明 sys_time 函数
+
 void syscall_init(){            // 初始化系统调用处理函数表
     for (int i = 0; i < SYSCALL_SIZE; i++) {
         syscall_table[i] = (handler_t)syscall_default;  // 默认指向默认处理函数
@@ -61,6 +63,7 @@ void syscall_init(){            // 初始化系统调用处理函数表
     syscall_table[SYS_NR_FORK] = (handler_t)task_fork;      // 注册 fork 系统调用处理函数
     syscall_table[SYS_NR_EXIT] = (handler_t)task_exit;      // 注册 exit 系统调用处理函数
     syscall_table[SYS_NR_WAITPID] = (handler_t)task_waitpid; // 注册 waitpid 系统调用处理函数
+    syscall_table[SYS_NR_TIME] = (handler_t)sys_time;       // 注册 time 系统调用处理函数
     LOGK("Syscall init done!\n");
 }
 

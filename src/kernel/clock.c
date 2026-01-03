@@ -65,6 +65,11 @@ void clock_handler(int vector)
     }
 }
 
+extern u32 startup_time;                // 系统启动时间，单位毫秒
+time_t sys_time(){
+    return startup_time + jiffies * JIFFY / 1000;   // 返回系统运行时间，单位秒
+}
+
 void pit_init()
 {
     // 配置计数器 0 时钟

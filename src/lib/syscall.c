@@ -81,3 +81,7 @@ pid_t fork(){
 void exit(int status){
     _syscall1(SYS_NR_EXIT, status);
 }
+
+time_t time(){
+    return _syscall0(SYS_NR_TIME);
+}
