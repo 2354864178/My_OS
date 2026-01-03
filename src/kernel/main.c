@@ -13,6 +13,7 @@ extern void keyboard_init();
 extern void hang();
 extern void tss_init();
 extern void arena_init();
+extern void ide_init();
 
 void kernel_init(){
     tss_init();
@@ -23,6 +24,7 @@ void kernel_init(){
     clock_init();
     keyboard_init();
     time_init();
+    ide_init();
     task_init();
     syscall_init();
     
