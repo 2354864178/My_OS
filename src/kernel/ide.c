@@ -5,6 +5,8 @@
 #include <onix/stdio.h>
 #include <onix/assert.h>
 #include <onix/io.h>
+#include <onix/interrupt.h>
+#include <onix/task.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)  // 内核日志宏
 
@@ -53,6 +55,19 @@
 #define IDE_LBA_SLAVE  0xF0  // LBA 从设备选择
 
 ide_ctrl_t ide_ctrls[IDE_CTRL_NR];
+
+// IDE 中断处理程序
+void ide_handler(int vector) {
+    send_eoi(vector); // 发送中断结束信号
+    ide_ctrl_t *ctrl = &ide_ctrls[vector - IRQ_HARDDISK - 0x20];    // 获取对应的 IDE 控制器
+    u8 state = inb(ctrl->io_base + IDE_REG_STATUS);                 // 读取状态寄存器
+
+    LOGK("%s: IDE Interrupt, Status: 0x%02X\n", ctrl->name, state);
+    if(ctrl->wait_task) {
+        task_unlock(ctrl->wait_task); // 唤醒等待任务
+        ctrl->wait_task = NULL;        // 清除等待任务
+    }
+}
 
 static u32 ide_error(ide_ctrl_t *ctrl) {
     // 读取错误状态
@@ -114,6 +129,7 @@ int ide_pio_read(ide_disk_t *disk, void *buffer, u8 count, idx_t lba) {
     // count: 要读取的扇区数
     // lba: 起始逻辑块地址
     assert(count > 0);
+    assert(!get_interrupt_state()); // 异步，确保在关中断状态下运行
     ide_ctrl_t *ctrl = disk->ctrl;
 
     raw_mutex_lock(&ctrl->lock); // 获取互斥锁
@@ -125,6 +141,12 @@ int ide_pio_read(ide_disk_t *disk, void *buffer, u8 count, idx_t lba) {
     outb(ctrl->io_base + IDE_REG_COMMAND, IDE_CMD_READ); // 发送读命令
 
     for(size_t i = 0; i < count; i++) {
+        task_t *current = running_task(); // 获取当前任务
+        // 阻塞当前任务，等待数据准备好
+        if(current->state == TASK_RUNNING){
+            ctrl->wait_task = current; // 设置等待任务
+            task_block(current, NULL, TASK_BLOCKED);       // 阻塞当前任务
+        }
         ide_wait_busy(ctrl, IDE_SR_DRQ);            // 等待数据请求
         u32 offset = (u32)buffer + i * SECTOR_SIZE; // 计算缓冲区偏移
         ide_pio_read_sector(ctrl, (u16 *)offset);   // 读取一个扇区数据
@@ -140,6 +162,7 @@ int ide_pio_write(ide_disk_t *disk, void *buffer, u8 count, idx_t lba) {
     // count: 要写入的扇区数
     // lba: 起始逻辑块地址
     assert(count > 0);
+    assert(!get_interrupt_state()); // 异步，确保在关中断状态下运行
     ide_ctrl_t *ctrl = disk->ctrl;
 
     raw_mutex_lock(&ctrl->lock); // 获取互斥锁
@@ -151,9 +174,16 @@ int ide_pio_write(ide_disk_t *disk, void *buffer, u8 count, idx_t lba) {
     outb(ctrl->io_base + IDE_REG_COMMAND, IDE_CMD_WRITE); // 发送写命令
 
     for(size_t i = 0; i < count; i++) {
-        ide_wait_busy(ctrl, IDE_SR_DRQ);            // 等待数据请求
         u32 offset = (u32)buffer + i * SECTOR_SIZE; // 计算缓冲区偏移
         ide_pio_write_sector(ctrl, (u16 *)offset);  // 写入一个扇区数据
+
+        task_t *current = running_task(); // 获取当前任务
+        // 阻塞当前任务，等待数据准备好
+        if(current->state == TASK_RUNNING){
+            ctrl->wait_task = current; // 设置等待任务
+            task_block(current, NULL, TASK_BLOCKED);       // 阻塞当前任务
+        }
+        ide_wait_busy(ctrl, IDE_SR_DRQ);            // 等待数据请求
     }
 
     raw_mutex_unlock(&ctrl->lock); // 释放互斥锁
@@ -190,13 +220,9 @@ void ide_init(void) {
     LOGK("IDE Init Start...\n");
     ide_ctrl_init();  // 初始化 IDE 控制器
 
-    void *buffer = (void *)alloc_kpage(1); // 分配一页内存作为缓冲区
-    BMB;
-    LOGK("read buffer: %x\n", buffer);
-    ide_pio_read(&ide_ctrls[0].disks[0], buffer, 1, 0); // 读取第一个扇区
-    BMB;
-    memset(buffer, 0x5a, SECTOR_SIZE); // 填充缓冲区数据
-    BMB;
-    ide_pio_write(&ide_ctrls[0].disks[0], buffer, 1, 1); // 写入第一个扇区
-    free_kpage((u32)buffer, 1); // 释放缓冲区
+    set_interrupt_handler(IRQ_HARDDISK, ide_handler);   // 设置 IDE 中断处理程序
+    set_interrupt_handler(IRQ_HARDDISK2, ide_handler);  // 设置第二个 IDE 中断处理程序
+    set_interrupt_mask(IRQ_HARDDISK, true);             // 允许 IDE 中断
+    set_interrupt_mask(IRQ_HARDDISK2, true);            // 允许第二个 IDE 中断
+    set_interrupt_mask(IRQ_CASCADE, true);              // 允许级联中断
 }

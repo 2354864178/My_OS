@@ -22,6 +22,7 @@ typedef struct ide_ctrl_t {
     raw_mutex_t lock;               // 互斥锁
     ide_disk_t disks[IDE_DISK_NR];  // 磁盘数组
     ide_disk_t *selected_disk;      // 当前选择的磁盘
+    struct task_t *wait_task;       // 等待任务
 } ide_ctrl_t;
 
 int ide_pio_read(ide_disk_t *disk, void *buffer, u8 count, idx_t lba);

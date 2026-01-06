@@ -67,6 +67,7 @@ void set_interrupt_handler(u32 irq, handler_t handler){
     handler_table[IRQ_MASTER_NR + irq] = handler;   // 注册中断处理函数
 }
 
+// 设置中断屏蔽位
 void set_interrupt_mask(u32 irq, bool enable)
 {
     assert(irq >= 0 && irq < 16);

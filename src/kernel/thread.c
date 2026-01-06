@@ -49,6 +49,8 @@ static void user_init_thread(){
 // 初始化测试线程函数
 void init_thread(){
     char temp[100];         // 临时缓冲区
+    set_interrupt_state(true);  // 允许中断
+    test();            // 启动测试线程
     task_to_user_mode(user_init_thread);    // 切换到用户态运行
 }
 
