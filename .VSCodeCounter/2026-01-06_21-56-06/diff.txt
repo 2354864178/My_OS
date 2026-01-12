@@ -1,0 +1,45 @@
+Date : 2026-01-06 21:56:06
+Directory : /home/ysy/code/Os_wrtie
+Total : 13 files,  396 codes, 24 comments, 73 blanks, all 493 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| C        |          9 |        358 |         24 |         66 |        448 |
+| C++      |          3 |         37 |          0 |          7 |         44 |
+| Makefile |          1 |          1 |          0 |          0 |          1 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++----------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                               | files      | code       | comment    | blank      | total      |
++----------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                  |         13 |        396 |         24 |         73 |        493 |
+| src                                                |         13 |        396 |         24 |         73 |        493 |
+| src (Files)                                        |          1 |          1 |          0 |          0 |          1 |
+| src/include                                        |          3 |         37 |          0 |          7 |         44 |
+| src/include/onix                                   |          3 |         37 |          0 |          7 |         44 |
+| src/kernel                                         |          8 |        346 |         24 |         62 |        432 |
+| src/lib                                            |          1 |         12 |          0 |          4 |         16 |
++----------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++----------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                           | language | code       | comment    | blank      | total      |
++----------------------------------------------------+----------+------------+------------+------------+------------+
+| /home/ysy/code/Os_wrtie/src/Makefile               | Makefile |          1 |          0 |          0 |          1 |
+| /home/ysy/code/Os_wrtie/src/include/onix/ide.h     | C++      |         24 |          0 |          7 |         31 |
+| /home/ysy/code/Os_wrtie/src/include/onix/syscall.h | C++      |          8 |          0 |          0 |          8 |
+| /home/ysy/code/Os_wrtie/src/include/onix/task.h    | C++      |          5 |          0 |          0 |          5 |
+| /home/ysy/code/Os_wrtie/src/kernel/clock.c         | C        |          4 |          0 |          1 |          5 |
+| /home/ysy/code/Os_wrtie/src/kernel/gate.c          | C        |         14 |         -5 |          1 |         10 |
+| /home/ysy/code/Os_wrtie/src/kernel/ide.c           | C        |        172 |         21 |         36 |        229 |
+| /home/ysy/code/Os_wrtie/src/kernel/interrupt.c     | C        |          0 |          1 |          0 |          1 |
+| /home/ysy/code/Os_wrtie/src/kernel/main.c          | C        |          3 |          0 |          0 |          3 |
+| /home/ysy/code/Os_wrtie/src/kernel/memory.c        | C        |         64 |         -6 |         10 |         68 |
+| /home/ysy/code/Os_wrtie/src/kernel/task.c          | C        |         87 |          0 |         14 |        101 |
+| /home/ysy/code/Os_wrtie/src/kernel/thread.c        | C        |          2 |         13 |          0 |         15 |
+| /home/ysy/code/Os_wrtie/src/lib/syscall.c          | C        |         12 |          0 |          4 |         16 |
+| Total                                              |          |        396 |         24 |         73 |        493 |
++----------------------------------------------------+----------+------------+------------+------------+------------+

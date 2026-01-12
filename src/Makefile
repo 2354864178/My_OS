@@ -84,17 +84,11 @@ $(BUILD)/os.img: \
 	dd if=$(BUILD)/boot/loader.bin of=$@ bs=512 count=4 seek=2 conv=notrunc
 	dd if=$(BUILD)/system.bin of=$@ bs=512 count=200 seek=10 conv=notrunc
 
-$(BUILD)/kernel.iso : $(BUILD)/kernel.bin $(SRC)/utils/grub.cfg
-# 检查多重引导2兼容性
-	grub-file --is-x86-multiboot2 $<
-# 创建目录
-	mkdir -p $(BUILD)/iso/boot/grub
-# 复制内核文件
-	cp $< $(BUILD)/iso/boot	
-# 复制grub配置文件
-	cp $(SRC)/utils/grub.cfg $(BUILD)/iso/boot/grub/	
-# 生成ISO文件
-	grub-mkrescue -o $@ $(BUILD)/iso	
+$(BUILD)/slave.img:
+	$(shell mkdir -p $(dir $@))
+	yes | ../bochs/bin/bximage -q -hd=32 -func=create -sectsize=512 -imgmode=flat $@
+
+IMAGES:= $(BUILD)/os.img $(BUILD)/slave.img
 
 .PHONY: clean
 clean:
@@ -111,42 +105,29 @@ bochs: $(BUILD)/os.img
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0" \
 	../bochs/bin/bochs -q -f ../bochs/bochsrc -unlock
 
-.PHONY: bochsb
-bochsb: $(BUILD)/kernel.iso
-	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0" \
-	../bochs/bin/bochs -q -f ../bochs/bochsrc.grub -unlock -debugger
+QEMU:= qemu-system-i386 				# 使用i386架构模拟器
+QEMU+= -m 32M 							# 分配32M内存
+QEMU+= -audiodev pa,id=hda				# 使用PulseAudio音频驱动
+QEMU+= -machine pcspk-audiodev=hda 		# 使用PC扬声器并连接到音频驱动
+QEMU+= -rtc base=localtime 				# 使用本地时间作为RTC时间
+QEMU+= -serial stdio 					# 将串口输出重定向到标准输入输出
+QEMU+= -drive file=$(BUILD)/os.img,if=ide,index=0,media=disk,format=raw
+QEMU+= -drive file=$(BUILD)/slave.img,if=ide,index=1,media=disk,format=raw
 
-QEMU = qemu-system-i386 \
-	-m 32M \
-	-audiodev pa,id=hda \
-	-machine pcspk-audiodev=hda \
-	-rtc base=localtime \
-	-serial stdio \
-
-QEMU_DISK:= -boot c \
-	-drive file=$(BUILD)/os.img,if=ide,index=0,media=disk,format=raw
-
-QEMU_CDROW:= -boot d \
-	-drive file=$(BUILD)/kernel.iso,media=cdrom
+QEMU_DISK:= -boot c
 
 QEMU_DEBUG:= -s -S
 
 .PHONY: qemu
 qemu:
-	$(MAKE) -B $(BUILD)/os.img
+	$(MAKE) -B $(IMAGES)
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
 	$(QEMU) $(QEMU_DISK)
 
 .PHONY: qemug
 qemug:
-	$(MAKE) -B $(BUILD)/os.img
+	$(MAKE) -B $(IMAGES)
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
 	$(QEMU) $(QEMU_DISK) $(QEMU_DEBUG)
-
-.PHONY: qemub
-qemub:
-	$(MAKE) -B $(BUILD)/kernel.iso
-	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
-	$(QEMU) $(QEMU_CDROW) #$(QEMU_DEBUG)
 
 test: $(BUILD)/os.img

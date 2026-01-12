@@ -232,6 +232,7 @@ static task_t *task_create(target_t target, const char *name, u32 priority, u32 
     return task;
 }
 
+// 构建子任务的栈帧
 static void task_build_stack(task_t *task){
     u32 addr = (u32)task + PAGE_SIZE;   // 计算任务栈顶地址
     addr -= sizeof(intr_frame_t);       // 为中断帧留出空间
@@ -243,34 +244,68 @@ static void task_build_stack(task_t *task){
     frame->ebx = 0xaa55aa55;            // 初始化保存的 ebx 寄存器值
     frame->edi = 0xaa55aa55;
     frame->esi = 0xaa55aa55;
-    frame->eip = interrupt_exit;;       // 设置任务的返回地址为中断退出处理程序
+    frame->eip = interrupt_exit;        // 设置任务的返回地址为中断退出处理程序
     task->stack = (u32 *)frame;         // 设置任务的栈指针
 }
 
 pid_t task_fork(){
-    task_t *task = running_task();       // 获取当前运行任务指针
-    assert(task->node.next == NULL && task->node.prev == NULL); // 确保当前任务不在任何链表中
-    assert(task->state == TASK_RUNNING); // 确保当前任务处于运行状态
+    task_t *parent = running_task();
+    assert(parent->node.next == NULL && parent->node.prev == NULL);
+    assert(parent->state == TASK_RUNNING);
 
-    task_t *child = get_free_task();     // 分配一个空闲任务结构体作为子任务
-    pid_t pid = child->pid;              // 获取子任务的进程ID
-    memcpy(child, task, PAGE_SIZE);      // 复制父任务的任务结构体到子任务结构体
-    
-    child->pid = pid;                    // 设置子任务的进程ID
-    child->ppid = task->pid;             // 设置子任务的父进程ID
-    child->state = TASK_READY;           // 将子任务状态设置为就绪
-    child->ticks = child->priority;      // 重置子任务的时间片为其优先级值
+    // 先在临界区外分配会睡眠的资源
+    void *child_page = (void *)alloc_kpage(1);          // 分配一页内核页作为子任务的任务结构体
+    if(!child_page) panic("alloc child page failed");   // 分配失败则触发 panic
 
-    child->vmap = kmalloc(sizeof(bitmap_t));            // 为子任务分配虚拟内存位图结构体
-    memcpy(child->vmap, task->vmap, sizeof(bitmap_t));  // 复制父任务的虚拟内存位图结构体到子任务
-    void *buf = (void *)alloc_kpage(1);                 // 为位图缓冲区分配一页内存
-    memcpy(buf, task->vmap->bits, PAGE_SIZE);           // 复制父任务的位图缓冲区到子任务
-    child->vmap->bits = buf;                            // 更新子任务的位图缓冲区指针
+    bitmap_t *vmap = kmalloc(sizeof(bitmap_t));         // 分配子任务的虚拟内存位图结构体
+    if(!vmap) panic("kmalloc vmap failed");             
+    void *vmap_bits = (void *)alloc_kpage(1);           // 分配一页内核页作为子任务的虚拟内存位图缓冲区
+    if(!vmap_bits) panic("alloc vmap bits failed"); 
 
-    child->pde = copy_pde();            // 复制父任务的页目录作为子任务的页目录
-    task_build_stack(child);            // 构建子任务的栈帧
+    u32 child_pde = copy_pde();                         // 复制页目录（可能会睡眠），提前完成
 
-    return child->pid;                  // 返回子任务的进程ID
+    // 复制位图内容（使用父的 vmap->bits）
+    memcpy(vmap, parent->vmap, sizeof(bitmap_t));       // 复制父任务的虚拟内存位图结构体内容
+    memcpy(vmap_bits, parent->vmap->bits, PAGE_SIZE);   // 复制父任务的虚拟内存位图缓冲区内容
+    vmap->bits = vmap_bits;                             // 设置子任务的虚拟内存位图缓冲区指针
+
+    // 在短临界区内把 child 插入任务表并初始化（避免在临界区内分配/睡眠）
+    bool intr = interrupt_disable();
+
+    int slot = -1;
+    for (int i = 0; i < TASK_NR; i++){
+        if (task_table[i] == NULL){
+            slot = i;
+            break;
+        }
+    }
+    if (slot == -1){    // 没有可用槽，回收已分配资源并报错
+        set_interrupt_state(intr);
+        free_kpage((u32)child_page, 1);
+        free_kpage((u32)vmap_bits, 1);
+        kfree(vmap);
+        panic("No Free Task!!!");
+    }
+
+    task_t *child = (task_t *)child_page;
+    task_table[slot] = child;           // 注册到任务表
+
+    memcpy(child, parent, PAGE_SIZE);   // 复制父任务的整个 page 到子任务页（保留栈快照）
+
+    // 修正子任务元数据 
+    child->pid = slot;              // 设置子任务的进程ID
+    child->ppid = parent->pid;      // 设置子任务的父进程ID
+    child->state = TASK_READY;      // 设置子任务状态为就绪
+    child->ticks = child->priority; // 重置子任务的时间片
+
+    child->vmap = vmap;         // 设置子任务的虚拟内存位图指针
+    child->pde = child_pde;     // 设置子任务的页目录地址
+
+    task_build_stack(child);    // 构建子任务的栈帧
+
+    set_interrupt_state(intr);
+
+    return child->pid;
 }
 
 void task_exit(int status){
