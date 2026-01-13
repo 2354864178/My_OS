@@ -7,6 +7,10 @@
 #define EOS '\0'            // End Of String：字符串结束符，内核字符串处理（如strlen、strcpy）的终止标志
 #define NULL ((void *)0)    // 空指针常量：初始化指针变量（避免野指针），用于判断指针有效性（如if (ptr == NULL)）
 
+#define CONCAT(x, y) x##y
+#define RESERVED_TOKEN(x, y) CONCAT(x, y)
+#define RESERVED RESERVED_TOKEN(reserved, __LINE__)
+
 #ifndef __cplusplus // 仅在C语言编译环境下生效（C++有原生bool，避免冲突）
 #define bool _Bool  // 基于C99标准的_Bool类型，定义内核统一的bool类型
 #define true 1

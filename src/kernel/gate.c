@@ -25,16 +25,16 @@ static void syscall_default(){      // 默认系统调用处理函数
 
 extern ide_ctrl_t ide_ctrls[IDE_CTRL_NR];
 static u32 sys_test(){          // 测试系统调用函数
-    BMB;
-    u16 *buf = (u16 *)alloc_kpage(1); // 分配一页内核页面
-    LOGK("pio read buf addr: 0x%p\n", buf);
-    ide_disk_t *disk = &ide_ctrls[0].disks[0]; // 获取第一个 IDE 磁盘
-    ide_pio_read(disk, buf, 4, 0); // 读取前 4 个扇区到缓冲区
-    BMB;
+    // BMB;
+    // u16 *buf = (u16 *)alloc_kpage(1); // 分配一页内核页面
+    // LOGK("pio read buf addr: 0x%p\n", buf);
+    // ide_disk_t *disk = &ide_ctrls[0].disks[0]; // 获取第一个 IDE 磁盘
+    // ide_pio_read(disk, buf, 4, 0); // 读取前 4 个扇区到缓冲区
+    // BMB;
 
-    memset(buf, 0x5a, 512); // 将缓冲区清零
-    ide_pio_write(disk, buf, 1, 1); // 写入第 1 个扇区
-    free_kpage((u32)buf, 1); // 释放内核页面
+    // memset(buf, 0x5a, 512); // 将缓冲区清零
+    // ide_pio_write(disk, buf, 1, 1); // 写入第 1 个扇区
+    // free_kpage((u32)buf, 1); // 释放内核页面
 
     return 255;
 }

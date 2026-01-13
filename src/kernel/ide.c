@@ -35,6 +35,7 @@
 #define IDE_CMD_IDENTIFY 0xEC       // 识别命令
 
 // IDE 状态码
+#define IDE_SR_NULL 0x00    // 空状态
 #define IDE_SR_BSY  0x80    // 忙碌状态
 #define IDE_SR_DRDY 0x40    // 驱动器就绪
 #define IDE_SR_DF   0x20    // 驱动器故障
@@ -53,6 +54,43 @@
 
 #define IDE_LBA_MASTER 0xE0  // LBA 主设备选择器基址
 #define IDE_LBA_SLAVE  0xF0  // LBA 从设备选择
+
+// IDE 参数结构体
+typedef struct ide_params_t
+{
+    u16 config;                 // 0 通用配置位
+    u16 cylinders;              // 01 柱面数
+    u16 RESERVED;               // 02 保留
+    u16 heads;                  // 03 磁头数
+    u16 RESERVED[5 - 3];        // 05 保留
+    u16 sectors;                // 06 每磁道扇区数
+    u16 RESERVED[9 - 6];        // 09 保留
+    u8 serial[20];              // 10 ~ 19 序列号
+    u16 RESERVED[22 - 19];      // 20 ~ 22 保留
+    u8 firmware[8];             // 23 ~ 26 固件版本
+    u8 model[40];               // 27 ~ 46 型号
+    u8 drq_sectors;             // 47 传输扇区数
+    u8 RESERVED[3];             // 48 保留
+    u16 capabilities;           // 49 能力标志
+    u16 RESERVED[59 - 49];      // 50 ~ 59 保留
+    u32 total_lba;              // 60 ~ 61 总逻辑扇区数（LBA）
+    u16 RESERVED;               // 62 保留
+    u16 mdma_mode;              // 63 MDMA 模式
+    u8 RESERVED;                // 64 保留
+    u8 pio_mode;                // 64 PIO 模式
+    u16 RESERVED[79 - 64];      // 65 ~ 79 保留（参见 ATA 规范）
+    u16 major_version;          // 80 主版本
+    u16 minor_version;          // 81 次版本
+    u16 commmand_sets[87 - 81]; // 82 ~ 87 支持的命令集
+    u16 RESERVED[118 - 87];     // 88 ~ 118 保留
+    u16 support_settings;       // 119 支持设置
+    u16 enable_settings;        // 120 启用设置
+    u16 RESERVED[221 - 120];    // 121 ~ 221 保留
+    u16 transport_major;        // 222 传输主版本
+    u16 transport_minor;        // 223 传输次版本
+    u16 RESERVED[254 - 223];    // 224 ~ 254 保留
+    u16 integrity;              // 校验和
+} _packed ide_params_t;
 
 ide_ctrl_t ide_ctrls[IDE_CTRL_NR];
 
@@ -80,7 +118,7 @@ static u32 ide_error(ide_ctrl_t *ctrl) {
     if(error & IDE_ER_MC) LOGK("%s: Media Error\n", ctrl->name);                // 媒体错误
     if(error & IDE_ER_UNC) LOGK("%s: Uncorrectable Error\n", ctrl->name);       // 未纠正错误
     if(error & IDE_ER_BBK) LOGK("%s: Bad Block\n", ctrl->name);                 // 坏块
-    return error;
+    // return error;
 }
 
 static u32 ide_wait_busy(ide_ctrl_t *ctrl, u8 mask) {
@@ -190,30 +228,81 @@ int ide_pio_write(ide_disk_t *disk, void *buffer, u8 count, idx_t lba) {
     return 0; // 写入成功
 }
 
+// 交换字节序对
+void ide_swap_pair(char *buf, u32 len){
+    for(u32 i = 0; i < len; i += 2){
+        char temp = buf[i];
+        buf[i] = buf[i + 1];
+        buf[i + 1] = temp;
+    }
+}
+
+// 识别磁盘
+static u32 ide_identify(ide_disk_t *disk, u16 *buf) {
+    // disk: 目标磁盘
+    // buf: 数据缓冲区
+    LOGK("%s: IDENTIFY Disk\n", disk->name);
+    raw_mutex_lock(&disk->ctrl->lock);          // 获取互斥锁
+    ide_select_drive(disk);                     // 选择磁盘
+    outb(disk->ctrl->io_base + IDE_REG_COMMAND, IDE_CMD_IDENTIFY); // 发送识别命令
+    ide_wait_busy(disk->ctrl, IDE_SR_NULL);     // 等待 BSY 清除
+    ide_params_t *params = (ide_params_t *)buf; // 参数结构体指针
+    ide_pio_read_sector(disk->ctrl, buf);       // 读取识别数据
+    LOGK("disk %s total lba %d\n", disk->name, params->total_lba);
+
+    u32 ret = EOF;
+    if(params->total_lba == 0) goto rollback;   // 无效磁盘
+
+    // 交换并打印识别信息
+    ide_swap_pair(params->serial, sizeof(params->serial));          // 交换序列号字节序对
+    LOGK("%s: Serial Number: %.20s\n", disk->name, params->serial); 
+    ide_swap_pair(params->firmware, sizeof(params->firmware));      // 交换固件版本字节序对
+    LOGK("%s: Firmware Version: %.8s\n", disk->name, params->firmware);
+    ide_swap_pair(params->model, sizeof(params->model));            // 交换型号字节序对
+    LOGK("%s: Model Number: %.40s\n\n", disk->name, params->model);
+
+    // 设置磁盘参数
+    disk->total_sectors = params->total_lba;            // 设置总扇区数
+    disk->cylinders = params->cylinders;                // 设置柱面数
+    disk->heads = params->heads;                        // 设置磁头数
+    disk->sectors_per_track = params->sectors;          // 设置每磁道扇区数
+    ret = 0;
+
+rollback:
+    raw_mutex_unlock(&disk->ctrl->lock);    // 释放互斥锁
+    return ret;
+}
+
 static void ide_ctrl_init(void) {
+    u16 *buf = (u16*)alloc_kpage(1);                // 分配一页内核页面作为缓冲区
     for(size_t cidx = 0; cidx < IDE_CTRL_NR; cidx++) {
         ide_ctrl_t *ctrl = &ide_ctrls[cidx];        // 获取控制器结构体
         sprintf(ctrl->name, "ide%d", cidx);         // 设置控制器名称
         raw_mutex_init(&ctrl->lock);                // 初始化互斥锁
         ctrl->selected_disk = NULL;                 // 初始化当前选择的磁盘为空
-        
+        ctrl->wait_task = NULL;                     // 初始化等待任务为空
+            
         if(cidx == 0)  ctrl->io_base = IDE_REG_PRIMARY; // 主控制器基址
         else ctrl->io_base = IDE_REG_SECONDARY;         // 副控制器基址
-        
+
+        ctrl->control = inb(ctrl->io_base + IDE_REG_CONTROL); // 读取控制寄存器初始值
+
         for(size_t didx = 0; didx < IDE_DISK_NR; didx++) {
             ide_disk_t *disk = &ctrl->disks[didx];      // 获取磁盘结构体
             sprintf(disk->name, "hd%c", 'a' + cidx * IDE_DISK_NR + didx);   // 设置磁盘名称
             disk->ctrl = ctrl;                          // 设置所属控制器
             if(didx){
-                disk->selecter = IDE_LBA_SLAVE;
+                disk->selecter = IDE_LBA_SLAVE;        
                 disk->master = false;
             }
             else{
                 disk->selecter = IDE_LBA_MASTER;
                 disk->master = true;
             }
+            ide_identify(disk, buf);
         }
     }
+    free_kpage((u32)buf, 1); // 释放内核页面
 }
 
 void ide_init(void) {

@@ -14,5 +14,9 @@
     "stdio.h": "c",
     "arena.h": "c"
   },
-  "C_Cpp_Runner.msvcBatchPath": ""
+  "C_Cpp_Runner.msvcBatchPath": "",
+  "github.copilot.advanced": {
+        "debug.useNodeFetcher": true,
+        "debug.useElectronFetcher": true
+    }
 }
