@@ -55,6 +55,13 @@
 #define IDE_LBA_MASTER 0xE0  // LBA 主设备选择器基址
 #define IDE_LBA_SLAVE  0xF0  // LBA 从设备选择
 
+typedef enum PART_FS{      // 分区类型
+    PART_FS_FAT12 = 1,      // FAT12 
+    PART_FS_EXTENDED = 5,   // 扩展分区
+    PART_FS_MINIX = 0x80,   // Minix 
+    PART_FS_LINUX = 0x83,   // Linux 
+} PART_FS;
+
 // IDE 参数结构体
 typedef struct ide_params_t
 {
@@ -228,6 +235,16 @@ int ide_pio_write(ide_disk_t *disk, void *buffer, u8 count, idx_t lba) {
     return 0; // 写入成功
 }
 
+// 基于分区的读操作
+int ide_pio_part_read(ide_part_t *part, void *buffer, u8 count, idx_t lba) {
+    return ide_pio_read(part->disk, buffer, count, part->start + lba);
+}
+
+// 基于分区的写操作
+int ide_pio_part_write(ide_part_t *part, void *buffer, u8 count, idx_t lba) {
+    return ide_pio_write(part->disk, buffer, count, part->start + lba);
+}
+
 // 交换字节序对
 void ide_swap_pair(char *buf, u32 len){
     for(u32 i = 0; i < len; i += 2){
@@ -273,6 +290,52 @@ rollback:
     return ret;
 }
 
+// 初始化分区
+static void ide_part_init(ide_disk_t *disk, u16 *buf){
+    // disk: 目标磁盘
+    // buf: 数据缓冲区
+
+    if(!disk->total_sectors) return;            // 无效磁盘，直接返回
+    ide_pio_read(disk, buf, 1, 0);              // 读取主引导扇区
+    boot_sector_t *bs = (boot_sector_t *)buf;   // 引导扇区结构体指针
+
+    for(size_t i=0; i<IDE_PART_NR; i++){
+        part_entry_t *entry = &bs->entry[i];    // 分区表项指针
+        ide_part_t *part = &disk->disk[i];      // 分区结构体指针
+        if(!entry->system) continue;            // 分区类型为 0，跳过
+
+        sprintf(part->name, "%s%d", disk->name, i + 1); // 设置分区名称
+        
+        LOGK("part %s \n", part->name);             // 打印分区信息
+        LOGK("bootable: %d\n", entry->bootable);    // 是否可引导
+        LOGK("  system: %x\n", entry->system);      // 分区类型
+        LOGK("  start: %d\n", entry->start);        // 起始扇区
+        LOGK("  count: %d\n\n", entry->count);      // 总扇区数
+
+        part->disk = disk;              // 设置所属磁盘
+        part->system = entry->system;   // 设置分区类型
+        part->start = entry->start;     // 设置起始扇区
+        part->count = entry->count;     // 设置总扇区数
+        
+        // 处理扩展分区
+        if(part->system == PART_FS_EXTENDED){
+            LOGK("unsupported Extended Partition");
+            boot_sector_t *eboot = (boot_sector_t *)(buf + SECTOR_SIZE);    // 扩展引导扇区结构体指针
+            ide_pio_read(disk, eboot, 1, part->start);                      // 读取扩展引导扇区
+            for(size_t j=0; j<IDE_PART_NR; j++){
+                part_entry_t *eentry = &eboot->entry[j];                    // 扩展分区表项指针
+                if (!eentry->count) continue;                               // 分区类型为 0，跳过
+
+                LOGK("part %d extend %d\n", i, j);              // 打印扩展分区信息
+                LOGK("    bootable %d\n", eentry->bootable);    // 是否可引导
+                LOGK("    start %d\n", eentry->start);          // 起始扇区
+                LOGK("    count %d\n", eentry->count);          // 总扇区数
+                LOGK("    system 0x%x\n", eentry->system);      // 分区类型
+            }
+        }
+    }
+}
+
 static void ide_ctrl_init(void) {
     u16 *buf = (u16*)alloc_kpage(1);                // 分配一页内核页面作为缓冲区
     for(size_t cidx = 0; cidx < IDE_CTRL_NR; cidx++) {
@@ -300,6 +363,7 @@ static void ide_ctrl_init(void) {
                 disk->master = true;
             }
             ide_identify(disk, buf);
+            ide_part_init(disk, buf);
         }
     }
     free_kpage((u32)buf, 1); // 释放内核页面
