@@ -36,6 +36,7 @@ typedef unsigned int u32;
 typedef unsigned long long u64;
 
 typedef int32 pid_t;    // 进程ID类型：定义为32位有符号整数，表示系统中唯一标识一个进程的ID
+typedef int32 dev_t;    // 设备号类型：定义为32位有符号整数，表示系统中唯一标识一个设备的编号
 
 typedef u32 time_t;     // 时间戳类型：定义为32位无符号整数，存储"从1970-01-01 00:00:00到当前的秒数"
 typedef u32 idx_t;

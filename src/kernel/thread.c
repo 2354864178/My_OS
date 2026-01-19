@@ -59,18 +59,7 @@ void test_thread(){
     set_interrupt_state(true);
     u32 counter = 0;
     while(true) {
-        // void *ptr = kmalloc(1200);
-        // LOGK("kmalloc 0x%p....\n", ptr);
-        // kfree(ptr);
-
-        // ptr = kmalloc(1024);
-        // LOGK("kmalloc 0x%p....\n", ptr);
-        // kfree(ptr);
-
-        // ptr = kmalloc(54);
-        // LOGK("kmalloc 0x%p....\n", ptr);
-        // kfree(ptr);
-        // printf("Test thread %d, %d, %d... \n", getpid(), getppid(), counter++);
-        sleep(2000);
+        test();
+        // sleep(2000);
     }
 }
