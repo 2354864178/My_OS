@@ -1,0 +1,87 @@
+/dts-v1/;
+
+/ {
+    compatible = "onix,pc";
+    model = "Onix teaching kernel";
+    #address-cells = <1>;
+    #size-cells = <1>;
+
+    // 设备别名
+    aliases {
+        console0 = &vga_console;
+        keyboard0 = &ps2_kbd;
+        rtc0 = &cmos_rtc;
+        timer0 = &pit_timer;
+        intc0 = &pic_8259;
+        ide0 = &ide_primary;
+        ide1 = &ide_secondary;
+    };
+
+    // 系统标准输入输出设备路径
+    chosen {
+        stdout-path = &vga_console;
+        stdin-path = &ps2_kbd;
+    };
+
+    // VGA 文本模式控制台
+    vga_console: console@3d4 {
+        compatible = "onix,vga-text";
+        reg = <0x3d4 0x2>, <0x3d5 0x2>, <0xb8000 0x4000>;
+        width = <80>;
+        height = <25>;
+        color-attr = <0x07>;            // 默认字符属性（白底黑字）
+        cursor-reg = <0x0e 0x0f>;       // 光标高/低寄存器索引
+        startaddr-reg = <0x0c 0x0d>;    // 起始地址高/低寄存器索引
+        status = "okay";
+    };
+
+    // PS/2 键盘控制器 (i8042)
+    ps2_kbd: keyboard@60 {
+        compatible = "onix,ps2-keyboard", "i8042-kbd";
+        reg = <0x60 0x1>, <0x64 0x1>;   // 数据端口和命令端口
+        interrupts = <1>;               // IRQ1
+        keymap = "us";                  // 默认键位布局
+        status = "okay"; 
+    };
+
+    // CMOS RTC (MC146818 兼容)
+    cmos_rtc: rtc@70 {
+        compatible = "onix,rtc-cmos", "mc146818";
+        reg = <0x70 0x1>, <0x71 0x1>;   // 地址端口和数据端口
+        interrupts = <8>;               // IRQ8
+        status = "okay";
+    };
+
+    // 8253/8254 可编程间隔定时器 (PIT)
+    pit_timer: timer@40 {
+        compatible = "onix,i8253", "intel,8254";
+        reg = <0x40 0x1>, <0x42 0x1>, <0x43 0x1>; // 通道0、2和控制端口
+        interrupts = <0>;                         // IRQ0
+        clock-frequency = <1193182>;              // 输入时钟频率 (Hz)
+        status = "okay";                          // 启用状态
+    };
+
+    // 8259A 可编程中断控制器 (主从级联)
+    pic_8259: interrupt-controller@20 {
+        compatible = "onix,i8259", "intel,8259";
+        reg = <0x20 0x2>, <0xa0 0x2>; // 主片(0x20/0x21) 与 从片(0xa0/0xa1) 控制+数据端口
+        interrupt-controller;
+        #interrupt-cells = <1>;
+        status = "okay";
+    };
+
+    // PATA / IDE 控制器（主/从通道）
+    ide_primary: ide@1f0 {
+        compatible = "onix,ide", "ata-generic";
+        reg = <0x1f0 0x8>, <0x3f6 0x1>; // 命令块端口 0x1f0-0x1f7，控制块 0x3f6
+        interrupts = <14>;              // 主通道 IRQ14
+        status = "okay";                // 启用状态
+    };
+
+    ide_secondary: ide@170 {
+        compatible = "onix,ide", "ata-generic";
+        reg = <0x170 0x8>, <0x376 0x1>; // 命令块端口 0x170-0x177，控制块 0x376
+        interrupts = <15>;              // 从通道 IRQ15
+        status = "okay";                // 若未接设备可标记为禁用
+    };
+};

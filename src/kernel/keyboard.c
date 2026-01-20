@@ -7,6 +7,7 @@
 #include <onix/task.h>
 #include <onix/mutex.h>
 #include <onix/device.h>
+#include <onix/devicetree.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -26,6 +27,17 @@ static task_t *waiter; // 等待输入的任务
 #define BUFFER_SIZE 64        // 输入缓冲区大小
 static char buf[BUFFER_SIZE]; // 输入缓冲区
 static fifo_t fifo;           // 循环队列
+
+typedef struct keyboard_dt_info
+{
+    bool present;       // 信息是否有效
+    u32 data_port;      // 数据端口
+    u32 ctrl_port;      // 控制端口
+    u32 irq;            // 中断号
+    char keymap[16];    // 键盘映射（当前未用）
+} keyboard_dt_info_t;
+
+static keyboard_dt_info_t kbd_dt;
 
 // 键盘扫描码枚举类型
 typedef enum{
@@ -239,6 +251,40 @@ static bool extcode_state;  // 扩展码状态
 #define alt_state (keymap[KEY_ALT_L][2] || keymap[KEY_ALT_L][3])        // ALT 键状态
 #define shift_state (keymap[KEY_SHIFT_L][2] || keymap[KEY_SHIFT_R][2])  // SHIFT 键状态
 
+static void keyboard_dt_probe(void)
+{
+    void *val; u32 len;
+    const char *paths[] = {"/keyboard@60"};
+
+    if (dtb_get_prop_any(paths, 1, "reg", &val, &len) == 0 && len >= 8)
+    {
+        u32 *cells = (u32 *)val;
+        kbd_dt.data_port = dt_be32_read(&cells[0]);
+        if (len >= 16)
+            kbd_dt.ctrl_port = dt_be32_read(&cells[2]);
+        kbd_dt.present = true;
+        LOGK("DT keyboard: data 0x%x (code 0x%x), ctrl 0x%x (code 0x%x)\n",
+             kbd_dt.data_port, KEYBOARD_DATA_PORT, kbd_dt.ctrl_port, KEYBOARD_CTRL_PORT);
+    }
+
+    if (dtb_get_prop_any(paths, 1, "interrupts", &val, &len) == 0 && len >= 4)
+    {
+        kbd_dt.irq = dt_be32_read(val);
+        kbd_dt.present = true;
+        LOGK("DT keyboard: irq %u (code %u)\n", kbd_dt.irq, IRQ_KEYBOARD);
+    }
+
+    if (dtb_get_prop_any(paths, 1, "keymap", &val, &len) == 0 && len > 0)
+    {
+        size_t n = len;
+        if (n >= sizeof(kbd_dt.keymap)) n = sizeof(kbd_dt.keymap) - 1;
+        memcpy(kbd_dt.keymap, val, n);
+        kbd_dt.keymap[n] = '\0';
+        kbd_dt.present = true;
+        LOGK("DT keyboard: keymap %s\n\n", kbd_dt.keymap);
+    }
+}
+
 // 等待键盘控制器准备就绪
 static void keyboard_wait()
 {
@@ -362,6 +408,9 @@ void keyboard_init(){
     scrlock_state = false;
     numlock_state = false;
     extcode_state = false;
+
+    assert(dtb_node_enabled("/keyboard@60"));
+    keyboard_dt_probe();
 
     fifo_init(&fifo, buf, BUFFER_SIZE);
     reentrant_mutex_init(&lock);

@@ -7,6 +7,8 @@
 #include <onix/io.h>
 #include <onix/interrupt.h>
 #include <onix/task.h>
+#include <onix/devicetree.h>
+#include <onix/printk.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)  // 内核日志宏
 
@@ -54,6 +56,57 @@
 
 #define IDE_LBA_MASTER 0xE0  // LBA 主设备选择器基址
 #define IDE_LBA_SLAVE  0xF0  // LBA 从设备选择
+
+typedef struct ide_dt_info
+{
+    bool present;
+    u32 cmd_base;
+    u32 cmd_size;
+    u32 ctrl_base;
+    u32 ctrl_size;
+    u32 irq;
+} ide_dt_info_t;
+
+static ide_dt_info_t ide_dt[IDE_CTRL_NR];
+
+static void ide_dt_probe_one(int idx, const char *paths[], size_t pathnr, u32 def_cmd, u32 def_ctrl, u32 def_irq)
+{
+    void *val; u32 len; ide_dt_info_t *info = &ide_dt[idx];
+
+    if (dtb_get_prop_any(paths, pathnr, "reg", &val, &len) == 0 && len >= 8)
+    {
+        u32 *cells = (u32 *)val;
+        info->cmd_base = dt_be32_read(&cells[0]);
+        info->cmd_size = dt_be32_read(&cells[1]);
+        if (len >= 16)
+        {
+            info->ctrl_base = dt_be32_read(&cells[2]);
+            info->ctrl_size = dt_be32_read(&cells[3]);
+        }
+        info->present = true;
+        LOGK("DT ide%d: cmd 0x%x size 0x%x (code 0x%x size 0x%x) \n",
+             idx, info->cmd_base, info->cmd_size, def_cmd, 8U);
+        LOGK("DT ide%d: ctrl 0x%x size 0x%x (code 0x%x size 0x%x) \n",
+             idx, info->ctrl_base, info->ctrl_size, def_ctrl, 1U);
+    }
+
+    if (dtb_get_prop_any(paths, pathnr, "interrupts", &val, &len) == 0 && len >= 4)
+    {
+        info->irq = dt_be32_read(val);
+        info->present = true;
+        LOGK("DT ide%d: irq %u (code %u) \n",
+             idx, info->irq, def_irq);
+    }
+}
+
+static void ide_dt_probe(void)
+{
+    const char *p0[] = {"/ide@1f0"};
+    const char *p1[] = {"/ide@170"};
+    ide_dt_probe_one(0, p0, 1, IDE_REG_PRIMARY, IDE_REG_PRIMARY + IDE_REG_CONTROL, IRQ_HARDDISK);
+    ide_dt_probe_one(1, p1, 1, IDE_REG_SECONDARY, IDE_REG_SECONDARY + IDE_REG_CONTROL, IRQ_HARDDISK2);
+    printk("\n");
+}
 
 typedef enum PART_FS{      // 分区类型
     PART_FS_FAT12 = 1,      // FAT12 
@@ -109,8 +162,8 @@ void ide_handler(int vector) {
 
     LOGK("%s: IDE Interrupt, Status: 0x%02X\n", ctrl->name, state);
     if(ctrl->wait_task) {
-        task_unlock(ctrl->wait_task); // 唤醒等待任务
-        ctrl->wait_task = NULL;        // 清除等待任务
+        task_unlock(ctrl->wait_task);   // 唤醒等待任务
+        ctrl->wait_task = NULL;         // 清除等待任务
     }
 }
 
@@ -330,7 +383,7 @@ static void ide_part_init(ide_disk_t *disk, u16 *buf){
                 LOGK("    bootable %d\n", eentry->bootable);    // 是否可引导
                 LOGK("    start %d\n", eentry->start);          // 起始扇区
                 LOGK("    count %d\n", eentry->count);          // 总扇区数
-                LOGK("    system 0x%x\n", eentry->system);      // 分区类型
+                LOGK("    system 0x%x\n\n", eentry->system);      // 分区类型
             }
         }
     }
@@ -370,7 +423,9 @@ static void ide_ctrl_init(void) {
 }
 
 void ide_init(void) {
-    LOGK("IDE Init Start...\n");
+    // LOGK("IDE Init Start...\n");
+    assert(dtb_node_enabled("/ide@1f0") && dtb_node_enabled("/ide@170"));
+    ide_dt_probe();
     ide_ctrl_init();  // 初始化 IDE 控制器
 
     set_interrupt_handler(IRQ_HARDDISK, ide_handler);   // 设置 IDE 中断处理程序

@@ -5,7 +5,7 @@
 #include <onix/list.h>
 
 #define DEVICE_NR 64 // 设备数量
-#define NAMELEN 16
+#define NAMELEN 16   // 设备名称长度
 
 // 设备类型
 enum device_type_t {

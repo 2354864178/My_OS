@@ -53,7 +53,7 @@ typedef struct ide_disk_t {
     ide_part_t disk[IDE_PART_NR]; // 主分区数组
 } ide_disk_t;
 
-typedef struct ide_ctrl_t {
+typedef struct ide_ctrl_t { 
     char name[8];                   // 控制器名称
     u16 io_base;                    // I/O 端口基址
     raw_mutex_t lock;               // 互斥锁

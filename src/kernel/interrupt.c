@@ -4,6 +4,7 @@
 #include <onix/printk.h>
 #include <onix/io.h>
 #include <onix/assert.h>
+#include <onix/devicetree.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -14,6 +15,54 @@
 #define PIC_S_CTRL 0xa0 // 从片的控制端口
 #define PIC_S_DATA 0xa1 // 从片的数据端口
 #define PIC_EOI 0x20    // 通知中断控制器中断结束
+
+typedef struct pic_dt_info
+{
+    bool present;   // 信息是否有效
+    u32 m_ctrl;     // 主片控制端口
+    u32 m_data;     // 主片数据端口
+    u32 s_ctrl;     // 从片控制端口
+    u32 s_data;     // 从片数据端口
+    u32 cells;      // 中断描述符单元数
+} pic_dt_info_t;
+
+static pic_dt_info_t pic_dt;
+
+// 解析设备树中的 8259A 信息，仅用于与硬编码端口对比，当前不影响行为
+static void pic_dt_probe(void)
+{
+    void *val; u32 len;
+    const char *paths[] = {"/interrupt-controller@20"};
+
+    if (dtb_get_prop_any(paths, 1, "reg", &val, &len) == 0 && len >= 8)
+    {
+        u32 *cells = (u32 *)val;
+        // reg 按 <addr size> 成对出现。主片覆盖 0x20/0x21，从片覆盖 0xa0/0xa1。
+        u32 m_base = dt_be32_read(&cells[0]);
+        u32 m_size = dt_be32_read(&cells[1]);
+        pic_dt.m_ctrl = m_base;
+        pic_dt.m_data = m_base + (m_size > 1 ? 1 : 0);
+
+        if (len >= 16)
+        {
+            u32 s_base = dt_be32_read(&cells[2]);
+            u32 s_size = dt_be32_read(&cells[3]);
+            pic_dt.s_ctrl = s_base;
+            pic_dt.s_data = s_base + (s_size > 1 ? 1 : 0);
+        }
+        pic_dt.present = true;
+        LOGK("DT pic: m_ctrl 0x%x (code 0x%x), s_ctrl 0x%x (code 0x%x) \n",
+             pic_dt.m_ctrl, PIC_M_CTRL, pic_dt.s_ctrl, PIC_S_CTRL);
+    }   LOGK("DT pic: m_data 0x%x (code 0x%x), s_data 0x%x (code 0x%x) \n",
+             pic_dt.m_data, PIC_M_DATA, pic_dt.s_data, PIC_S_DATA);
+
+    if (dtb_get_prop_any(paths, 1, "#interrupt-cells", &val, &len) == 0 && len >= 4)
+    {
+        pic_dt.cells = dt_be32_read(val);
+        pic_dt.present = true;
+        LOGK("DT pic: #interrupt-cells %u\n\n", pic_dt.cells);
+    }
+}
 
 gate_t idt[IDT_SIZE];   // 中断描述符表
 pointer_t idt_ptr;      // 中断描述符表指针
@@ -214,6 +263,8 @@ void idt_init(){
 
 void interrupt_init()
 {
+    assert(dtb_node_enabled("/interrupt-controller@20"));
+    pic_dt_probe();
     pic_init();
     idt_init();
 }

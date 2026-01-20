@@ -128,7 +128,7 @@ void memory_map_init()
         memory_map[i] = 1;  // 标记所有已占用的物理页为1（占用状态）。
     }
 
-    LOGK("Total pages %d free pages %d\n", total_pages, free_pages);    // 打印系统总物理页数和当前空闲页数
+    LOGK("Total pages %d free pages %d\n\n", total_pages, free_pages);    // 打印系统总物理页数和当前空闲页数
 
     // 初始化内核虚拟内存位图，需要 8 位对齐
     u32 length = (IDX(KERNEL_MEMORY_SIZE) - IDX(MEMORY_BASE)) / 8;  // 计算内核内存位图长度，单位字节

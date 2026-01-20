@@ -1,6 +1,12 @@
 BUILD:=../build
 SRC:=.
 
+DTC?=dtc
+DTS:=$(SRC)/devicetree/device.dts
+DTB:=$(BUILD)/device.dtb
+ISO_DTB:=$(BUILD)/iso/boot/device.dtb
+DTB_OBJ:=$(BUILD)/device_dtb.o
+
 MULTIBOOT2:=0x10000 # 多重引导2头部加载地址
 ENTRYPOINT:=0x10040 # 内核入口地址
 
@@ -27,6 +33,18 @@ $(BUILD)/%.o: $(SRC)/%.asm
 $(BUILD)/%.o: $(SRC)/%.c
 	$(shell mkdir -p $(dir $@))
 	gcc $(CFLAGS) $(DEBUG) $(INCLUDE) -c $< -o $@
+
+$(DTB): $(DTS)
+	$(shell mkdir -p $(dir $@))
+	$(DTC) -I dts -O dtb -o $@ $<
+
+$(DTB_OBJ): $(DTB)
+	$(shell mkdir -p $(dir $@))
+	objcopy -I binary -O elf32-i386 -B i386 $< $@
+
+$(ISO_DTB): $(DTB)
+	$(shell mkdir -p $(dir $@))
+	cp $< $@
 
 LDFLAGS:= -m elf_i386 \
 		-static \
@@ -65,7 +83,11 @@ $(BUILD)/kernel.bin: \
 	$(BUILD)/lib/syscall.o \
 	$(BUILD)/lib/list.o \
 	$(BUILD)/lib/fifo.o \
-	$(BUILD)/lib/printf.o
+	$(BUILD)/lib/printf.o \
+	$(BUILD)/kernel/devicetree.o \
+	$(DTB_OBJ)
+
+$(BUILD)/kernel.bin: | $(DTB)
 	$(shell mkdir -p $(dir $@))
 	ld $(LDFLAGS) -o $@ $^
 
@@ -92,6 +114,9 @@ $(BUILD)/slave.img:
 	yes | ../bochs/bin/bximage -q -hd=32 -func=create -sectsize=512 -imgmode=flat $@
 
 IMAGES:= $(BUILD)/os.img $(BUILD)/slave.img
+
+.PHONY: dtb
+dtb: $(DTB) $(ISO_DTB)
 
 .PHONY: clean
 clean:

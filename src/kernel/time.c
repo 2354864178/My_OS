@@ -5,20 +5,6 @@
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
-#define CMOS_ADDR 0x70 // CMOS 地址寄存器
-#define CMOS_DATA 0x71 // CMOS 数据寄存器
-
-// 下面是 CMOS 信息的寄存器索引
-#define CMOS_SECOND 0x00  // (0 ~ 59)
-#define CMOS_MINUTE 0x02  // (0 ~ 59)
-#define CMOS_HOUR 0x04    // (0 ~ 23)
-#define CMOS_WEEKDAY 0x06 // (1 ~ 7) 星期天 = 1，星期六 = 7
-#define CMOS_DAY 0x07     // (1 ~ 31)
-#define CMOS_MONTH 0x08   // (1 ~ 12)
-#define CMOS_YEAR 0x09    // (0 ~ 99)
-#define CMOS_CENTURY 0x32 // 可能不存在
-#define CMOS_NMI 0x80
-
 #define MINUTE 60          // 每分钟的秒数
 #define HOUR (60 * MINUTE) // 每小时的秒数
 #define DAY (24 * HOUR)    // 每天的秒数
@@ -148,15 +134,15 @@ void time_read_bcd(tm *time)
     // 这样内核就能把与 CMOS 的时间误差控制在 1 秒之内。
     do
     {
-        time->tm_sec = cmos_read(CMOS_SECOND);
-        time->tm_min = cmos_read(CMOS_MINUTE);
-        time->tm_hour = cmos_read(CMOS_HOUR);
-        time->tm_wday = cmos_read(CMOS_WEEKDAY);
-        time->tm_mday = cmos_read(CMOS_DAY);
-        time->tm_mon = cmos_read(CMOS_MONTH);
-        time->tm_year = cmos_read(CMOS_YEAR);
-        century = cmos_read(CMOS_CENTURY);
-    } while (time->tm_sec != cmos_read(CMOS_SECOND));
+        time->tm_sec = cmos_read(CMOS_REG_SECONDS);
+        time->tm_min = cmos_read(CMOS_REG_MINUTES);
+        time->tm_hour = cmos_read(CMOS_REG_HOURS);
+        time->tm_wday = cmos_read(CMOS_REG_WEEKDAY);
+        time->tm_mday = cmos_read(CMOS_REG_DAY);
+        time->tm_mon = cmos_read(CMOS_REG_MONTH);
+        time->tm_year = cmos_read(CMOS_REG_YEAR);
+        century = cmos_read(CMOS_REG_CENTURY);
+    } while (time->tm_sec != cmos_read(CMOS_REG_SECONDS));
 }
 
 void time_read(tm *time)
@@ -179,7 +165,7 @@ void time_init()
     tm time;
     time_read(&time);
     startup_time = mktime(&time);
-    LOGK("startup time: %d%d-%02d-%02d %02d:%02d:%02d\n",
+    LOGK("startup time: %d%d-%02d-%02d %02d:%02d:%02d\n\n",
          century,
          time.tm_year,
          time.tm_mon,

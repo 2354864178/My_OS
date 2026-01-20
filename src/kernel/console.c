@@ -4,6 +4,11 @@
 #include <onix/debug.h>
 #include <onix/interrupt.h>
 #include <onix/device.h>
+#include <onix/devicetree.h>
+#include <onix/console.h>
+#include <onix/assert.h>
+
+#define LOGK(fmt, args...) DEBUGK(fmt, ##args)  // 内核日志宏
 
 #define CRT_ADDR_REG 0x3D4 // CRT(6845)索引寄存器
 #define CRT_DATA_REG 0x3D5 // CRT(6845)数据寄存器
@@ -43,6 +48,77 @@ static u32 x, y;    //  当前光标的坐标（80x25）
 static u8 attr = 7; //  字符的样式
 static u16 erase = 0x0720;  //  空格（删除后插入空格）
 static bool serial_ready = false; // 串口是否已初始化
+
+typedef struct console_dt_info  // 来自设备树的控制台信息
+{
+    bool present;           // 信息是否有效
+    u32 width;              // 宽度
+    u32 height;             // 高度
+    u32 color_attr;         // 颜色属性
+    u32 reg_base[3];        // 寄存器基址
+    u32 reg_size[3];        // 寄存器大小
+    u32 cursor_reg[2];      // 光标寄存器
+    u32 startaddr_reg[2];   // 起始地址寄存器   
+} console_dt_info_t;
+
+static console_dt_info_t console_dt;
+
+static void console_dt_probe(void){
+    void *val;
+    u32 len;
+    const char *paths[] = {"/console@3d4"}; // node name and label fallback
+
+    // 读取 DTB 中的控制台配置信息
+    if (dtb_get_prop_any(paths, 1, "width", &val, &len) == 0 && len == 4) { // 宽度属性存在且长度为4字节
+        console_dt.present = true;              // 标记 DTB 控制台信息有效
+        console_dt.width = dt_be32_read(val);   // 读取宽度值（大端转换）
+        LOGK("DT console: width %u (code %u)\n", console_dt.width, WIDTH);
+    }
+
+    if (dtb_get_prop_any(paths, 1, "height", &val, &len) == 0 && len == 4) { // 高度属性存在且长度为4字节
+        console_dt.present = true; 
+        console_dt.height = dt_be32_read(val);
+        LOGK("DT console: height %u (code %u)\n", console_dt.height, HEIGHT);
+    }
+
+    if (dtb_get_prop_any(paths, 1, "color-attr", &val, &len) == 0 && len == 4) {
+        console_dt.present = true;
+        console_dt.color_attr = dt_be32_read(val);
+        LOGK("DT console: color attr 0x%x (code 0x%x)\n", console_dt.color_attr, attr);
+    }
+
+    if (dtb_get_prop_any(paths, 1, "reg", &val, &len) == 0 && len >= 8 && (len % 8) == 0) {
+        console_dt.present = true;
+        u32 pairs = len / 8;
+        u32 *cells = (u32 *)val;
+        for (u32 i = 0; i < pairs && i < 3; i++){
+            console_dt.reg_base[i] = dt_be32_read(&cells[i * 2]);
+            console_dt.reg_size[i] = dt_be32_read(&cells[i * 2 + 1]);
+        }
+        LOGK("DT console: reg0 base 0x%x size 0x%x (code base 0x%x size 0x%x)\n",
+               console_dt.reg_base[0], console_dt.reg_size[0], CRT_ADDR_REG, 2U);
+        LOGK("DT console: reg1 base 0x%x size 0x%x (code base 0x%x size 0x%x)\n",
+               console_dt.reg_base[1], console_dt.reg_size[1], CRT_DATA_REG, 2U);
+        LOGK("DT console: fb base 0x%x size 0x%x (code base 0x%x size 0x%x)\n",
+               console_dt.reg_base[2], console_dt.reg_size[2], MEM_BASE, MEM_SIZE);
+    }
+
+    if (dtb_get_prop_any(paths, 1, "cursor-reg", &val, &len) == 0 && len >= 8) {
+        console_dt.present = true;
+        console_dt.cursor_reg[0] = dt_be32_read((u32 *)val);
+        console_dt.cursor_reg[1] = dt_be32_read((u32 *)val + 1);
+        LOGK("DT console: cursor regs 0x%x/0x%x (code 0x%x/0x%x)\n",
+               console_dt.cursor_reg[0], console_dt.cursor_reg[1], CRT_CURSOR_H, CRT_CURSOR_L);
+    }
+
+    if (dtb_get_prop_any(paths, 1, "startaddr-reg", &val, &len) == 0 && len >= 8) {
+        console_dt.present = true;
+        console_dt.startaddr_reg[0] = dt_be32_read((u32 *)val);
+        console_dt.startaddr_reg[1] = dt_be32_read((u32 *)val + 1);
+        LOGK("DT console: startaddr regs 0x%x/0x%x (code 0x%x/0x%x)\n\n",
+               console_dt.startaddr_reg[0], console_dt.startaddr_reg[1], CRT_START_ADDR_H, CRT_START_ADDR_L);
+    }
+}
 
 //  获取 VGA 文本模式下当前屏幕显示缓冲区起始地址
 static void get_screen(){
@@ -245,6 +321,8 @@ void console_write(void *dev, char *buf, u32 count){
 
 void console_init(){
     serial_init();
+    assert(dtb_node_enabled("/console@3d4")); // 确保控制台节点启用
+    console_dt_probe();
     console_clear();
     device_install(DEV_CHAR, DEV_CONSOLE,
         NULL, "console", 0,
