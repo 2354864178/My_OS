@@ -290,8 +290,8 @@ static void keyboard_wait()
 {
     u8 state;
     do{
-        state = inb(KEYBOARD_CTRL_PORT);
-    } while (state & 0x02);         // 读取键盘缓冲区，直到为空
+        state = inb(kbd_dt.ctrl_port);  // 读取键盘控制端口
+    } while (state & 0x02);             // 读取键盘缓冲区，直到为空
 }
 
 // 等待键盘控制器发送 ACK 确认
@@ -299,7 +299,7 @@ static void keyboard_ack()
 {
     u8 state;
     do{
-        state = inb(KEYBOARD_DATA_PORT);    // 读取键盘数据端口
+        state = inb(kbd_dt.data_port);    // 读取键盘数据端口
     } while (state != KEYBOARD_CMD_ACK);    // 直到收到 ACK 确认
 }
 
@@ -308,12 +308,12 @@ static void set_leds()
     u8 leds = (capslock_state << 2) | (numlock_state << 1) | scrlock_state;
     keyboard_wait();
     
-    outb(KEYBOARD_DATA_PORT, KEYBOARD_CMD_LED); // 设置 LED 命令
+    outb(kbd_dt.data_port, KEYBOARD_CMD_LED); // 设置 LED 命令
     keyboard_ack();
 
     keyboard_wait();
     
-    outb(KEYBOARD_DATA_PORT, leds);             // 设置 LED 灯状态
+    outb(kbd_dt.data_port, leds);             // 设置 LED 灯状态
     keyboard_ack();
 }
 
@@ -321,7 +321,7 @@ static void set_leds()
 void keyboard_handler(int vector){
     assert(vector == 0x21);
     send_eoi(vector);                       // 发送中断处理完成信号
-    u16 scancode = inb(KEYBOARD_DATA_PORT); // 读取扫描码；>0x80 表示按键释放
+    u16 scancode = inb(kbd_dt.data_port); // 读取扫描码；>0x80 表示按键释放
     u8 ext = 2; // 扩展码偏移量
 
     // 处理扩展码
@@ -418,8 +418,8 @@ void keyboard_init(){
 
     set_leds();
 
-    set_interrupt_handler(IRQ_KEYBOARD, keyboard_handler);  // 设置键盘中断处理函数
-    set_interrupt_mask(IRQ_KEYBOARD, true);                 // 允许键盘中断
+    set_interrupt_handler(kbd_dt.irq, keyboard_handler);  // 设置键盘中断处理函数
+    set_interrupt_mask(kbd_dt.irq, true);                 // 允许键盘中断
 
     device_install(DEV_CHAR, DEV_KEYBOARD,
         NULL, "keyboard", 0,

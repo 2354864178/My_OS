@@ -398,8 +398,8 @@ static void ide_ctrl_init(void) {
         ctrl->selected_disk = NULL;                 // 初始化当前选择的磁盘为空
         ctrl->wait_task = NULL;                     // 初始化等待任务为空
             
-        if(cidx == 0)  ctrl->io_base = IDE_REG_PRIMARY; // 主控制器基址
-        else ctrl->io_base = IDE_REG_SECONDARY;         // 副控制器基址
+        if(cidx == 0)  ctrl->io_base = ide_dt[0].cmd_base;  // 主控制器基址
+        else ctrl->io_base = ide_dt[1].cmd_base;            // 副控制器基址
 
         ctrl->control = inb(ctrl->io_base + IDE_REG_CONTROL); // 读取控制寄存器初始值
 

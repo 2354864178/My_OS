@@ -102,11 +102,11 @@ static char *messages[] = {     // 异常信息字符串数组
 void send_eoi(int vector)
 {
     if (vector >= 0x20 && vector < 0x28){
-        outb(PIC_M_CTRL, PIC_EOI);  // 向主片发送结束信号
+        outb(pic_dt.m_ctrl, PIC_EOI);  // 向主片发送结束信号
     }
     if (vector >= 0x28 && vector < 0x30){
-        outb(PIC_M_CTRL, PIC_EOI);  // 向主片发送结束信号
-        outb(PIC_S_CTRL, PIC_EOI);  // 向从片发送结束信号
+        outb(pic_dt.m_ctrl, PIC_EOI);  // 向主片发送结束信号
+        outb(pic_dt.s_ctrl, PIC_EOI);  // 向从片发送结束信号
     }
 }
 
@@ -121,9 +121,9 @@ void set_interrupt_mask(u32 irq, bool enable)
 {
     assert(irq >= 0 && irq < 16);
     u16 port;   // 端口号
-    if (irq < 8) port = PIC_M_DATA; // 主片
+    if (irq < 8) port = pic_dt.m_data; // 主片
     else {
-        port = PIC_S_DATA;          // 从片
+        port = pic_dt.s_data;          // 从片
         irq -= 8;       // 调整 irq 编号
     }
 
@@ -135,18 +135,18 @@ void set_interrupt_mask(u32 irq, bool enable)
 // 初始化中断控制器
 void pic_init()
 {
-    outb(PIC_M_CTRL, 0b00010001); // ICW1: 边沿触发, 级联 8259, 需要ICW4.
-    outb(PIC_M_DATA, 0x20);       // ICW2: 起始中断向量号 0x20
-    outb(PIC_M_DATA, 0b00000100); // ICW3: IR2接从片.
-    outb(PIC_M_DATA, 0b00000001); // ICW4: 8086模式, 正常EOI
+    outb(pic_dt.m_ctrl, 0b00010001); // ICW1: 边沿触发, 级联 8259, 需要ICW4.
+    outb(pic_dt.m_data, 0x20);       // ICW2: 起始中断向量号 0x20
+    outb(pic_dt.m_data, 0b00000100); // ICW3: IR2接从片.
+    outb(pic_dt.m_data, 0b00000001); // ICW4: 8086模式, 正常EOI
 
-    outb(PIC_S_CTRL, 0b00010001); // ICW1: 边沿触发, 级联 8259, 需要ICW4.
-    outb(PIC_S_DATA, 0x28);       // ICW2: 起始中断向量号 0x28
-    outb(PIC_S_DATA, 2);          // ICW3: 设置从片连接到主片的 IR2 引脚
-    outb(PIC_S_DATA, 0b00000001); // ICW4: 8086模式, 正常EOI
+    outb(pic_dt.s_ctrl, 0b00010001); // ICW1: 边沿触发, 级联 8259, 需要ICW4.
+    outb(pic_dt.s_data, 0x28);       // ICW2: 起始中断向量号 0x28
+    outb(pic_dt.s_data, 2);          // ICW3: 设置从片连接到主片的 IR2 引脚
+    outb(pic_dt.s_data, 0b00000001); // ICW4: 8086模式, 正常EOI
 
-    outb(PIC_M_DATA, 0b11111111); // 打开时钟中断
-    outb(PIC_S_DATA, 0b11111111); // 关闭所有中断
+    outb(pic_dt.m_data, 0b11111111); // 打开时钟中断
+    outb(pic_dt.s_data, 0b11111111); // 关闭所有中断
 }
 
 void exception_handler(

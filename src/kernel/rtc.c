@@ -41,15 +41,15 @@ static void rtc_dt_probe(void)
 // 读 cmos 寄存器的值
 u8 cmos_read(u8 addr)
 {
-    outb(CMOS_ADDR_PORT, CMOS_NMI_MASK | addr);
-    return inb(CMOS_DATA_PORT);
+    outb(rtc_dt.addr_port, CMOS_NMI_MASK | addr);
+    return inb(rtc_dt.data_port);
 };
 
 // 写 cmos 寄存器的值
 void cmos_write(u8 addr, u8 value)
 {
-    outb(CMOS_ADDR_PORT, CMOS_NMI_MASK | addr);
-    outb(CMOS_DATA_PORT, value);
+    outb(rtc_dt.addr_port, CMOS_NMI_MASK | addr);
+    outb(rtc_dt.data_port, value);
 }
 
 extern void start_beep();

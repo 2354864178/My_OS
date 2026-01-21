@@ -26,8 +26,8 @@
 #define MEM_END (MEM_BASE + MEM_SIZE) // 显卡内存结束位置
 #define WIDTH 80                      // 屏幕文本列数
 #define HEIGHT 25                     // 屏幕文本行数
-#define ROW_SIZE (WIDTH * 2)          // 每行字节数
-#define SCR_SIZE (ROW_SIZE * HEIGHT)  // 屏幕字节数
+#define ROW_SIZE (console_dt.width * 2)          // 每行字节数
+#define SCR_SIZE (ROW_SIZE * console_dt.height)  // 屏幕字节数
 
 //  一些符号
 #define NUL 0x00
@@ -152,8 +152,8 @@ static void get_cursor(){
     pos += MEM_BASE;
     
     u32 delta = (pos - screen) >> 1;    //  计算光标位置相较于屏幕左上角的偏移量
-    x = delta % WIDTH;  //  计算x坐标
-    y = delta / WIDTH;  //  计算y坐标
+    x = delta % console_dt.width;  //  计算x坐标
+    y = delta / console_dt.width;  //  计算y坐标
 }
 
 //  设置光标在屏幕上的具体位置
@@ -187,7 +187,7 @@ static void scroll_up(){
     }
     u32 *ptr = (u32 *)(screen + SCR_SIZE);  //  当前屏幕内容的末尾地址，转为u32*方便一次写2个字符（4字节）
     //  将新增的一行清空（填充空格）
-    for(size_t i=0; i<WIDTH; i++){
+    for(size_t i=0; i<console_dt.width; i++){
         *ptr++ = erase;
     }
     screen += ROW_SIZE; //  原来的第二行内容现在变成第一行，所以屏幕起始地址向后移动一行的字节数
@@ -232,7 +232,7 @@ static inline void serial_putc(char c){
 // 光标换行\n
 static void command_lf(){
     // 当前行不是最后一行，直接换行到下一行
-    if(y + 1 < HEIGHT){
+    if(y + 1 < console_dt.height){
         y++;               // 光标行坐标+1（移动到下一行）
         pos += ROW_SIZE;   // 光标内存地址+一行的字节数（对应下一行的起始位置）
         set_cursor();
@@ -298,14 +298,14 @@ void console_write(void *dev, char *buf, u32 count){
             command_del();
             break;
         default:
-            if(x >= WIDTH){
-                x -= WIDTH;
+            if(x >= console_dt.width){
+                x -= console_dt.width;
                 pos -= ROW_SIZE;
                 command_lf();
             }
             *((char *)pos) = ch;
             pos++;
-            *((char *)pos) = attr;
+            *((char *)pos) = console_dt.color_attr;
             pos++;
             x++;
             // set_cursor();

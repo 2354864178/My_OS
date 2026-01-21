@@ -14,12 +14,12 @@
 
 #define HZ 100              // 时钟中断频率
 #define OSCILLATOR 1193182  // 8253/8254 时钟芯片的输入频率
-#define CLOCK_COUNTER (OSCILLATOR / HZ) // 计数器初值
+#define CLOCK_COUNTER (pit_dt.clock_hz / HZ) // 计数器初值
 #define JIFFY (1000 / HZ)   // 每个时钟节拍的毫秒数
 
 #define SPEAKER_REG 0x61    // 蜂鸣器端口
 #define BEEP_HZ 440         // 蜂鸣器频率
-#define BEEP_COUNTER (OSCILLATOR / BEEP_HZ) // 蜂鸣器计数器初值
+#define BEEP_COUNTER (pit_dt.clock_hz / BEEP_HZ) // 蜂鸣器计数器初值
 // #define BEEP_MS 100
 
 u32 volatile jiffies = 0;   // 全局时钟节拍计数
@@ -125,20 +125,20 @@ time_t sys_time(){
 void pit_init()
 {
     // 配置计数器 0 时钟
-    outb(PIT_CTRL_REG, 0b00110100);                     // 方式 2, 16 位二进制, 读写低高字节
-    outb(PIT_CHAN0_REG, CLOCK_COUNTER & 0xff);          // 计数器低 8 位
-    outb(PIT_CHAN0_REG, (CLOCK_COUNTER >> 8) & 0xff);   // 计数器高 8 位
+    outb(pit_dt.ctrl, 0b00110100);                     // 方式 2, 16 位二进制, 读写低高字节
+    outb(pit_dt.chan0, CLOCK_COUNTER & 0xff);          // 计数器低 8 位
+    outb(pit_dt.chan0, (CLOCK_COUNTER >> 8) & 0xff);   // 计数器高 8 位
 
     // 配置计数器 2 蜂鸣器
-    outb(PIT_CTRL_REG, 0b10110110);                     // 方式 3, 16 位二进制, 读写低高字节
-    outb(PIT_CHAN2_REG, (u8)BEEP_COUNTER);              // 计数器低 8 位
-    outb(PIT_CHAN2_REG, (u8)(BEEP_COUNTER >> 8));       // 计数器高 8 位
+    outb(pit_dt.ctrl, 0b10110110);                     // 方式 3, 16 位二进制, 读写低高字节
+    outb(pit_dt.chan2, (u8)BEEP_COUNTER);              // 计数器低 8 位
+    outb(pit_dt.chan2, (u8)(BEEP_COUNTER >> 8));       // 计数器高 8 位
 }
 
 void clock_init(){
     assert(dtb_node_enabled("/timer@40"));
     pit_dt_probe();
     pit_init();
-    set_interrupt_handler(IRQ_CLOCK, clock_handler);
-    set_interrupt_mask(IRQ_CLOCK, true);
+    set_interrupt_handler(pit_dt.irq, clock_handler);
+    set_interrupt_mask(pit_dt.irq, true);
 }
