@@ -139,8 +139,8 @@ QEMU+= -audiodev pa,id=hda				# 使用PulseAudio音频驱动
 QEMU+= -machine pcspk-audiodev=hda 		# 使用PC扬声器并连接到音频驱动
 QEMU+= -rtc base=localtime 				# 使用本地时间作为RTC时间
 QEMU+= -serial stdio 					# 将串口输出重定向到标准输入输出
-QEMU+= -drive file=$(BUILD)/os.img,if=ide,index=0,media=disk,format=raw
-QEMU+= -drive file=$(BUILD)/slave.img,if=ide,index=1,media=disk,format=raw
+QEMU+= -drive file=$(BUILD)/os.img,if=ide,index=0,media=disk,format=raw		# 主磁盘
+QEMU+= -drive file=$(BUILD)/slave.img,if=ide,index=1,media=disk,format=raw	# 从磁盘
 
 QEMU_DISK:= -boot c
 

@@ -63,7 +63,14 @@ typedef struct ide_ctrl_t {
     struct task_t *wait_task;       // 等待任务
 } ide_ctrl_t;
 
+// 磁盘操作
 int ide_pio_read(ide_disk_t *disk, void *buffer, u8 count, idx_t lba);
 int ide_pio_write(ide_disk_t *disk, void *buffer, u8 count, idx_t lba);
+int ide_pio_ioctl(ide_disk_t *disk, int cmd, void *args, int flags); 
+
+// 分区操作
+int ide_pio_part_read(ide_part_t *part, void *buffer, u8 count, idx_t lba);
+int ide_pio_part_write(ide_part_t *part, void *buffer, u8 count, idx_t lba);
+int ide_pio_part_ioctl(ide_part_t *part, int cmd, void *args, int flags);
 
 #endif // ONIX_IDE_H

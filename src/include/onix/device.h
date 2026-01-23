@@ -18,7 +18,30 @@ enum device_type_t {
 enum device_subtype_t {
     DEV_CONSOLE = 1, // 控制台
     DEV_KEYBOARD,    // 键盘
+    DEV_IDE_DISK,    // IDE磁盘
+    DEV_IDE_PART,    // IDE磁盘分区
 };
+
+// 设备控制命令
+enum device_cmd_t{
+    DEV_CMD_SECTOR_START = 1,   // 起始扇区
+    DEV_CMD_SECTOR_COUNT        // 扇区数量
+};
+
+#define REQ_READ  0 // 读请求
+#define REQ_WRITE 1 // 写请求
+
+// 设备请求结构体
+typedef struct request_t{
+    dev_t dev;              // 设备号
+    u32 type;               // 请求类型（读或写）
+    u32 idx;                // 索引（如扇区号）
+    u32 count;              // 计数（如扇区数量）
+    int flags;              // 标志
+    u8 *buf;                // 数据缓冲区
+    struct task_t *task;    // 发起请求的任务
+    list_node_t node;       // 链表结点
+} request_t;
 
 // 设备结构体
 typedef struct device_t {
@@ -28,7 +51,7 @@ typedef struct device_t {
     dev_t dev;           // 设备号
     dev_t parent;        // 父设备号
     void *ptr;           // 设备指针
-
+    list_t requests_list;    // 设备请求队列
     int (*ioctl)(void *dev, int cmd, void *args, int flags);                // 控制操作
     int (*read)(void *dev, void *buf, size_t count, idx_t idx, int flags);  // 读操作
     int (*write)(void *dev, void *buf, size_t count, idx_t idx, int flags); // 写操作
@@ -44,5 +67,5 @@ device_t *device_get(dev_t dev);            // 根据设备号查找设备
 int device_ioctl(dev_t dev, int cmd, void *args, int flags);                // 控制设备
 int device_read(dev_t dev, void *buf, size_t count, idx_t idx, int flags);  // 读设备
 int device_write(dev_t dev, void *buf, size_t count, idx_t idx, int flags); // 写设备
-
+void device_request(dev_t dev, void *buf, u8 count, idx_t idx, int flags, u32 type); // 块设备请求
 #endif

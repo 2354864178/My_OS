@@ -9,6 +9,7 @@
 #include <onix/task.h>
 #include <onix/devicetree.h>
 #include <onix/printk.h>
+#include <onix/device.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)  // 内核日志宏
 
@@ -17,19 +18,19 @@
 #define IDE_REG_SECONDARY 0x170 // 副基址
 
 // IDE 寄存器偏移
-#define IDE_REG_DATA 0x00           // 数据寄存器
-#define IDE_REG_ERROR 0x01          // 错误寄存器（只读）
-#define IDE_REG_FEATURES 0x01       // 特性寄存器（只写）
-#define IDE_REG_SECTOR_COUNT 0x02   // 扇区数寄存器
-#define IDE_REG_LBA_LOW 0x03        // LBA 低 8 位
-#define IDE_REG_LBA_MID 0x04        // LBA 中 8 位
-#define IDE_REG_LBA_HIGH 0x05       // LBA 高 8 位
-#define IDE_REG_HDDEVSEL 0x06       // 选择硬盘设备寄存器
-#define IDE_REG_STATUS 0x07         // 状态寄存器（只读）
-#define IDE_REG_COMMAND 0x07        // 命令寄存器（只写）
-#define IDE_REG_ALTSTATUS 0x206     // 备用状态寄存器（只读）
-#define IDE_REG_CONTROL 0x206       // 控制寄存器（只写）
-#define IDE_REG_DEVCONTROL 0x206    // 设备控制寄存器（只写）
+#define IDE_REG_DATA 0x0000           // 数据寄存器
+#define IDE_REG_ERROR 0x0001          // 错误寄存器（只读）
+#define IDE_REG_FEATURES 0x0001       // 特性寄存器（只写）
+#define IDE_REG_SECTOR_COUNT 0x0002   // 扇区数寄存器
+#define IDE_REG_LBA_LOW 0x0003        // LBA 低 8 位
+#define IDE_REG_LBA_MID 0x0004        // LBA 中 8 位
+#define IDE_REG_LBA_HIGH 0x0005       // LBA 高 8 位
+#define IDE_REG_HDDEVSEL 0x0006       // 选择硬盘设备寄存器
+#define IDE_REG_STATUS 0x0007         // 状态寄存器（只读）
+#define IDE_REG_COMMAND 0x0007        // 命令寄存器（只写）
+#define IDE_REG_ALTSTATUS 0x0206     // 备用状态寄存器（只读）
+#define IDE_REG_CONTROL 0x0206       // 控制寄存器（只写）
+#define IDE_REG_DEVCONTROL 0x0206    // 设备控制寄存器（只写）
 
 // IDE 命令
 #define IDE_CMD_READ  0x20          // 读命令
@@ -170,22 +171,23 @@ void ide_handler(int vector) {
 static u32 ide_error(ide_ctrl_t *ctrl) {
     // 读取错误状态
     u8 error = inb(ctrl->io_base + IDE_REG_ERROR); // 读取错误寄存器
-    if(error & IDE_ER_AMNF) LOGK("%s: Address Mark Not Found\n", ctrl->name);   // 地址标记未找到
-    if(error & IDE_ER_TK0NF) LOGK("%s: Track 0 Not Found\n", ctrl->name);       // 磁道 0 未找到
-    if(error & IDE_ER_ABRT) LOGK("%s: Command Aborted\n", ctrl->name);          // 命令中止
-    if(error & IDE_ER_MCR) LOGK("%s: Media Change Request\n", ctrl->name);      // 媒体更改请求
-    if(error & IDE_ER_IDNF) LOGK("%s: ID Not Found\n", ctrl->name);             // ID 未找到
-    if(error & IDE_ER_MC) LOGK("%s: Media Error\n", ctrl->name);                // 媒体错误
-    if(error & IDE_ER_UNC) LOGK("%s: Uncorrectable Error\n", ctrl->name);       // 未纠正错误
-    if(error & IDE_ER_BBK) LOGK("%s: Bad Block\n", ctrl->name);                 // 坏块
+    if(error & IDE_ER_AMNF) LOGK("Address Mark Not Found\n");   // 地址标记未找到
+    if(error & IDE_ER_TK0NF) LOGK("Track 0 Not Found\n", ctrl->name);       // 磁道 0 未找到
+    if(error & IDE_ER_ABRT) LOGK("Command Aborted\n", ctrl->name);          // 命令中止
+    if(error & IDE_ER_MCR) LOGK("Media Change Request\n");      // 媒体更改请求
+    if(error & IDE_ER_IDNF) LOGK("ID Not Found\n");             // ID 未找到
+    if(error & IDE_ER_MC) LOGK("Media Error\n");                // 媒体错误
+    if(error & IDE_ER_UNC) LOGK("Uncorrectable Error\n");       // 未纠正错误
+    if(error & IDE_ER_BBK) LOGK("Bad Block\n");                 // 坏块
     // return error;
 }
 
 static u32 ide_wait_busy(ide_ctrl_t *ctrl, u8 mask) {
     while(true) {
         u8 status = inb(ctrl->io_base + IDE_REG_ALTSTATUS); // 读取状态寄存器
+        LOGK("%s: IDE Status: 0x%02X\n", ctrl->name, status);
         if(status & IDE_SR_ERR) ide_error(ctrl);    // 检查并报告错误
-        if(status & IDE_SR_BSY) continue;           // 等待 BSY 清除
+        if(status & IDE_SR_BSY)  continue;          // 仍然忙碌，继续等待   
         if((status & mask) == mask) return 0;       // 所需状态达成
     }
 }
@@ -207,17 +209,17 @@ static void ide_select_sector(ide_disk_t *disk, idx_t lba, u8 count) {
     outb(disk->ctrl->io_base + IDE_REG_HDDEVSEL, disk->selecter | ((lba >> 24) & 0x0F)); // 设置 LBA 最高 4 位
 }
 
-static void ide_pio_read_sector(ide_ctrl_t *ctrl, u16 *buffer) {
+static void ide_pio_read_sector(ide_disk_t *disk, u16 *buffer) {
     // 从数据寄存器读取一个扇区的数据
     for(size_t i = 0; i < SECTOR_SIZE/2; i++){
-        buffer[i] = inw(ctrl->io_base + IDE_REG_DATA); // 读取 16 位数据
+        buffer[i] = inw(disk->ctrl->io_base + IDE_REG_DATA); // 读取 16 位数据
     }
 }
 
-static void ide_pio_write_sector(ide_ctrl_t *ctrl, u16 *buffer) {
+static void ide_pio_write_sector(ide_disk_t *disk, u16 *buffer) {
     // 向数据寄存器写入一个扇区的数据
     for(size_t i = 0; i < SECTOR_SIZE/2; i++){
-        outw(ctrl->io_base + IDE_REG_DATA, buffer[i]); // 写入 16 位数据
+        outw(disk->ctrl->io_base + IDE_REG_DATA, buffer[i]); // 写入 16 位数据
     }
 }
 
@@ -247,7 +249,7 @@ int ide_pio_read(ide_disk_t *disk, void *buffer, u8 count, idx_t lba) {
         }
         ide_wait_busy(ctrl, IDE_SR_DRQ);            // 等待数据请求
         u32 offset = (u32)buffer + i * SECTOR_SIZE; // 计算缓冲区偏移
-        ide_pio_read_sector(ctrl, (u16 *)offset);   // 读取一个扇区数据
+        ide_pio_read_sector(disk, (u16 *)offset);   // 读取一个扇区数据
     }
 
     raw_mutex_unlock(&ctrl->lock); // 释放互斥锁
@@ -273,7 +275,7 @@ int ide_pio_write(ide_disk_t *disk, void *buffer, u8 count, idx_t lba) {
 
     for(size_t i = 0; i < count; i++) {
         u32 offset = (u32)buffer + i * SECTOR_SIZE; // 计算缓冲区偏移
-        ide_pio_write_sector(ctrl, (u16 *)offset);  // 写入一个扇区数据
+        ide_pio_write_sector(disk, (u16 *)offset);  // 写入一个扇区数据
 
         task_t *current = running_task(); // 获取当前任务
         // 阻塞当前任务，等待数据准备好
@@ -281,11 +283,31 @@ int ide_pio_write(ide_disk_t *disk, void *buffer, u8 count, idx_t lba) {
             ctrl->wait_task = current; // 设置等待任务
             task_block(current, NULL, TASK_BLOCKED);       // 阻塞当前任务
         }
-        ide_wait_busy(ctrl, IDE_SR_DRQ);            // 等待数据请求
+        LOGK("%s: Write sector %u done, waiting for completion...\n", ctrl->name, lba + i);
+        task_sleep(100);                            // 等待 100 毫秒，确保数据写入完成
+        ide_wait_busy(ctrl, IDE_SR_NULL);           // 等待写入完成
     }
 
     raw_mutex_unlock(&ctrl->lock); // 释放互斥锁
     return 0; // 写入成功
+}
+
+// IDE 磁盘的 ioctl 操作
+int ide_pio_ioctl(ide_disk_t *disk, int cmd, void *args, int flags) {
+    // disk: 目标磁盘
+    // cmd: 控制命令
+    // args: 命令参数
+    // flags: 控制标志
+    switch (cmd)
+    {
+    case DEV_CMD_SECTOR_START:
+        return 0;
+    case DEV_CMD_SECTOR_COUNT:
+        return disk->total_sectors;
+    default:
+        panic("ide_pio_ioctl: unsupported cmd %d\n", cmd);
+        break;
+    }
 }
 
 // 基于分区的读操作
@@ -296,6 +318,19 @@ int ide_pio_part_read(ide_part_t *part, void *buffer, u8 count, idx_t lba) {
 // 基于分区的写操作
 int ide_pio_part_write(ide_part_t *part, void *buffer, u8 count, idx_t lba) {
     return ide_pio_write(part->disk, buffer, count, part->start + lba);
+}
+
+int ide_pio_part_ioctl(ide_part_t *part, int cmd, void *args, int flags) {
+    switch (cmd)
+    {
+    case DEV_CMD_SECTOR_START:
+        return part->start;
+    case DEV_CMD_SECTOR_COUNT:
+        return part->count;
+    default:
+        panic("ide_pio_part_ioctl: unsupported cmd %d\n", cmd);
+        break;
+    }
 }
 
 // 交换字节序对
@@ -317,7 +352,7 @@ static u32 ide_identify(ide_disk_t *disk, u16 *buf) {
     outb(disk->ctrl->io_base + IDE_REG_COMMAND, IDE_CMD_IDENTIFY); // 发送识别命令
     ide_wait_busy(disk->ctrl, IDE_SR_NULL);     // 等待 BSY 清除
     ide_params_t *params = (ide_params_t *)buf; // 参数结构体指针
-    ide_pio_read_sector(disk->ctrl, buf);       // 读取识别数据
+    ide_pio_read_sector(disk, buf);       // 读取识别数据
     LOGK("disk %s total lba %d\n", disk->name, params->total_lba);
 
     u32 ret = EOF;
@@ -422,11 +457,30 @@ static void ide_ctrl_init(void) {
     free_kpage((u32)buf, 1); // 释放内核页面
 }
 
+static void ide_install(){
+    for(size_t cidx = 0; cidx < IDE_CTRL_NR; cidx++) {
+        ide_ctrl_t *ctrl = &ide_ctrls[cidx];        // 获取控制器结构体
+        for(size_t didx = 0; didx < IDE_DISK_NR; didx++) {
+            ide_disk_t *disk = &ctrl->disks[didx];      // 获取磁盘结构体
+            if(!disk->total_sectors) continue;          // 无效磁盘，跳过
+            dev_t dev = device_install(DEV_BLOCK, DEV_IDE_DISK, disk, disk->name, 0,
+                ide_pio_ioctl, ide_pio_read, ide_pio_write );   // 安装磁盘设备
+            for(size_t pidx = 0; pidx < IDE_PART_NR; pidx++) {
+                ide_part_t *part = &disk->disk[pidx];   // 获取分区结构体
+                if(!part->count) continue;              // 无效分区，跳过
+                device_install(DEV_BLOCK, DEV_IDE_PART, part, part->name, dev,
+                    ide_pio_part_ioctl, ide_pio_part_read, ide_pio_part_write ); // 安装分区设备
+            }
+        }
+    }
+}
+
 void ide_init(void) {
     // LOGK("IDE Init Start...\n");
-    assert(dtb_node_enabled("/ide@1f0") && dtb_node_enabled("/ide@170"));
+    // assert(dtb_node_enabled("/ide@1f0") && dtb_node_enabled("/ide@170"));
     ide_dt_probe();
     ide_ctrl_init();  // 初始化 IDE 控制器
+    ide_install();    // 安装 IDE 设备
 
     set_interrupt_handler(IRQ_HARDDISK, ide_handler);   // 设置 IDE 中断处理程序
     set_interrupt_handler(IRQ_HARDDISK2, ide_handler);  // 设置第二个 IDE 中断处理程序

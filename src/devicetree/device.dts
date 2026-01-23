@@ -1,8 +1,8 @@
 /dts-v1/;
 
 / {
-    compatible = "onix,pc";
-    model = "Onix teaching kernel";
+    compatible = "ysy,pc";
+    model = "ysy teaching kernel";
     #address-cells = <1>;
     #size-cells = <1>;
 
