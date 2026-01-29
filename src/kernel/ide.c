@@ -486,5 +486,5 @@ void ide_init(void) {
     set_interrupt_handler(IRQ_HARDDISK2, ide_handler);  // 设置第二个 IDE 中断处理程序
     set_interrupt_mask(IRQ_HARDDISK, true);             // 允许 IDE 中断
     set_interrupt_mask(IRQ_HARDDISK2, true);            // 允许第二个 IDE 中断
-    set_interrupt_mask(IRQ_CASCADE, true);              // 允许级联中断
+    // set_interrupt_mask(IRQ_CASCADE, true);              // 允许级联中断
 }

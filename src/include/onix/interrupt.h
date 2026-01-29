@@ -66,6 +66,7 @@ typedef struct gate_t
 typedef void *handler_t; // 中断处理函数
 // void interrupt_init();
 void send_eoi(int vector);
+void send_eoi_apic(int vector);
 
 // void set_exception_handler(u32 intr, handler_t handler);
 

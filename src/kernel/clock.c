@@ -104,6 +104,10 @@ void clock_handler(int vector)
 
     jiffies++;          // 全局时钟节拍计数加一
 
+    if (jiffies <= 5) {
+        LOGK("clock tick jiffies=%u\n", jiffies);
+    }
+
     task_t *task = running_task();      // 获取当前运行任务指针
     // printk("Clock tick: %d\n", task->magic);
     assert(task->magic == ONIX_MAGIC);  // 检查任务魔数，防止栈溢出
@@ -122,8 +126,7 @@ time_t sys_time(){
     return startup_time + jiffies * JIFFY / 1000;   // 返回系统运行时间，单位秒
 }
 
-void pit_init()
-{
+void pit_init(){
     // 配置计数器 0 时钟
     outb(pit_dt.ctrl, 0b00110100);                     // 方式 2, 16 位二进制, 读写低高字节
     outb(pit_dt.chan0, CLOCK_COUNTER & 0xff);          // 计数器低 8 位

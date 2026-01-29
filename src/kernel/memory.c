@@ -259,6 +259,7 @@ void mapping_init()
     // BMB;
     enable_page();      // 分页有效
     map_page_fixed(0xFEE00000, 0xFEE00000, PAGE_PRESENT | PAGE_WRITE | PAGE_PCD); // 映射本地 APIC 寄存器
+    map_page_fixed(0xFEC00000, 0xFEC00000, PAGE_PRESENT | PAGE_WRITE | PAGE_PCD); // 映射 I/O APIC 寄存器
 }
 
 // 获取页目录

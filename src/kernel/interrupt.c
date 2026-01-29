@@ -3,8 +3,10 @@
 #include <onix/interrupt.h>
 #include <onix/printk.h>
 #include <onix/io.h>
+#include <onix/mmio.h>
 #include <onix/assert.h>
 #include <onix/devicetree.h>
+#include <onix/apic.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 
@@ -98,15 +100,70 @@ static char *messages[] = {     // 异常信息字符串数组
     "#CP Control Protection Exception\0",
 };
 
-// 通知中断控制器，中断处理结束
-void send_eoi(int vector)
-{
-    if (vector >= 0x20 && vector < 0x28){
-        outb(pic_dt.m_ctrl, PIC_EOI);  // 向主片发送结束信号
-    }
-    if (vector >= 0x28 && vector < 0x30){
-        outb(pic_dt.m_ctrl, PIC_EOI);  // 向主片发送结束信号
-        outb(pic_dt.s_ctrl, PIC_EOI);  // 向从片发送结束信号
+// 写 Local APIC 寄存器
+static _inline void lapic_write32(uintptr_t reg, u32 value){
+    mmio_write32((uintptr_t)(LAPIC_BASE_PHYS + reg), value);
+}
+
+// 读 Local APIC 寄存器
+static _inline u32 lapic_read32(uintptr_t reg){
+    return mmio_read32((uintptr_t)(LAPIC_BASE_PHYS + reg));
+}
+
+// 读 I/O APIC 寄存器
+static _inline u32 ioapic_read32(u32 index){
+    uintptr_t regsel = (uintptr_t)(IOAPIC_BASE_PHYS + IOAPIC_REGSEL);   // 选址寄存器
+    uintptr_t window = (uintptr_t)(IOAPIC_BASE_PHYS + IOAPIC_WINDOW);   // 窗口寄存器
+    mmio_write32(regsel, index);    // 选中要读取的寄存器
+    return mmio_read32(window);     // 读取寄存器的值
+}
+
+// 写 I/O APIC 寄存器
+static _inline void ioapic_write32(u32 index, u32 value){
+    uintptr_t regsel = (uintptr_t)(IOAPIC_BASE_PHYS + IOAPIC_REGSEL);
+    uintptr_t window = (uintptr_t)(IOAPIC_BASE_PHYS + IOAPIC_WINDOW);
+    mmio_write32(regsel, index);
+    mmio_write32(window, value);
+}
+
+// 写 Local APIC 的 EOI 寄存器完成中断结束确认。
+static _inline void lapic_eoi(void){
+    lapic_write32(LAPIC_REG_EOI, 0);
+}
+
+// 写 I/O APIC 重定向表项
+static void ioapic_write_redir(u32 irq, u64 entry){
+    u32 low_index = IOAPIC_REDTBL_BASE + irq * 2;   // 重定向表项低 32 位索引
+    u32 high_index = low_index + 1;                 // 重定向表项高 32 位索引
+
+    // 先写高 32 位，再写低 32 位：避免在低 32 位写入瞬间出现短暂的无效目的地。
+    ioapic_write32(high_index, (u32)((entry >> 32) & 0xFFFFFFFFu)); // 写高 32 位
+    ioapic_write32(low_index, (u32)(entry & 0xFFFFFFFFu));          // 写低 32 位
+}
+
+// 传统 ISA IRQ 到 IOAPIC 输入引脚（GSI）的最小映射。
+// 在常见 PC/QEMU 配置中，PIT(IRQ0) 会被 override 到 GSI2。
+static _inline u32 ioapic_pin_from_isa_irq(u32 irq){
+    if (irq == IRQ_CLOCK) return 2;     // IRQ0 -> pin 2
+    if (irq == IRQ_CASCADE) return 0;   // IRQ2 -> pin 0（常见为 ExtINT/cascade）
+    return irq;
+}
+
+// 初始化 I/O APIC 的 IRQ0~IRQ15 重定向表（最小版：全部 masked，edge/high，fixed/physical）。
+// 之后由各个驱动通过 set_interrupt_mask(irq, true) 来逐个放行。
+static void ioapic_init_irq0_15(void) {
+    u32 apic_id = (lapic_read32(LAPIC_REG_ID) >> 24) & 0xFFu;   // 本地 APIC ID
+
+    for (u32 irq = 0; irq < 16; irq++) {
+        u32 pin = ioapic_pin_from_isa_irq(irq);
+        u64 entry = (u64)(APIC_IRQ_TO_VECTOR(irq) & 0xFFu) |    // 设置向量号
+                    IOAPIC_REDIR_DELIV_FIXED |                  // 固定模式
+                    IOAPIC_REDIR_DEST_PHYSICAL |                // 物理模式
+                    IOAPIC_REDIR_POLARITY_HIGH |                // 高电平有效
+                    IOAPIC_REDIR_TRIGGER_EDGE |                 // 边沿触发
+                    IOAPIC_REDIR_MASKED |                       // 屏蔽
+                    IOAPIC_REDIR_DEST(apic_id);                 // 目的地 APIC ID
+        ioapic_write_redir(pin, entry);                         // 写入重定向表项
     }
 }
 
@@ -117,38 +174,36 @@ void set_interrupt_handler(u32 irq, handler_t handler){
 }
 
 // 设置中断屏蔽位
-void set_interrupt_mask(u32 irq, bool enable)
-{
-    assert(irq >= 0 && irq < 16);
-    u16 port;   // 端口号
-    if (irq < 8) port = pic_dt.m_data; // 主片
-    else {
-        port = pic_dt.s_data;          // 从片
-        irq -= 8;       // 调整 irq 编号
-    }
+void set_interrupt_mask(u32 irq, bool enable){
+    assert(irq < 16);
+    // I/O APIC 的寄存器访问方式：先写 IOREGSEL 选中内部寄存器索引，再从 IOWIN 读写数据。
+    uintptr_t regsel = (uintptr_t)(IOAPIC_BASE_PHYS + IOAPIC_REGSEL);
+    uintptr_t window = (uintptr_t)(IOAPIC_BASE_PHYS + IOAPIC_WINDOW);
 
-    if (enable) outb(port, inb(port) & ~(1 << irq));    // 允许该中断
-    else outb(port, inb(port) | (1 << irq));            // 屏蔽该中断 
+    u32 pin = ioapic_pin_from_isa_irq(irq);
+    u32 redir_low_index = IOAPIC_REDTBL_BASE + pin * 2;
+
+    // 读 redirection entry 的低 32 位
+    mmio_write32(regsel, redir_low_index);                  // 选中重定向表项低 32 位
+    u32 low = mmio_read32(window);                          // 读取当前值
+
+    if (enable) low &= ~(1u << IOAPIC_REDIR_MASK_SHIFT);    // 取消屏蔽
+    else low |= (1u << IOAPIC_REDIR_MASK_SHIFT);            // 屏蔽
+
+    // 写回低 32 位（不改变 vector/trigger/polarity 等其他位）
+    mmio_write32(regsel, redir_low_index);                  // 选中重定向表项低 32 位
+    mmio_write32(window, low);                              // 写回修改后的值
 }
 
 
 // 初始化中断控制器
-void pic_init()
-{
-    outb(pic_dt.m_ctrl, 0b00010001); // ICW1: 边沿触发, 级联 8259, 需要ICW4.
-    outb(pic_dt.m_data, 0x20);       // ICW2: 起始中断向量号 0x20
-    outb(pic_dt.m_data, 0b00000100); // ICW3: IR2接从片.
-    outb(pic_dt.m_data, 0b00000001); // ICW4: 8086模式, 正常EOI
-
-    outb(pic_dt.s_ctrl, 0b00010001); // ICW1: 边沿触发, 级联 8259, 需要ICW4.
-    outb(pic_dt.s_data, 0x28);       // ICW2: 起始中断向量号 0x28
-    outb(pic_dt.s_data, 2);          // ICW3: 设置从片连接到主片的 IR2 引脚
-    outb(pic_dt.s_data, 0b00000001); // ICW4: 8086模式, 正常EOI
-
-    outb(pic_dt.m_data, 0b11111111); // 打开时钟中断
-    outb(pic_dt.s_data, 0b11111111); // 关闭所有中断
+void lapic_init(){
+    lapic_write32(LAPIC_REG_SVR, LAPIC_SVR_ENABLE | APIC_SPURIOUS_VECTOR);
+    lapic_write32(LAPIC_REG_TPR, 0);
+    lapic_eoi();
 }
 
+// 异常处理函数
 void exception_handler(
     int vector,
     u32 edi, u32 esi, u32 ebp, u32 esp,
@@ -212,13 +267,20 @@ void set_interrupt_state(bool state)
         asm volatile("cli\n");  // 清除 IF 位，屏蔽外中断
 }
 
-void default_handler(int vector)
-{
+void default_handler(int vector){
     send_eoi(vector);
     DEBUGK("[%x] default interrupt called ...\n", vector);
 }
 
+// 向中断控制器发送 EOI。
+// APIC 路线：对外部 IRQ 向量发送 Local APIC EOI。
+void send_eoi(int vector){
+    // 仅对 IRQ0~IRQ15 对应的向量发送 EOI（默认 IRQ_BASE=0x20）。
+    if ((u32)vector >= IRQ_MASTER_NR && (u32)vector < (IRQ_MASTER_NR + 16))
+        lapic_eoi();
+}
 
+// 初始化中断描述符表 IDT
 void idt_init(){
     for (size_t i = 0; i < IDT_SIZE; i++)
     {
@@ -250,7 +312,7 @@ void idt_init(){
     syscall_gate->offset1 = ((u32)syscall_handler >> 16) & 0xffff;
     syscall_gate->selector = 1 << 3; // 代码段
     syscall_gate->reserved = 0;      // 保留不用
-    syscall_gate->type = 0b1110;     // 中断门
+    syscall_gate->type = 0b1110;     // 中断门（进入内核时清 IF；本内核调度/阻塞路径要求关中断）
     syscall_gate->segment = 0;       // 系统段
     syscall_gate->DPL = 3;           // 用户态
     syscall_gate->present = 1;       // 有效
@@ -265,6 +327,17 @@ void interrupt_init()
 {
     assert(dtb_node_enabled("/interrupt-controller@20"));
     pic_dt_probe();
-    pic_init();
     idt_init();
+
+    // APIC 路线：先开 LAPIC，再配置 IOAPIC 的 IRQ0/IRQ1 路由。
+    lapic_init();
+    ioapic_init_irq0_15();
+
+    // 将外部 IRQ 从 8259A 路由到 APIC（IMCR）。
+    // outb(0x22, 0x70);
+    // outb(0x23, 0x01);
+
+    // 屏蔽 legacy PIC，避免 APIC 与 PIC 同时产生外部中断（双重触发）。
+    outb(PIC_M_DATA, 0xFF);
+    outb(PIC_S_DATA, 0xFF);
 }

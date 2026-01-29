@@ -113,7 +113,7 @@ void rtc_init()
     rtc_dt_probe();
     set_interrupt_handler(IRQ_RTC, rtc_handler);
     set_interrupt_mask(IRQ_RTC, true);
-    set_interrupt_mask(IRQ_CASCADE, true);
+    // set_interrupt_mask(IRQ_CASCADE, true);
 }
 
 // 供其他模块读取设备树探测到的 CMOS/RTC 信息
