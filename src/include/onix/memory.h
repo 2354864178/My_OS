@@ -14,6 +14,14 @@
 
 #define PDE_MASK 0xFFC00000         // 页目录偏移掩码
 
+// 页表/页目录项标志位
+#define PAGE_PRESENT 0x1    // 在内存中
+#define PAGE_WRITE   0x2    // 可读可写
+#define PAGE_USER    0x4    // 用户态可访问
+#define PAGE_PWT     0x8    // 页写通过
+#define PAGE_PCD     0x10   // 页缓存禁用
+#define PAGE_GLOBAL  0x100  // 全局页
+
 static u32 KERNEL_PAGE_TABLE[] = {  // 内核页表索引
     0x2000,
     0x3000,
@@ -50,4 +58,6 @@ int32 sys_brk(void *addr);
 void link_page(u32 vaddr);      // 将用户/内核虚拟地址链接到新物理页（按需创建页表）
 void unlink_page(u32 vaddr);    // 解除虚拟地址与物理页的映射
 
+void map_page_fixed(u32 vaddr, u32 paddr, u32 flags); // 将虚拟地址映射到指定物理地址，带标志位
+void unmap_page_fixed(u32 vaddr);                     // 解除虚拟地址与物理页的映射，固定映射版本
 #endif

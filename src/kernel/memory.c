@@ -208,6 +208,19 @@ static void entry_init(page_entry_t *entry, u32 index)
     entry->index = index;
 }
 
+// 初始化页表项，带标志位
+static void entry_init_flags(page_entry_t *entry, u32 index, u32 flags){
+    *(u32 *)entry = 0;          // 清空页表项
+    entry->present = (flags & PAGE_PRESENT) ? 1 : 0;    // 设置存在位
+    entry->write = (flags & PAGE_WRITE) ? 1 : 0;        // 设置可写位
+    entry->user = (flags & PAGE_USER) ? 1 : 0;          // 设置用户位
+    entry->pwt = (flags & PAGE_PWT) ? 1 : 0;            // 设置页写通过位
+    entry->pcd = (flags & PAGE_PCD) ? 1 : 0;            // 设置页缓存禁用位
+    entry->global = (flags & PAGE_GLOBAL) ? 1 : 0;      // 设置全局页位
+    entry->index = index;                               // 设置页索引
+
+}
+
 // 初始化内存映射
 void mapping_init()
 {
@@ -216,6 +229,7 @@ void mapping_init()
 
     idx_t index = 0;
 
+    // 初始化内核页目录和页表，实现虚拟地址到物理地址的恒等映射
     for (idx_t didx = 0; didx < (sizeof(KERNEL_PAGE_TABLE) / 4); didx++)
     {
         page_entry_t *pte = (page_entry_t *)KERNEL_PAGE_TABLE[didx];    // 拿到当前页表的物理地址，强制转换为页表项指针
@@ -244,6 +258,7 @@ void mapping_init()
     set_cr3((u32)pde);  // 设置 cr3 寄存器
     // BMB;
     enable_page();      // 分页有效
+    map_page_fixed(0xFEE00000, 0xFEE00000, PAGE_PRESENT | PAGE_WRITE | PAGE_PCD); // 映射本地 APIC 寄存器
 }
 
 // 获取页目录
@@ -300,6 +315,12 @@ page_entry_t *copy_pde() {
         for(size_t tidx = 0; tidx < 1024; tidx++) {     // 遍历该页表的所有页表项
             entry = &table[tidx];
             if(!entry->present) continue;            // 如果该页表项不存在，跳过
+
+            // MMIO/设备寄存器等映射的物理地址可能远超实际 RAM，
+            // 不在 memory_map 管理范围内（例如 x86 Local APIC: 0xFEE00000）。
+            // 这些映射不参与 COW/引用计数，保持原样共享即可。
+            if (entry->index >= total_pages) continue;
+
             assert(memory_map[entry->index] >= 1);   // 验证该物理页已被占用
             entry->write = false;                    // 先将该页表项设置为只读，防止写时错误
             memory_map[entry->index]++;              // 增加该物理页的引用计数
@@ -447,6 +468,34 @@ void unlink_page(u32 vaddr){
    
     put_page(paddr);    // 函数内部做了判断物理内存是否被多次引用
     flush_tlb(vaddr);   // 刷新该虚拟地址对应的 TLB
+}
+
+// 将虚拟地址 vaddr 映射到指定的物理地址 paddr，带标志位
+void map_page_fixed(u32 vaddr, u32 paddr, u32 flags){
+    ASSERT_PAGE(vaddr);
+    ASSERT_PAGE(paddr);
+    page_entry_t *pte = get_pte(vaddr, true);       // 获取vaddr对应的页表
+    page_entry_t *entry = &pte[TIDX(vaddr)];        // 获取vaddr页框的入口
+    assert(!entry->present);                        // 页面必须不存在
+
+    entry_init_flags(entry, IDX(paddr), flags|PAGE_PRESENT);    // 初始化页表项，建立映射关系
+    flush_tlb(vaddr);                                           // 刷新该虚拟地址对应的 TLB
+    LOGK("MAP fixed from 0x%p to 0x%p\n", vaddr, paddr);
+}
+
+// 解除虚拟地址 vaddr 对应的物理页映射，固定映射版本(仅取消映射，不释放物理页)
+void unmap_page_fixed(u32 vaddr){
+    ASSERT_PAGE(vaddr);
+    page_entry_t *pte = get_pte(vaddr, false);      // 获取vaddr对应的页表
+    page_entry_t *entry = &pte[TIDX(vaddr)];        // 获取vaddr页框的入口
+    assert(entry->present);                         // 页面必须存在
+
+    entry->present = false;                     // 取消页表项的存在标志    
+    u32 paddr = PAGE(entry->index);             // 获取该页表项对应的物理页地址
+    DEBUGK("UNMAP fixed from 0x%p to 0x%p\n", vaddr, paddr);
+   
+    // put_page(paddr);     // 
+    flush_tlb(vaddr);       // 刷新该虚拟地址对应的 TLB
 }
 
 #pragma pack(1) 
