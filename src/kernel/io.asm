@@ -66,3 +66,35 @@ outw:
     leave ; 恢复栈帧
     ret
 
+
+global inl
+inl:
+    push ebp
+    mov ebp, esp
+
+    mov edx, [ebp + 8] ; port
+    in eax, dx         ; 将端口号 dx 的 32 bit 输入到 eax
+
+    jmp $+2
+    jmp $+2
+    jmp $+2
+
+    leave
+    ret
+
+global outl
+outl:
+    push ebp
+    mov ebp, esp
+
+    mov edx, [ebp + 8]  ; port
+    mov eax, [ebp + 12] ; value
+    out dx, eax         ; 将 eax 中的 32 bit 输出到端口号 dx
+
+    jmp $+2
+    jmp $+2
+    jmp $+2
+
+    leave
+    ret
+

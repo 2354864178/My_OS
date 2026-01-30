@@ -1,5 +1,6 @@
-#include <onix/debug.h>
 #include <onix/types.h>
+#include <onix/interrupt.h>
+#include <onix/onix.h>
 
 extern void memory_map_init();
 extern void mapping_init();
@@ -14,6 +15,8 @@ extern void hang();
 extern void tss_init();
 extern void arena_init();
 extern void ide_init();
+extern void pci_init();
+extern void nvme_init();
 
 void kernel_init(){
     tss_init();
@@ -21,12 +24,14 @@ void kernel_init(){
     mapping_init();
     arena_init();
     interrupt_init();
+    pci_init();
     clock_init();
     keyboard_init();
     rtc_init();
-    ide_init();
+    // ide_init();
     time_init();
     task_init();
+    nvme_init();
     syscall_init();
     
     set_interrupt_state(true);

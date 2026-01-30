@@ -11,7 +11,7 @@
 #define IDE_PART_NR 4    // 每个磁盘的主分区数量
 
 #pragma pack(1) 
-typedef struct part_entry_t {  // 分区表项结构体
+typedef struct part_entry_t {   // 分区表项结构体
     u8 bootable;                // 是否可引导
     u8 start_head;              // 起始磁头
     u8 start_sector : 6;        // 起始扇区

@@ -1,6 +1,6 @@
 #include <onix/stdarg.h>
-#include <onix/console.h>
 #include <onix/stdio.h>
+#include <onix/types.h>
 
 static char buf[1024];
 extern int32 console_write();

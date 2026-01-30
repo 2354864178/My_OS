@@ -459,7 +459,7 @@ static void ide_ctrl_init(void) {
 
 static void ide_install(){
     for(size_t cidx = 0; cidx < IDE_CTRL_NR; cidx++) {
-        ide_ctrl_t *ctrl = &ide_ctrls[cidx];        // 获取控制器结构体
+        ide_ctrl_t *ctrl = &ide_ctrls[cidx];            // 获取控制器结构体
         for(size_t didx = 0; didx < IDE_DISK_NR; didx++) {
             ide_disk_t *disk = &ctrl->disks[didx];      // 获取磁盘结构体
             if(!disk->total_sectors) continue;          // 无效磁盘，跳过

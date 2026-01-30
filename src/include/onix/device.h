@@ -20,6 +20,8 @@ enum device_subtype_t {
     DEV_KEYBOARD,    // 键盘
     DEV_IDE_DISK,    // IDE磁盘
     DEV_IDE_PART,    // IDE磁盘分区
+    DEV_NVME_DISK,   // NVMe 磁盘
+    DEV_NVME_PART,   // NVMe 磁盘分区
 };
 
 // 设备控制命令

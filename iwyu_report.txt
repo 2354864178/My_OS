@@ -1,0 +1,1434 @@
+==== /home/ysy/code/Os_wrtie/src/kernel/arena.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/arena.c:3:
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: warning: incompatible redeclaration of library function 'strncpy' [-Wincompatible-library-redeclaration]
+    7 | char *strncpy(char *dest, const char *src, size_t count);   // 复制指定长度字符串
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: note: 'strncpy' is a builtin with type 'char *(char *, const char *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: warning: incompatible redeclaration of library function 'strlen' [-Wincompatible-library-redeclaration]
+    9 | size_t strlen(const char *str);                 // 计算字符串长度
+      |        ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: note: 'strlen' is a builtin with type 'unsigned long (const char *)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: warning: incompatible redeclaration of library function 'memcmp' [-Wincompatible-library-redeclaration]
+   17 | int memcmp(const void *lhs, const void *rhs, size_t count); // 比较内存区域
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: note: 'memcmp' is a builtin with type 'int (const void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: warning: incompatible redeclaration of library function 'memset' [-Wincompatible-library-redeclaration]
+   18 | void *memset(void *dest, int ch, size_t count);             // 设置内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: note: 'memset' is a builtin with type 'void *(void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: warning: incompatible redeclaration of library function 'memcpy' [-Wincompatible-library-redeclaration]
+   19 | void *memcpy(void *dest, const void *src, size_t count);    // 复制内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: note: 'memcpy' is a builtin with type 'void *(void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: warning: incompatible redeclaration of library function 'memchr' [-Wincompatible-library-redeclaration]
+   20 | void *memchr(const void *ptr, int ch, size_t count);        // 查找内存区域中字符首次出现位置
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: note: 'memchr' is a builtin with type 'void *(const void *, int, unsigned long)'
+In file included from /home/ysy/code/Os_wrtie/src/kernel/arena.c:4:
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:13:6: warning: incompatible redeclaration of library function 'toupper' [-Wincompatible-library-redeclaration]
+   13 | char toupper(char ch);
+      |      ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:13:6: note: 'toupper' is a builtin with type 'int (int)'
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:14:6: warning: incompatible redeclaration of library function 'tolower' [-Wincompatible-library-redeclaration]
+   14 | char tolower(char ch);
+      |      ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:14:6: note: 'tolower' is a builtin with type 'int (int)'
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:21:6: warning: incompatible redeclaration of library function 'isdigit' [-Wincompatible-library-redeclaration]
+   21 | bool isdigit(int c);
+      |      ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:21:6: note: 'isdigit' is a builtin with type 'int (int)'
+/home/ysy/code/Os_wrtie/src/kernel/arena.c:34:16: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'void *' [-Wvoid-pointer-to-int-cast]
+   34 |     u32 addr = (u32)ptr;                        // 获取块地址
+      |                ^~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/arena.c:36:12: warning: cast to 'arena_t *' (aka 'struct arena_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   36 |     return (arena_t *)addr;
+      |            ^~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/arena.c:50:17: warning: cast to 'arena_t *' (aka 'struct arena_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   50 |         arena = (arena_t *)alloc_kpage(page_count);         // 分配对应页数的内存
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/arena.c:57:25: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'arena_t *' (aka 'struct arena_t *') [-Wpointer-to-int-cast]
+   57 |         addr = (char *)((u32)arena + sizeof(arena_t));      // 计算返回地址
+      |                         ^~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/arena.c:73:17: warning: cast to 'arena_t *' (aka 'struct arena_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   73 |         arena = (arena_t *)alloc_kpage(1);          // 分配一页内存
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/arena.c:107:20: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'arena_t *' (aka 'struct arena_t *') [-Wpointer-to-int-cast]
+  107 |         free_kpage((u32)arena, arena->count);     // 释放对应页数内存
+      |                    ^~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/arena.c:123:20: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'arena_t *' (aka 'struct arena_t *') [-Wpointer-to-int-cast]
+  123 |         free_kpage((u32)arena, 1); // 释放该 arena 所在页
+      |                    ^~~~~~~~~~
+
+/home/ysy/code/Os_wrtie/src/include/onix/arena.h should add these lines:
+#include <stddef.h>      // for size_t
+
+/home/ysy/code/Os_wrtie/src/include/onix/arena.h should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/include/onix/arena.h:
+#include <onix/list.h>   // for list_node_t, list_t
+#include <onix/types.h>  // for u32
+#include <stddef.h>      // for size_t
+---
+
+/home/ysy/code/Os_wrtie/src/kernel/arena.c should add these lines:
+#include "onix/list.h"    // for list_push, list_empty, list_init, list_pop
+#include "onix/onix.h"    // for ONIX_MAGIC
+#include "onix/types.h"   // for u32, false, true
+
+/home/ysy/code/Os_wrtie/src/kernel/arena.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/arena.c:
+#include <onix/arena.h>
+#include <onix/assert.h>  // for assert
+#include <onix/memory.h>  // for PAGE_SIZE, alloc_kpage, free_kpage
+#include <onix/stdlib.h>  // for div_round_up
+#include <onix/string.h>  // for memset
+#include "onix/list.h"    // for list_push, list_empty, list_init, list_pop
+#include "onix/onix.h"    // for ONIX_MAGIC
+#include "onix/types.h"   // for u32, false, true
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/assert.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/assert.c:4:
+/home/ysy/code/Os_wrtie/src/include/onix/stdio.h:6:5: warning: incompatible redeclaration of library function 'vsprintf' [-Wincompatible-library-redeclaration]
+    6 | int vsprintf(char *buf, const char *fmt, va_list args);
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdio.h:6:5: note: 'vsprintf' is a builtin with type 'int (char *, const char *, struct __va_list_tag *)'
+/home/ysy/code/Os_wrtie/src/kernel/assert.c:34:22: warning: passing 'u8[1024]' (aka 'unsigned char[1024]') to parameter of type 'char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+   34 |     int i = vsprintf(buf, fmt, args);
+      |                      ^~~
+/home/ysy/code/Os_wrtie/src/include/onix/stdio.h:6:20: note: passing argument to parameter 'buf' here
+    6 | int vsprintf(char *buf, const char *fmt, va_list args);
+      |                    ^
+
+(/home/ysy/code/Os_wrtie/src/include/onix/assert.h has correct #includes/fwd-decls)
+
+/home/ysy/code/Os_wrtie/src/kernel/assert.c should add these lines:
+#include <stdarg.h>       // for va_list
+
+/home/ysy/code/Os_wrtie/src/kernel/assert.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/assert.c:
+#include <onix/assert.h>
+#include <onix/printk.h>  // for printk
+#include <onix/stdarg.h>  // for va_end, va_start
+#include <onix/stdio.h>   // for vsprintf
+#include <onix/types.h>   // for true, u8
+#include <stdarg.h>       // for va_list
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/clock.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+
+/home/ysy/code/Os_wrtie/src/kernel/clock.c should add these lines:
+#include <time.h>             // for time_t
+#include "onix/onix.h"        // for ONIX_MAGIC
+#include "onix/types.h"       // for u32, true, bool, u8
+
+/home/ysy/code/Os_wrtie/src/kernel/clock.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/clock.c:
+#include <onix/assert.h>      // for assert
+#include <onix/debug.h>       // for DEBUGK
+#include <onix/devicetree.h>  // for dt_be32_read, dtb_get_prop_any, dtb_nod...
+#include <onix/interrupt.h>   // for send_eoi, set_interrupt_handler, set_in...
+#include <onix/io.h>          // for outb, inb
+#include <onix/task.h>        // for running_task, schedule, task_t
+#include <time.h>             // for time_t
+#include "onix/onix.h"        // for ONIX_MAGIC
+#include "onix/types.h"       // for u32, true, bool, u8
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/console.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/console.c:3:
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: warning: incompatible redeclaration of library function 'strncpy' [-Wincompatible-library-redeclaration]
+    7 | char *strncpy(char *dest, const char *src, size_t count);   // 复制指定长度字符串
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: note: 'strncpy' is a builtin with type 'char *(char *, const char *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: warning: incompatible redeclaration of library function 'strlen' [-Wincompatible-library-redeclaration]
+    9 | size_t strlen(const char *str);                 // 计算字符串长度
+      |        ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: note: 'strlen' is a builtin with type 'unsigned long (const char *)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: warning: incompatible redeclaration of library function 'memcmp' [-Wincompatible-library-redeclaration]
+   17 | int memcmp(const void *lhs, const void *rhs, size_t count); // 比较内存区域
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: note: 'memcmp' is a builtin with type 'int (const void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: warning: incompatible redeclaration of library function 'memset' [-Wincompatible-library-redeclaration]
+   18 | void *memset(void *dest, int ch, size_t count);             // 设置内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: note: 'memset' is a builtin with type 'void *(void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: warning: incompatible redeclaration of library function 'memcpy' [-Wincompatible-library-redeclaration]
+   19 | void *memcpy(void *dest, const void *src, size_t count);    // 复制内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: note: 'memcpy' is a builtin with type 'void *(void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: warning: incompatible redeclaration of library function 'memchr' [-Wincompatible-library-redeclaration]
+   20 | void *memchr(const void *ptr, int ch, size_t count);        // 查找内存区域中字符首次出现位置
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: note: 'memchr' is a builtin with type 'void *(const void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/kernel/console.c:10:10: fatal error: 'onix/clock.h' file not found
+   10 | #include <onix/clock.h>
+      |          ^~~~~~~~~~~~~~
+==== /home/ysy/code/Os_wrtie/src/kernel/debug.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/debug.c:3:
+/home/ysy/code/Os_wrtie/src/include/onix/stdio.h:6:5: warning: incompatible redeclaration of library function 'vsprintf' [-Wincompatible-library-redeclaration]
+    6 | int vsprintf(char *buf, const char *fmt, va_list args);
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdio.h:6:5: note: 'vsprintf' is a builtin with type 'int (char *, const char *, struct __va_list_tag *)'
+
+(/home/ysy/code/Os_wrtie/src/include/onix/debug.h has correct #includes/fwd-decls)
+
+/home/ysy/code/Os_wrtie/src/kernel/debug.c should add these lines:
+#include <stdarg.h>       // for va_list
+
+/home/ysy/code/Os_wrtie/src/kernel/debug.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/debug.c:
+#include <onix/debug.h>
+#include <onix/printk.h>  // for printk
+#include <onix/stdarg.h>  // for va_start
+#include <onix/stdio.h>   // for vsprintf
+#include <stdarg.h>       // for va_list
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/device.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/device.c:2:
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: warning: incompatible redeclaration of library function 'strncpy' [-Wincompatible-library-redeclaration]
+    7 | char *strncpy(char *dest, const char *src, size_t count);   // 复制指定长度字符串
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: note: 'strncpy' is a builtin with type 'char *(char *, const char *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: warning: incompatible redeclaration of library function 'strlen' [-Wincompatible-library-redeclaration]
+    9 | size_t strlen(const char *str);                 // 计算字符串长度
+      |        ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: note: 'strlen' is a builtin with type 'unsigned long (const char *)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: warning: incompatible redeclaration of library function 'memcmp' [-Wincompatible-library-redeclaration]
+   17 | int memcmp(const void *lhs, const void *rhs, size_t count); // 比较内存区域
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: note: 'memcmp' is a builtin with type 'int (const void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: warning: incompatible redeclaration of library function 'memset' [-Wincompatible-library-redeclaration]
+   18 | void *memset(void *dest, int ch, size_t count);             // 设置内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: note: 'memset' is a builtin with type 'void *(void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: warning: incompatible redeclaration of library function 'memcpy' [-Wincompatible-library-redeclaration]
+   19 | void *memcpy(void *dest, const void *src, size_t count);    // 复制内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: note: 'memcpy' is a builtin with type 'void *(void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: warning: incompatible redeclaration of library function 'memchr' [-Wincompatible-library-redeclaration]
+   20 | void *memchr(const void *ptr, int ch, size_t count);        // 查找内存区域中字符首次出现位置
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: note: 'memchr' is a builtin with type 'void *(const void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/kernel/device.c:19:1: warning: non-void function does not return a value in all control paths [-Wreturn-type]
+   19 | }
+      | ^
+/home/ysy/code/Os_wrtie/src/kernel/device.c:89:35: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'struct list_node_t *' [-Wpointer-to-int-cast]
+   89 |         request_t *next_request = element_entry(request_t, node, device->requests_list.tail.prev);
+      |                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:7:51: note: expanded from macro 'element_entry'
+    7 | #define element_entry(type, member, ptr) (type *)((u32)ptr - element_offset(type, member))  // 由成员指针获取结构体指针
+      |                                                   ^~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/device.c:89:35: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'list_node_t *' (aka 'struct list_node_t *') [-Wpointer-to-int-cast]
+   89 |         request_t *next_request = element_entry(request_t, node, device->requests_list.tail.prev);
+      |                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:7:62: note: expanded from macro 'element_entry'
+    7 | #define element_entry(type, member, ptr) (type *)((u32)ptr - element_offset(type, member))  // 由成员指针获取结构体指针
+      |                                                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:6:38: note: expanded from macro 'element_offset'
+    6 | #define element_offset(type, member) (u32)(&((type *)0)->member)    // 计算成员在结构体中的偏移量
+      |                                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/device.c:89:35: warning: cast to 'request_t *' (aka 'struct request_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   89 |         request_t *next_request = element_entry(request_t, node, device->requests_list.tail.prev);
+      |                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:7:42: note: expanded from macro 'element_entry'
+    7 | #define element_entry(type, member, ptr) (type *)((u32)ptr - element_offset(type, member))  // 由成员指针获取结构体指针
+      |                                          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+/home/ysy/code/Os_wrtie/src/include/onix/device.h should add these lines:
+#include <sys/types.h>   // for dev_t, size_t
+
+/home/ysy/code/Os_wrtie/src/include/onix/device.h should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/include/onix/device.h:
+#include <onix/list.h>   // for list_node_t, list_t
+#include <onix/types.h>  // for idx_t, u32, u8
+#include <sys/types.h>   // for dev_t, size_t
+---
+
+/home/ysy/code/Os_wrtie/src/kernel/device.c should add these lines:
+#include <stdio.h>        // for NULL, EOF
+#include "onix/list.h"    // for list_empty, list_init, list_push, list_remove
+#include "onix/onix.h"    // for ONIX_MAGIC
+#include "onix/types.h"   // for idx_t, bool, u32, u8
+
+/home/ysy/code/Os_wrtie/src/kernel/device.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/device.c:
+#include <onix/device.h>
+#include <onix/arena.h>   // for kfree, kmalloc
+#include <onix/assert.h>  // for assert, panic
+#include <onix/debug.h>   // for DEBUGK
+#include <onix/string.h>  // for strcpy, strncpy
+#include <onix/task.h>    // for running_task, task_block, task_unlock, task...
+#include <stdio.h>        // for NULL, EOF
+#include "onix/list.h"    // for list_empty, list_init, list_push, list_remove
+#include "onix/onix.h"    // for ONIX_MAGIC
+#include "onix/types.h"   // for idx_t, bool, u32, u8
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/devicetree.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/devicetree.c:2:
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: warning: incompatible redeclaration of library function 'strncpy' [-Wincompatible-library-redeclaration]
+    7 | char *strncpy(char *dest, const char *src, size_t count);   // 复制指定长度字符串
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: note: 'strncpy' is a builtin with type 'char *(char *, const char *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: warning: incompatible redeclaration of library function 'strlen' [-Wincompatible-library-redeclaration]
+    9 | size_t strlen(const char *str);                 // 计算字符串长度
+      |        ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: note: 'strlen' is a builtin with type 'unsigned long (const char *)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: warning: incompatible redeclaration of library function 'memcmp' [-Wincompatible-library-redeclaration]
+   17 | int memcmp(const void *lhs, const void *rhs, size_t count); // 比较内存区域
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: note: 'memcmp' is a builtin with type 'int (const void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: warning: incompatible redeclaration of library function 'memset' [-Wincompatible-library-redeclaration]
+   18 | void *memset(void *dest, int ch, size_t count);             // 设置内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: note: 'memset' is a builtin with type 'void *(void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: warning: incompatible redeclaration of library function 'memcpy' [-Wincompatible-library-redeclaration]
+   19 | void *memcpy(void *dest, const void *src, size_t count);    // 复制内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: note: 'memcpy' is a builtin with type 'void *(void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: warning: incompatible redeclaration of library function 'memchr' [-Wincompatible-library-redeclaration]
+   20 | void *memchr(const void *ptr, int ch, size_t count);        // 查找内存区域中字符首次出现位置
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: note: 'memchr' is a builtin with type 'void *(const void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/kernel/devicetree.c:91:20: warning: cast to smaller integer type 'uintptr_t' (aka 'unsigned int') from 'u8 *' (aka 'unsigned char *') [-Wpointer-to-int-cast]
+   91 |             while ((uintptr_t)p & 3)        // 对齐到4字节边界
+      |                    ^~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/devicetree.c:116:20: warning: cast to smaller integer type 'uintptr_t' (aka 'unsigned int') from 'u8 *' (aka 'unsigned char *') [-Wpointer-to-int-cast]
+  116 |             while ((uintptr_t)p & 3)
+      |                    ^~~~~~~~~~~~
+
+/home/ysy/code/Os_wrtie/src/include/onix/devicetree.h should add these lines:
+#include <stddef.h>      // for size_t
+
+/home/ysy/code/Os_wrtie/src/include/onix/devicetree.h should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/include/onix/devicetree.h:
+#include <onix/types.h>  // for u32, bool
+#include <stddef.h>      // for size_t
+---
+
+/home/ysy/code/Os_wrtie/src/kernel/devicetree.c should add these lines:
+#include <stdint.h>       // for uintptr_t
+
+/home/ysy/code/Os_wrtie/src/kernel/devicetree.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/devicetree.c:
+#include <onix/devicetree.h>
+#include <onix/debug.h>   // for DEBUGK
+#include <onix/string.h>  // for strcmp, memcpy, strlen
+#include <onix/types.h>   // for u32, u8, bool, false, true
+#include <stdint.h>       // for uintptr_t
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/gate.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/gate.c:8:
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: warning: incompatible redeclaration of library function 'strncpy' [-Wincompatible-library-redeclaration]
+    7 | char *strncpy(char *dest, const char *src, size_t count);   // 复制指定长度字符串
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: note: 'strncpy' is a builtin with type 'char *(char *, const char *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: warning: incompatible redeclaration of library function 'strlen' [-Wincompatible-library-redeclaration]
+    9 | size_t strlen(const char *str);                 // 计算字符串长度
+      |        ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: note: 'strlen' is a builtin with type 'unsigned long (const char *)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: warning: incompatible redeclaration of library function 'memcmp' [-Wincompatible-library-redeclaration]
+   17 | int memcmp(const void *lhs, const void *rhs, size_t count); // 比较内存区域
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: note: 'memcmp' is a builtin with type 'int (const void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: warning: incompatible redeclaration of library function 'memset' [-Wincompatible-library-redeclaration]
+   18 | void *memset(void *dest, int ch, size_t count);             // 设置内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: note: 'memset' is a builtin with type 'void *(void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: warning: incompatible redeclaration of library function 'memcpy' [-Wincompatible-library-redeclaration]
+   19 | void *memcpy(void *dest, const void *src, size_t count);    // 复制内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: note: 'memcpy' is a builtin with type 'void *(void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: warning: incompatible redeclaration of library function 'memchr' [-Wincompatible-library-redeclaration]
+   20 | void *memchr(const void *ptr, int ch, size_t count);        // 查找内存区域中字符首次出现位置
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: note: 'memchr' is a builtin with type 'void *(const void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/kernel/gate.c:38:11: error: incompatible integer to pointer conversion initializing 'void *' with an expression of type 'u32' (aka 'unsigned int') [-Wint-conversion]
+   38 |     void *buf = alloc_kpage(1);                 // 分配一页内存作为缓冲区
+      |           ^     ~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/gate.c:43:16: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'void *' [-Wvoid-pointer-to-int-cast]
+   43 |     free_kpage((u32)buf, 1);                            // 释放缓冲区
+      |                ^~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/gate.c:54:58: warning: passing arguments to 'console_write' without a prototype is deprecated in all versions of C and is not supported in C2x [-Wdeprecated-non-prototype]
+   54 |     if(fd == stdout || fd == stderr) return console_write(NULL, buf, len);    // 写入控制台
+      |                                                          ^
+
+/home/ysy/code/Os_wrtie/src/kernel/gate.c should add these lines:
+#include <time.h>            // for NULL, time_t
+#include "onix/types.h"      // for u32, int32, std_fd_t, fd_t
+
+/home/ysy/code/Os_wrtie/src/kernel/gate.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/gate.c:
+#include <onix/assert.h>     // for panic, assert
+#include <onix/debug.h>      // for DEBUGK
+#include <onix/device.h>     // for device_find, device_request, REQ_WRITE
+#include <onix/ide.h>        // for IDE_CTRL_NR, ide_ctrl_t
+#include <onix/interrupt.h>  // for handler_t
+#include <onix/memory.h>     // for alloc_kpage, free_kpage, PAGE_SIZE, sys_brk
+#include <onix/string.h>     // for memset
+#include <onix/syscall.h>    // for syscall_t
+#include <onix/task.h>       // for running_task, sys_getpid, sys_getppid
+#include <time.h>            // for NULL, time_t
+#include "onix/types.h"      // for u32, int32, std_fd_t, fd_t
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/global.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/global.c:2:
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: warning: incompatible redeclaration of library function 'strncpy' [-Wincompatible-library-redeclaration]
+    7 | char *strncpy(char *dest, const char *src, size_t count);   // 复制指定长度字符串
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: note: 'strncpy' is a builtin with type 'char *(char *, const char *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: warning: incompatible redeclaration of library function 'strlen' [-Wincompatible-library-redeclaration]
+    9 | size_t strlen(const char *str);                 // 计算字符串长度
+      |        ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: note: 'strlen' is a builtin with type 'unsigned long (const char *)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: warning: incompatible redeclaration of library function 'memcmp' [-Wincompatible-library-redeclaration]
+   17 | int memcmp(const void *lhs, const void *rhs, size_t count); // 比较内存区域
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: note: 'memcmp' is a builtin with type 'int (const void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: warning: incompatible redeclaration of library function 'memset' [-Wincompatible-library-redeclaration]
+   18 | void *memset(void *dest, int ch, size_t count);             // 设置内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: note: 'memset' is a builtin with type 'void *(void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: warning: incompatible redeclaration of library function 'memcpy' [-Wincompatible-library-redeclaration]
+   19 | void *memcpy(void *dest, const void *src, size_t count);    // 复制内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: note: 'memcpy' is a builtin with type 'void *(void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: warning: incompatible redeclaration of library function 'memchr' [-Wincompatible-library-redeclaration]
+   20 | void *memchr(const void *ptr, int ch, size_t count);        // 查找内存区域中字符首次出现位置
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: note: 'memchr' is a builtin with type 'void *(const void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/kernel/global.c:60:20: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'descriptor_t (*)[128]' (aka 'struct descriptor_t (*)[128]') [-Wpointer-to-int-cast]
+   60 |     gdt_ptr.base = (u32)&gdt;           // 全局描述符表地址
+      |                    ^~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/global.c:71:27: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'tss_t *' (aka 'struct tss_t *') [-Wpointer-to-int-cast]
+   71 |     descriptor_init(desc, (u32)&tss, sizeof(tss) - 1);
+      |                           ^~~~~~~~~
+
+(/home/ysy/code/Os_wrtie/src/include/onix/global.h has correct #includes/fwd-decls)
+
+/home/ysy/code/Os_wrtie/src/kernel/global.c should add these lines:
+#include "onix/types.h"   // for u32
+
+/home/ysy/code/Os_wrtie/src/kernel/global.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/global.c:
+#include <onix/global.h>
+#include <onix/debug.h>   // for BMB, DEBUGK
+#include <onix/string.h>  // for memset
+#include "onix/types.h"   // for u32
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/ide.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/ide.c:4:
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: warning: incompatible redeclaration of library function 'strncpy' [-Wincompatible-library-redeclaration]
+    7 | char *strncpy(char *dest, const char *src, size_t count);   // 复制指定长度字符串
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: note: 'strncpy' is a builtin with type 'char *(char *, const char *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: warning: incompatible redeclaration of library function 'strlen' [-Wincompatible-library-redeclaration]
+    9 | size_t strlen(const char *str);                 // 计算字符串长度
+      |        ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: note: 'strlen' is a builtin with type 'unsigned long (const char *)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: warning: incompatible redeclaration of library function 'memcmp' [-Wincompatible-library-redeclaration]
+   17 | int memcmp(const void *lhs, const void *rhs, size_t count); // 比较内存区域
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: note: 'memcmp' is a builtin with type 'int (const void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: warning: incompatible redeclaration of library function 'memset' [-Wincompatible-library-redeclaration]
+   18 | void *memset(void *dest, int ch, size_t count);             // 设置内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: note: 'memset' is a builtin with type 'void *(void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: warning: incompatible redeclaration of library function 'memcpy' [-Wincompatible-library-redeclaration]
+   19 | void *memcpy(void *dest, const void *src, size_t count);    // 复制内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: note: 'memcpy' is a builtin with type 'void *(void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: warning: incompatible redeclaration of library function 'memchr' [-Wincompatible-library-redeclaration]
+   20 | void *memchr(const void *ptr, int ch, size_t count);        // 查找内存区域中字符首次出现位置
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: note: 'memchr' is a builtin with type 'void *(const void *, int, unsigned long)'
+In file included from /home/ysy/code/Os_wrtie/src/kernel/ide.c:5:
+/home/ysy/code/Os_wrtie/src/include/onix/stdio.h:6:5: warning: incompatible redeclaration of library function 'vsprintf' [-Wincompatible-library-redeclaration]
+    6 | int vsprintf(char *buf, const char *fmt, va_list args);
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdio.h:6:5: note: 'vsprintf' is a builtin with type 'int (char *, const char *, struct __va_list_tag *)'
+/home/ysy/code/Os_wrtie/src/kernel/ide.c:183:1: warning: non-void function does not return a value [-Wreturn-type]
+  183 | }
+      | ^
+/home/ysy/code/Os_wrtie/src/kernel/ide.c:251:22: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'void *' [-Wvoid-pointer-to-int-cast]
+  251 |         u32 offset = (u32)buffer + i * SECTOR_SIZE; // 计算缓冲区偏移
+      |                      ^~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/ide.c:252:35: warning: cast to 'u16 *' (aka 'unsigned short *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+  252 |         ide_pio_read_sector(disk, (u16 *)offset);   // 读取一个扇区数据
+      |                                   ^~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/ide.c:277:22: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'void *' [-Wvoid-pointer-to-int-cast]
+  277 |         u32 offset = (u32)buffer + i * SECTOR_SIZE; // 计算缓冲区偏移
+      |                      ^~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/ide.c:278:36: warning: cast to 'u16 *' (aka 'unsigned short *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+  278 |         ide_pio_write_sector(disk, (u16 *)offset);  // 写入一个扇区数据
+      |                                    ^~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/ide.c:311:1: warning: non-void function does not return a value in all control paths [-Wreturn-type]
+  311 | }
+      | ^
+/home/ysy/code/Os_wrtie/src/kernel/ide.c:334:1: warning: non-void function does not return a value in all control paths [-Wreturn-type]
+  334 | }
+      | ^
+/home/ysy/code/Os_wrtie/src/kernel/ide.c:362:19: warning: passing 'u8[20]' (aka 'unsigned char[20]') to parameter of type 'char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+  362 |     ide_swap_pair(params->serial, sizeof(params->serial));          // 交换序列号字节序对
+      |                   ^~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/ide.c:337:26: note: passing argument to parameter 'buf' here
+  337 | void ide_swap_pair(char *buf, u32 len){
+      |                          ^
+/home/ysy/code/Os_wrtie/src/kernel/ide.c:364:19: warning: passing 'u8[8]' (aka 'unsigned char[8]') to parameter of type 'char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+  364 |     ide_swap_pair(params->firmware, sizeof(params->firmware));      // 交换固件版本字节序对
+      |                   ^~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/ide.c:337:26: note: passing argument to parameter 'buf' here
+  337 | void ide_swap_pair(char *buf, u32 len){
+      |                          ^
+/home/ysy/code/Os_wrtie/src/kernel/ide.c:366:19: warning: passing 'u8[40]' (aka 'unsigned char[40]') to parameter of type 'char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+  366 |     ide_swap_pair(params->model, sizeof(params->model));            // 交换型号字节序对
+      |                   ^~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/ide.c:337:26: note: passing argument to parameter 'buf' here
+  337 | void ide_swap_pair(char *buf, u32 len){
+      |                          ^
+/home/ysy/code/Os_wrtie/src/kernel/ide.c:428:16: warning: cast to 'u16 *' (aka 'unsigned short *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+  428 |     u16 *buf = (u16*)alloc_kpage(1);                // 分配一页内核页面作为缓冲区
+      |                ^~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/ide.c:457:16: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'u16 *' (aka 'unsigned short *') [-Wpointer-to-int-cast]
+  457 |     free_kpage((u32)buf, 1); // 释放内核页面
+      |                ^~~~~~~~
+
+(/home/ysy/code/Os_wrtie/src/include/onix/ide.h has correct #includes/fwd-decls)
+
+/home/ysy/code/Os_wrtie/src/kernel/ide.c should add these lines:
+#include <stdio.h>            // for NULL, EOF
+#include <sys/types.h>        // for size_t, dev_t
+#include "onix/mutex.h"       // for raw_mutex_lock, raw_mutex_unlock, raw_m...
+#include "onix/types.h"       // for u16, u32, u8, RESERVED, true, idx_t
+
+/home/ysy/code/Os_wrtie/src/kernel/ide.c should remove these lines:
+- #include <onix/string.h>  // lines 4-4
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/ide.c:
+#include <onix/ide.h>
+#include <onix/assert.h>      // for assert, panic
+#include <onix/debug.h>       // for DEBUGK
+#include <onix/device.h>      // for device_cmd_t, device_install, device_su...
+#include <onix/devicetree.h>  // for dt_be32_read, dtb_get_prop_any
+#include <onix/interrupt.h>   // for IRQ_HARDDISK, get_interrupt_state, set_...
+#include <onix/io.h>          // for outb, inb, inw, outw
+#include <onix/memory.h>      // for alloc_kpage, free_kpage
+#include <onix/printk.h>      // for printk
+#include <onix/stdio.h>       // for sprintf
+#include <onix/task.h>        // for running_task, task_block, task_state_t
+#include <stdio.h>            // for NULL, EOF
+#include <sys/types.h>        // for size_t, dev_t
+#include "onix/mutex.h"       // for raw_mutex_lock, raw_mutex_unlock, raw_m...
+#include "onix/types.h"       // for u16, u32, u8, RESERVED, true, idx_t
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/interrupt.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/interrupt.c:6:
+/home/ysy/code/Os_wrtie/src/include/onix/mmio.h:13:10: warning: cast to 'volatile u8 *' (aka 'volatile unsigned char *') from smaller integer type 'uintptr_t' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   13 |         u8 v = *(volatile u8 *)addr;
+      |                 ^~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/mmio.h:20:11: warning: cast to 'volatile u16 *' (aka 'volatile unsigned short *') from smaller integer type 'uintptr_t' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   20 |         u16 v = *(volatile u16 *)addr;
+      |                  ^~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/mmio.h:27:11: warning: cast to 'volatile u32 *' (aka 'volatile unsigned int *') from smaller integer type 'uintptr_t' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   27 |         u32 v = *(volatile u32 *)addr;
+      |                  ^~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/mmio.h:35:3: warning: cast to 'volatile u8 *' (aka 'volatile unsigned char *') from smaller integer type 'uintptr_t' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   35 |         *(volatile u8 *)addr = value;
+      |          ^~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/mmio.h:42:3: warning: cast to 'volatile u16 *' (aka 'volatile unsigned short *') from smaller integer type 'uintptr_t' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   42 |         *(volatile u16 *)addr = value;
+      |          ^~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/mmio.h:49:3: warning: cast to 'volatile u32 *' (aka 'volatile unsigned int *') from smaller integer type 'uintptr_t' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   49 |         *(volatile u32 *)addr = value;
+      |          ^~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/interrupt.c:248:1: warning: non-void function does not return a value [-Wreturn-type]
+  248 | }
+      | ^
+/home/ysy/code/Os_wrtie/src/kernel/interrupt.c:259:1: warning: non-void function does not return a value [-Wreturn-type]
+  259 | }
+      | ^
+/home/ysy/code/Os_wrtie/src/kernel/interrupt.c:290:25: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'handler_t' (aka 'void *') [-Wvoid-pointer-to-int-cast]
+  290 |         gate->offset0 = (u32)handler & 0xffff;          // 段内偏移 0 ~ 15 位
+      |                         ^~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/interrupt.c:291:26: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'handler_t' (aka 'void *') [-Wvoid-pointer-to-int-cast]
+  291 |         gate->offset1 = ((u32)handler >> 16) & 0xffff;  // 段内偏移 16 ~ 31 位
+      |                          ^~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/interrupt.c:311:29: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'void (*)()' [-Wpointer-to-int-cast]
+  311 |     syscall_gate->offset0 = (u32)syscall_handler & 0xffff;
+      |                             ^~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/interrupt.c:312:30: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'void (*)()' [-Wpointer-to-int-cast]
+  312 |     syscall_gate->offset1 = ((u32)syscall_handler >> 16) & 0xffff;
+      |                              ^~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/interrupt.c:320:20: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'gate_t *' (aka 'struct gate_t *') [-Wpointer-to-int-cast]
+  320 |     idt_ptr.base = (u32)idt;            // IDT 表地址
+      |                    ^~~~~~~~
+
+/home/ysy/code/Os_wrtie/src/kernel/interrupt.c should add these lines:
+#include <stddef.h>           // for size_t, NULL
+#include <stdint.h>           // for uintptr_t
+#include "onix/types.h"       // for u32, _inline, bool, true, u64
+
+/home/ysy/code/Os_wrtie/src/kernel/interrupt.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/interrupt.c:
+#include <onix/apic.h>        // for IOAPIC_BASE_PHYS, IOAPIC_REGSEL, IOAPIC...
+#include <onix/assert.h>      // for assert
+#include <onix/debug.h>       // for DEBUGK
+#include <onix/devicetree.h>  // for dt_be32_read, dtb_get_prop_any, dtb_nod...
+#include <onix/global.h>      // for pointer_t
+#include <onix/interrupt.h>   // for handler_t, IDT_SIZE, IRQ_MASTER_NR, gate_t
+#include <onix/io.h>          // for outb
+#include <onix/mmio.h>        // for mmio_write32, mmio_read32
+#include <onix/printk.h>      // for printk
+#include <stddef.h>           // for size_t, NULL
+#include <stdint.h>           // for uintptr_t
+#include "onix/types.h"       // for u32, _inline, bool, true, u64
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/keyboard.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/keyboard.c:11:
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: warning: incompatible redeclaration of library function 'strncpy' [-Wincompatible-library-redeclaration]
+    7 | char *strncpy(char *dest, const char *src, size_t count);   // 复制指定长度字符串
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: note: 'strncpy' is a builtin with type 'char *(char *, const char *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: warning: incompatible redeclaration of library function 'strlen' [-Wincompatible-library-redeclaration]
+    9 | size_t strlen(const char *str);                 // 计算字符串长度
+      |        ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: note: 'strlen' is a builtin with type 'unsigned long (const char *)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: warning: incompatible redeclaration of library function 'memcmp' [-Wincompatible-library-redeclaration]
+   17 | int memcmp(const void *lhs, const void *rhs, size_t count); // 比较内存区域
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: note: 'memcmp' is a builtin with type 'int (const void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: warning: incompatible redeclaration of library function 'memset' [-Wincompatible-library-redeclaration]
+   18 | void *memset(void *dest, int ch, size_t count);             // 设置内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: note: 'memset' is a builtin with type 'void *(void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: warning: incompatible redeclaration of library function 'memcpy' [-Wincompatible-library-redeclaration]
+   19 | void *memcpy(void *dest, const void *src, size_t count);    // 复制内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: note: 'memcpy' is a builtin with type 'void *(void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: warning: incompatible redeclaration of library function 'memchr' [-Wincompatible-library-redeclaration]
+   20 | void *memchr(const void *ptr, int ch, size_t count);        // 查找内存区域中字符首次出现位置
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: note: 'memchr' is a builtin with type 'void *(const void *, int, unsigned long)'
+
+/home/ysy/code/Os_wrtie/src/kernel/keyboard.c should add these lines:
+#include <stddef.h>           // for NULL, size_t
+#include "onix/types.h"       // for false, true, u32, bool, u8, u16
+
+/home/ysy/code/Os_wrtie/src/kernel/keyboard.c should remove these lines:
+- #include <onix/mutex.h>  // lines 8-8
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/keyboard.c:
+#include <onix/assert.h>      // for assert
+#include <onix/debug.h>       // for DEBUGK
+#include <onix/device.h>      // for device_install, device_subtype_t, devic...
+#include <onix/devicetree.h>  // for dt_be32_read, dtb_get_prop_any, dtb_nod...
+#include <onix/fifo.h>        // for fifo_empty, fifo_get, fifo_init, fifo_put
+#include <onix/interrupt.h>   // for send_eoi, set_interrupt_handler, set_in...
+#include <onix/io.h>          // for inb, outb
+#include <onix/mutex.h>       // for reentrant_mutex_init, reentrant_mutex_lock
+#include <onix/string.h>      // for memcpy
+#include <onix/task.h>        // for running_task, task_block, task_unlock
+#include <stddef.h>           // for NULL, size_t
+#include "onix/types.h"       // for false, true, u32, bool, u8, u16
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/main.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+
+/home/ysy/code/Os_wrtie/src/kernel/main.c should add these lines:
+#include "onix/onix.h"       // for kernel_init
+
+/home/ysy/code/Os_wrtie/src/kernel/main.c should remove these lines:
+- #include <onix/debug.h>  // lines 1-1
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/main.c:
+#include <onix/interrupt.h>  // for set_interrupt_state
+#include <onix/types.h>      // for true
+#include "onix/onix.h"       // for kernel_init
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/memory.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/memory.c:8:
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: warning: incompatible redeclaration of library function 'strncpy' [-Wincompatible-library-redeclaration]
+    7 | char *strncpy(char *dest, const char *src, size_t count);   // 复制指定长度字符串
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: note: 'strncpy' is a builtin with type 'char *(char *, const char *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: warning: incompatible redeclaration of library function 'strlen' [-Wincompatible-library-redeclaration]
+    9 | size_t strlen(const char *str);                 // 计算字符串长度
+      |        ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: note: 'strlen' is a builtin with type 'unsigned long (const char *)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: warning: incompatible redeclaration of library function 'memcmp' [-Wincompatible-library-redeclaration]
+   17 | int memcmp(const void *lhs, const void *rhs, size_t count); // 比较内存区域
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: note: 'memcmp' is a builtin with type 'int (const void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: warning: incompatible redeclaration of library function 'memset' [-Wincompatible-library-redeclaration]
+   18 | void *memset(void *dest, int ch, size_t count);             // 设置内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: note: 'memset' is a builtin with type 'void *(void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: warning: incompatible redeclaration of library function 'memcpy' [-Wincompatible-library-redeclaration]
+   19 | void *memcpy(void *dest, const void *src, size_t count);    // 复制内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: note: 'memcpy' is a builtin with type 'void *(void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: warning: incompatible redeclaration of library function 'memchr' [-Wincompatible-library-redeclaration]
+   20 | void *memchr(const void *ptr, int ch, size_t count);        // 查找内存区域中字符首次出现位置
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: note: 'memchr' is a builtin with type 'void *(const void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:47:18: warning: cast to 'u32 *' (aka 'unsigned int *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   47 |         count = *(u32 *)addr;               // 从ARDS表起始地址+4字节，读取区域总数（addr首4字节是count）
+      |                  ^~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:48:23: warning: cast to 'ards_t *' (aka 'struct ards_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   48 |         ards_t *ptr = (ards_t *)(addr + 4); // ptr指向第一个ARDS区域描述符
+      |                       ^~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:63:27: warning: cast to 'u32 *' (aka 'unsigned int *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   63 |         u32 total_size = *(u32 *)addr;                  // 多重引导2信息总大小
+      |                           ^~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:64:28: warning: cast to 'multi_tag_t *' (aka 'struct multi_tag_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   64 |         multi_tag_t *tag = (multi_tag_t *)(addr + 8);   // 第一个标签起始地址
+      |                            ^~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:69:35: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'multi_tag_t *' (aka 'struct multi_tag_t *') [-Wpointer-to-int-cast]
+   69 |             tag = (multi_tag_t *)((u32)tag + ((tag->size + 7) & ~7)); // 下一个标签，8字节对齐
+      |                                   ^~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:69:19: warning: cast to 'multi_tag_t *' (aka 'struct multi_tag_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   69 |             tag = (multi_tag_t *)((u32)tag + ((tag->size + 7) & ~7)); // 下一个标签，8字节对齐
+      |                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:73:15: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'multi_mmap_entry_t *' (aka 'struct multi_mmap_entry_t *') [-Wpointer-to-int-cast]
+   73 |         while((u32)entry < (u32)tag + tag->size){           // 遍历所有内存映射条目
+      |               ^~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:73:28: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'multi_tag_t *' (aka 'struct multi_tag_t *') [-Wpointer-to-int-cast]
+   73 |         while((u32)entry < (u32)tag + tag->size){           // 遍历所有内存映射条目
+      |                            ^~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:82:44: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'multi_mmap_entry_t *' (aka 'struct multi_mmap_entry_t *') [-Wpointer-to-int-cast]
+   82 |             entry = (multi_mmap_entry_t *)((u32)entry + mtag->entry_size); // 下一个内存映射条目
+      |                                            ^~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:82:21: warning: cast to 'multi_mmap_entry_t *' (aka 'struct multi_mmap_entry_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   82 |             entry = (multi_mmap_entry_t *)((u32)entry + mtag->entry_size); // 下一个内存映射条目
+      |                     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:117:18: warning: cast to 'u8 *' (aka 'unsigned char *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+  117 |     memory_map = (u8 *)memory_base; // 初始化物理内存数组（物理内存映射表）
+      |                  ^~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:118:24: error: call to undeclared function 'div_round_up'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+  118 |     memory_map_pages = div_round_up(total_pages, PAGE_SIZE);    // 计算映射表本身需要占用多少个物理页
+      |                        ^
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:135:30: warning: passing 'u8 *' (aka 'unsigned char *') to parameter of type 'char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+  135 |     bitmap_init(&kernel_map, (u8 *)KERNEL_MAP_BITS, length, IDX(MEMORY_BASE)); // 初始化内核内存位图结构体
+      |                              ^~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/bitmap.h:14:39: note: passing argument to parameter 'bits' here
+   14 | void bitmap_init(bitmap_t *map, char *bits, u32 length, u32 offset);    // 初始化位图
+      |                                       ^
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:235:29: warning: cast to 'page_entry_t *' (aka 'struct page_entry_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+  235 |         page_entry_t *pte = (page_entry_t *)KERNEL_PAGE_TABLE[didx];    // 拿到当前页表的物理地址，强制转换为页表项指针
+      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:240:32: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'page_entry_t *' (aka 'struct page_entry_t *') [-Wpointer-to-int-cast]
+  240 |         entry_init(dentry, IDX((u32)pte));  // 将页表物理地址转为页索引，存入 PDE 的 index 字段
+      |                                ^~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:15:25: note: expanded from macro 'IDX'
+   15 | #define IDX(addr) ((u32)addr >> 12)            // 获取 addr 的页索引
+      |                         ^~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:258:13: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'page_entry_t *' (aka 'struct page_entry_t *') [-Wpointer-to-int-cast]
+  258 |     set_cr3((u32)pde);  // 设置 cr3 寄存器
+      |             ^~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:276:27: warning: cast to 'page_entry_t *' (aka 'struct page_entry_t *') from smaller integer type 'unsigned int' [-Wint-to-pointer-cast]
+  276 |     page_entry_t *table = (page_entry_t *)(PDE_MASK | (idx << 12));     // 找到可以修改的页表
+      |                           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:296:5: error: call to undeclared function 'flush_tlb'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+  296 |     flush_tlb(0);                           // 刷新 TLB，确保映射关系更新
+      |     ^
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:304:25: warning: cast to 'page_entry_t *' (aka 'struct page_entry_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+  304 |     page_entry_t *pde = (page_entry_t *)alloc_kpage(1); // 分配一页作为新的页目录
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:305:17: warning: cast to 'void *' from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-void-pointer-cast]
+  305 |     memcpy(pde, (void *)task->pde, PAGE_SIZE);
+      |                 ^~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:308:23: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'page_entry_t *' (aka 'struct page_entry_t *') [-Wpointer-to-int-cast]
+  308 |     entry_init(entry, IDX(pde));                        // 初始化该页目录项
+      |                       ^~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:15:20: note: expanded from macro 'IDX'
+   15 | #define IDX(addr) ((u32)addr >> 12)            // 获取 addr 的页索引
+      |                    ^~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:315:31: warning: cast to 'page_entry_t *' (aka 'struct page_entry_t *') from smaller integer type 'unsigned int' [-Wint-to-pointer-cast]
+  315 |         page_entry_t *table = (page_entry_t *)(PDE_MASK | (didx << 12));    // 找到可以修改的页表
+      |                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:346:29: warning: cast to 'page_entry_t *' (aka 'struct page_entry_t *') from smaller integer type 'unsigned int' [-Wint-to-pointer-cast]
+  346 |         page_entry_t *pte = (page_entry_t *)(PDE_MASK | (didx << 12)); // 找到可以修改的页表(虚拟地址)
+      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:361:15: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'void *' [-Wvoid-pointer-to-int-cast]
+  361 |     u32 brk = (u32)addr;
+      |               ^~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:374:22: warning: operator '>>' has lower precedence than '-'; '-' will be evaluated first [-Wshift-op-parentheses]
+  374 |     else if (IDX(brk - old_brk) > free_pages) {     // 如果新的增加brk大于了剩余的空闲页，就返回-1,没有可用内存了。
+      |              ~~~~~~~~^~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:15:25: note: expanded from macro 'IDX'
+   15 | #define IDX(addr) ((u32)addr >> 12)            // 获取 addr 的页索引
+      |                    ~~~~~^~~~ ~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:374:22: note: place parentheses around the '-' expression to silence this warning
+  374 |     else if (IDX(brk - old_brk) > free_pages) {     // 如果新的增加brk大于了剩余的空闲页，就返回-1,没有可用内存了。
+      |              ~~~~~~~~^~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:15:25: note: expanded from macro 'IDX'
+   15 | #define IDX(addr) ((u32)addr >> 12)            // 获取 addr 的页索引
+      |                    ~~~~~^~~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:365:37: warning: result of comparison of constant 132120576 with boolean expression is always true [-Wtautological-constant-out-of-range-compare]
+  365 |     assert(KERNEL_MEMORY_SIZE < brk < USER_STACK_BOTTOM);  // 判断brk是否属于用户内存空间
+      |     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/assert.h:7:9: note: expanded from macro 'assert'
+    7 |     if (exp)        \
+      |         ^~~
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:383:6: error: conflicting types for 'flush_tlb'
+  383 | void flush_tlb(u32 vaddr){
+      |      ^
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:296:5: note: previous implicit declaration is here
+  296 |     flush_tlb(0);                           // 刷新 TLB，确保映射关系更新
+      |     ^
+/home/ysy/code/Os_wrtie/src/kernel/memory.c:546:26: warning: cast to 'void *' from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-void-pointer-cast]
+  546 |             void *page = (void *)PAGE(IDX(vaddr));   // 获取该虚拟地址对应的页开始位置
+      |                          ^~~~~~~~~~~~~~~~~~~~~~~~
+==== /home/ysy/code/Os_wrtie/src/kernel/mutex.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+/home/ysy/code/Os_wrtie/src/kernel/mutex.c:36:24: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'struct list_node_t *' [-Wpointer-to-int-cast]
+   36 |         task_t *task = element_entry(task_t, node, raw_mutex->wait_queue.tail.prev);    // 获取等待队列中的第一个任务
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:7:51: note: expanded from macro 'element_entry'
+    7 | #define element_entry(type, member, ptr) (type *)((u32)ptr - element_offset(type, member))  // 由成员指针获取结构体指针
+      |                                                   ^~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/mutex.c:36:24: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'list_node_t *' (aka 'struct list_node_t *') [-Wpointer-to-int-cast]
+   36 |         task_t *task = element_entry(task_t, node, raw_mutex->wait_queue.tail.prev);    // 获取等待队列中的第一个任务
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:7:62: note: expanded from macro 'element_entry'
+    7 | #define element_entry(type, member, ptr) (type *)((u32)ptr - element_offset(type, member))  // 由成员指针获取结构体指针
+      |                                                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:6:38: note: expanded from macro 'element_offset'
+    6 | #define element_offset(type, member) (u32)(&((type *)0)->member)    // 计算成员在结构体中的偏移量
+      |                                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/mutex.c:36:24: warning: cast to 'task_t *' (aka 'struct task_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   36 |         task_t *task = element_entry(task_t, node, raw_mutex->wait_queue.tail.prev);    // 获取等待队列中的第一个任务
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:7:42: note: expanded from macro 'element_entry'
+    7 | #define element_entry(type, member, ptr) (type *)((u32)ptr - element_offset(type, member))  // 由成员指针获取结构体指针
+      |                                          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(/home/ysy/code/Os_wrtie/src/include/onix/mutex.h has correct #includes/fwd-decls)
+
+/home/ysy/code/Os_wrtie/src/kernel/mutex.c should add these lines:
+#include <stddef.h>          // for NULL
+#include "onix/list.h"       // for list_empty, list_init, element_entry
+#include "onix/onix.h"       // for ONIX_MAGIC
+#include "onix/types.h"      // for bool, false, true
+
+/home/ysy/code/Os_wrtie/src/kernel/mutex.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/mutex.c:
+#include <onix/mutex.h>
+#include <onix/assert.h>     // for assert
+#include <onix/interrupt.h>  // for interrupt_disable, set_interrupt_state
+#include <onix/task.h>       // for running_task, task_t, task_block, task_u...
+#include <stddef.h>          // for NULL
+#include "onix/list.h"       // for list_empty, list_init, element_entry
+#include "onix/onix.h"       // for ONIX_MAGIC
+#include "onix/types.h"      // for bool, false, true
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/printk.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/printk.c:3:
+/home/ysy/code/Os_wrtie/src/include/onix/stdio.h:6:5: warning: incompatible redeclaration of library function 'vsprintf' [-Wincompatible-library-redeclaration]
+    6 | int vsprintf(char *buf, const char *fmt, va_list args);
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdio.h:6:5: note: 'vsprintf' is a builtin with type 'int (char *, const char *, struct __va_list_tag *)'
+/home/ysy/code/Os_wrtie/src/kernel/printk.c:16:18: warning: passing arguments to 'console_write' without a prototype is deprecated in all versions of C and is not supported in C2x [-Wdeprecated-non-prototype]
+   16 |     console_write(NULL, buf, i);    // 输出到控制台
+      |                  ^
+
+/home/ysy/code/Os_wrtie/src/kernel/printk.c should add these lines:
+#include <cstdio>         // for NULL, va_list
+#include "onix/types.h"   // for int32
+
+/home/ysy/code/Os_wrtie/src/kernel/printk.c should remove these lines:
+- #include <onix/console.h>  // lines 2-2
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/printk.c:
+#include <onix/stdarg.h>  // for va_end, va_start
+#include <onix/stdio.h>   // for vsprintf
+#include <cstdio>         // for NULL, va_list
+#include "onix/types.h"   // for int32
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/rtc.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/rtc.c:9:
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:13:6: warning: incompatible redeclaration of library function 'toupper' [-Wincompatible-library-redeclaration]
+   13 | char toupper(char ch);
+      |      ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:13:6: note: 'toupper' is a builtin with type 'int (int)'
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:14:6: warning: incompatible redeclaration of library function 'tolower' [-Wincompatible-library-redeclaration]
+   14 | char tolower(char ch);
+      |      ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:14:6: note: 'tolower' is a builtin with type 'int (int)'
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:21:6: warning: incompatible redeclaration of library function 'isdigit' [-Wincompatible-library-redeclaration]
+   21 | bool isdigit(int c);
+      |      ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:21:6: note: 'isdigit' is a builtin with type 'int (int)'
+
+/home/ysy/code/Os_wrtie/src/kernel/rtc.c should add these lines:
+#include <time.h>             // for tm
+
+/home/ysy/code/Os_wrtie/src/kernel/rtc.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/rtc.c:
+#include <onix/assert.h>      // for assert
+#include <onix/debug.h>       // for DEBUGK
+#include <onix/devicetree.h>  // for dt_be32_read, dtb_get_prop_any, dtb_nod...
+#include <onix/interrupt.h>   // for IRQ_RTC, send_eoi, set_interrupt_handler
+#include <onix/io.h>          // for outb, inb
+#include <onix/rtc.h>         // for CMOS_NMI_MASK, rtc_dt_info_t, CMOS_ADDR...
+#include <onix/stdlib.h>      // for bin_to_bcd
+#include <onix/time.h>        // for time_read
+#include <onix/types.h>       // for u32, u8, true
+#include <time.h>             // for tm
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/task.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/task.c:9:
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: warning: incompatible redeclaration of library function 'strncpy' [-Wincompatible-library-redeclaration]
+    7 | char *strncpy(char *dest, const char *src, size_t count);   // 复制指定长度字符串
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: note: 'strncpy' is a builtin with type 'char *(char *, const char *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: warning: incompatible redeclaration of library function 'strlen' [-Wincompatible-library-redeclaration]
+    9 | size_t strlen(const char *str);                 // 计算字符串长度
+      |        ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: note: 'strlen' is a builtin with type 'unsigned long (const char *)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: warning: incompatible redeclaration of library function 'memcmp' [-Wincompatible-library-redeclaration]
+   17 | int memcmp(const void *lhs, const void *rhs, size_t count); // 比较内存区域
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: note: 'memcmp' is a builtin with type 'int (const void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: warning: incompatible redeclaration of library function 'memset' [-Wincompatible-library-redeclaration]
+   18 | void *memset(void *dest, int ch, size_t count);             // 设置内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: note: 'memset' is a builtin with type 'void *(void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: warning: incompatible redeclaration of library function 'memcpy' [-Wincompatible-library-redeclaration]
+   19 | void *memcpy(void *dest, const void *src, size_t count);    // 复制内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: note: 'memcpy' is a builtin with type 'void *(void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: warning: incompatible redeclaration of library function 'memchr' [-Wincompatible-library-redeclaration]
+   20 | void *memchr(const void *ptr, int ch, size_t count);        // 查找内存区域中字符首次出现位置
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: note: 'memchr' is a builtin with type 'void *(const void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/kernel/task.c:33:28: warning: cast to 'task_t *' (aka 'struct task_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+   33 |             task_t *task = (task_t *)alloc_kpage(1);    // 为任务分配一页内核页并存入表中
+      |                            ^~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:41:1: warning: non-void function does not return a value in all control paths [-Wreturn-type]
+   41 | } 
+      | ^
+/home/ysy/code/Os_wrtie/src/kernel/task.c:130:24: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'list_node_t *' (aka 'struct list_node_t *') [-Wpointer-to-int-cast]
+  130 |         task_t *task = element_entry(task_t, node, ptr); // 获取任务指针
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:7:51: note: expanded from macro 'element_entry'
+    7 | #define element_entry(type, member, ptr) (type *)((u32)ptr - element_offset(type, member))  // 由成员指针获取结构体指针
+      |                                                   ^~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:130:24: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'list_node_t *' (aka 'struct list_node_t *') [-Wpointer-to-int-cast]
+  130 |         task_t *task = element_entry(task_t, node, ptr); // 获取任务指针
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:7:62: note: expanded from macro 'element_entry'
+    7 | #define element_entry(type, member, ptr) (type *)((u32)ptr - element_offset(type, member))  // 由成员指针获取结构体指针
+      |                                                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:6:38: note: expanded from macro 'element_offset'
+    6 | #define element_offset(type, member) (u32)(&((type *)0)->member)    // 计算成员在结构体中的偏移量
+      |                                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:130:24: warning: cast to 'task_t *' (aka 'struct task_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+  130 |         task_t *task = element_entry(task_t, node, ptr); // 获取任务指针
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:7:42: note: expanded from macro 'element_entry'
+    7 | #define element_entry(type, member, ptr) (type *)((u32)ptr - element_offset(type, member))  // 由成员指针获取结构体指针
+      |                                          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:149:24: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'list_node_t *' (aka 'struct list_node_t *') [-Wpointer-to-int-cast]
+  149 |         task_t *task = element_entry(task_t, node, ptr);    // 获取任务指针
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:7:51: note: expanded from macro 'element_entry'
+    7 | #define element_entry(type, member, ptr) (type *)((u32)ptr - element_offset(type, member))  // 由成员指针获取结构体指针
+      |                                                   ^~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:149:24: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'list_node_t *' (aka 'struct list_node_t *') [-Wpointer-to-int-cast]
+  149 |         task_t *task = element_entry(task_t, node, ptr);    // 获取任务指针
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:7:62: note: expanded from macro 'element_entry'
+    7 | #define element_entry(type, member, ptr) (type *)((u32)ptr - element_offset(type, member))  // 由成员指针获取结构体指针
+      |                                                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:6:38: note: expanded from macro 'element_offset'
+    6 | #define element_offset(type, member) (u32)(&((type *)0)->member)    // 计算成员在结构体中的偏移量
+      |                                      ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:149:24: warning: cast to 'task_t *' (aka 'struct task_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+  149 |         task_t *task = element_entry(task_t, node, ptr);    // 获取任务指针
+      |                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:7:42: note: expanded from macro 'element_entry'
+    7 | #define element_entry(type, member, ptr) (type *)((u32)ptr - element_offset(type, member))  // 由成员指针获取结构体指针
+      |                                          ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:165:20: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'task_t *' (aka 'struct task_t *') [-Wpointer-to-int-cast]
+  165 |         tss.esp0 = (u32)task + PAGE_SIZE;   // 获取用户进程的内核栈，因为只有用户进行做特权级切换会用到，内核进程时用不到的
+      |                    ^~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:174:1: warning: non-void function does not return a value [-Wreturn-type]
+  174 | }
+      | ^
+/home/ysy/code/Os_wrtie/src/kernel/task.c:209:17: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'task_t *' (aka 'struct task_t *') [-Wpointer-to-int-cast]
+  209 |     u32 stack = (u32)task + PAGE_SIZE;  // 计算任务栈顶（任务结构体起始地址 + 一页大小）
+      |                 ^~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:211:27: warning: cast to 'task_frame_t *' (aka 'struct task_frame_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+  211 |     task_frame_t *frame = (task_frame_t *)stack; // 将栈指针转换成任务帧指针
+      |                           ^~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:221:19: warning: cast to 'u32 *' (aka 'unsigned int *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+  221 |     task->stack = (u32 *)stack;                 // 设置任务的栈指针
+      |                   ^~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:237:16: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'task_t *' (aka 'struct task_t *') [-Wpointer-to-int-cast]
+  237 |     u32 addr = (u32)task + PAGE_SIZE;   // 计算任务栈顶地址
+      |                ^~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:239:28: warning: cast to 'intr_frame_t *' (aka 'struct intr_frame_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+  239 |     intr_frame_t *iframe = (intr_frame_t *)(addr);   // 在栈顶创建中断帧
+      |                            ^~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:242:27: warning: cast to 'task_frame_t *' (aka 'struct task_frame_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+  242 |     task_frame_t *frame = (task_frame_t *)addr; // 在中断帧下方创建任务帧
+      |                           ^~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:257:24: warning: cast to 'void *' from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-void-pointer-cast]
+  257 |     void *child_page = (void *)alloc_kpage(1);          // 分配一页内核页作为子任务的任务结构体
+      |                        ^~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:262:23: warning: cast to 'void *' from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-void-pointer-cast]
+  262 |     void *vmap_bits = (void *)alloc_kpage(1);           // 分配一页内核页作为子任务的虚拟内存位图缓冲区
+      |                       ^~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:265:9: error: incompatible pointer to integer conversion initializing 'u32' (aka 'unsigned int') with an expression of type 'page_entry_t *' (aka 'struct page_entry_t *') [-Wint-conversion]
+  265 |     u32 child_pde = copy_pde();                         // 复制页目录（可能会睡眠），提前完成
+      |         ^           ~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:284:20: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'void *' [-Wvoid-pointer-to-int-cast]
+  284 |         free_kpage((u32)child_page, 1);
+      |                    ^~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:285:20: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'void *' [-Wvoid-pointer-to-int-cast]
+  285 |         free_kpage((u32)vmap_bits, 1);
+      |                    ^~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:317:5: error: call to undeclared function 'free_pde'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
+  317 |     free_pde();                                 // 释放任务的页目录和所有内存映射   
+      |     ^
+/home/ysy/code/Os_wrtie/src/kernel/task.c:318:16: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'u8 *' (aka 'unsigned char *') [-Wpointer-to-int-cast]
+  318 |     free_kpage((u32)task->vmap->bits, 1);       // 释放任务的虚拟内存位图缓冲区
+      |                ^~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:353:28: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'task_t *' (aka 'struct task_t *') [-Wpointer-to-int-cast]
+  353 |                 free_kpage((u32)child, 1);          // 释放子进程的任务结构体内存
+      |                            ^~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:385:17: warning: cast to 'void *' from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-void-pointer-cast]
+  385 |     void *buf = (void *)alloc_kpage(1);     // 为位图缓冲区分配一页内存
+      |                 ^~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:388:17: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'page_entry_t *' (aka 'struct page_entry_t *') [-Wpointer-to-int-cast]
+  388 |     task->pde = (u32)copy_pde();            // 复制当前任务的页目录作为新任务的页目录
+      |                 ^~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:391:16: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'task_t *' (aka 'struct task_t *') [-Wpointer-to-int-cast]
+  391 |     u32 addr = (u32)task + PAGE_SIZE; // 计算任务栈顶地址
+      |                ^~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:393:27: warning: cast to 'intr_frame_t *' (aka 'struct intr_frame_t *') from smaller integer type 'u32' (aka 'unsigned int') [-Wint-to-pointer-cast]
+  393 |     intr_frame_t *frame = (intr_frame_t *)(addr); // 在栈顶创建中断帧
+      |                           ^~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/kernel/task.c:415:18: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'target_t *' (aka 'void (*)()') [-Wpointer-to-int-cast]
+  415 |     frame->eip = (u32)target;                       // 设置指令指针为目标函数地址
+      |                  ^~~~~~~~~~~
+
+/home/ysy/code/Os_wrtie/src/include/onix/task.h should add these lines:
+#include <sys/types.h>   // for pid_t
+
+/home/ysy/code/Os_wrtie/src/include/onix/task.h should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/include/onix/task.h:
+#include <onix/list.h>   // for list_node_t, list_t
+#include <onix/types.h>  // for u32
+#include <sys/types.h>   // for pid_t
+---
+
+/home/ysy/code/Os_wrtie/src/kernel/task.c should add these lines:
+#include <unistd.h>          // for NULL, pid_t, size_t
+#include "onix/onix.h"       // for ONIX_MAGIC
+#include "onix/types.h"      // for u32, bool, true
+
+/home/ysy/code/Os_wrtie/src/kernel/task.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/task.c:
+#include <onix/task.h>
+#include <onix/arena.h>      // for kfree, kmalloc
+#include <onix/assert.h>     // for assert, panic
+#include <onix/bitmap.h>     // for bitmap_t, bitmap_init
+#include <onix/debug.h>      // for DEBUGK
+#include <onix/global.h>     // for USER_DATA_SELECTOR, USER_CODE_SELECTOR
+#include <onix/interrupt.h>  // for get_interrupt_state, set_interrupt_state
+#include <onix/list.h>       // for list_t, list_init, list_node_t, element_...
+#include <onix/memory.h>     // for alloc_kpage, PAGE_SIZE, free_kpage, copy...
+#include <onix/printk.h>     // for printk
+#include <onix/string.h>     // for memcpy, memset, strcpy
+#include <unistd.h>          // for NULL, pid_t, size_t
+#include "onix/onix.h"       // for ONIX_MAGIC
+#include "onix/types.h"      // for u32, bool, true
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/thread.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/thread.c:7:
+/home/ysy/code/Os_wrtie/src/include/onix/stdio.h:6:5: warning: incompatible redeclaration of library function 'vsprintf' [-Wincompatible-library-redeclaration]
+    6 | int vsprintf(char *buf, const char *fmt, va_list args);
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdio.h:6:5: note: 'vsprintf' is a builtin with type 'int (char *, const char *, struct __va_list_tag *)'
+
+/home/ysy/code/Os_wrtie/src/kernel/thread.c should add these lines:
+#include "onix/types.h"      // for true, u32
+
+/home/ysy/code/Os_wrtie/src/kernel/thread.c should remove these lines:
+- #include <onix/arena.h>  // lines 6-6
+- #include <onix/stdio.h>  // lines 7-7
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/thread.c:
+#include <onix/debug.h>      // for DEBUGK, BMB
+#include <onix/interrupt.h>  // for set_interrupt_state
+#include <onix/mutex.h>      // for raw_mutex_t, reentrant_mutex_t
+#include <onix/syscall.h>    // for sleep, test, yield
+#include <onix/task.h>       // for task_to_user_mode
+#include "onix/types.h"      // for true, u32
+---
+==== /home/ysy/code/Os_wrtie/src/kernel/time.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/kernel/time.c:3:
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:13:6: warning: incompatible redeclaration of library function 'toupper' [-Wincompatible-library-redeclaration]
+   13 | char toupper(char ch);
+      |      ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:13:6: note: 'toupper' is a builtin with type 'int (int)'
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:14:6: warning: incompatible redeclaration of library function 'tolower' [-Wincompatible-library-redeclaration]
+   14 | char tolower(char ch);
+      |      ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:14:6: note: 'tolower' is a builtin with type 'int (int)'
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:21:6: warning: incompatible redeclaration of library function 'isdigit' [-Wincompatible-library-redeclaration]
+   21 | bool isdigit(int c);
+      |      ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:21:6: note: 'isdigit' is a builtin with type 'int (int)'
+
+/home/ysy/code/Os_wrtie/src/include/onix/time.h should add these lines:
+#include <time.h>  // for time_t
+
+/home/ysy/code/Os_wrtie/src/include/onix/time.h should remove these lines:
+- #include <onix/types.h>  // lines 4-4
+
+The full include-list for /home/ysy/code/Os_wrtie/src/include/onix/time.h:
+#include <time.h>  // for time_t
+---
+
+/home/ysy/code/Os_wrtie/src/kernel/time.c should add these lines:
+#include "onix/types.h"   // for bool
+
+/home/ysy/code/Os_wrtie/src/kernel/time.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/kernel/time.c:
+#include <onix/time.h>
+#include <onix/debug.h>   // for DEBUGK
+#include <onix/rtc.h>     // for cmos_read, CMOS_REG_SECONDS, CMOS_REG_CENTURY
+#include <onix/stdlib.h>  // for bcd_to_bin
+#include "onix/types.h"   // for bool
+---
+==== /home/ysy/code/Os_wrtie/src/lib/bitmap.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/lib/bitmap.c:2:
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: warning: incompatible redeclaration of library function 'strncpy' [-Wincompatible-library-redeclaration]
+    7 | char *strncpy(char *dest, const char *src, size_t count);   // 复制指定长度字符串
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: note: 'strncpy' is a builtin with type 'char *(char *, const char *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: warning: incompatible redeclaration of library function 'strlen' [-Wincompatible-library-redeclaration]
+    9 | size_t strlen(const char *str);                 // 计算字符串长度
+      |        ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: note: 'strlen' is a builtin with type 'unsigned long (const char *)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: warning: incompatible redeclaration of library function 'memcmp' [-Wincompatible-library-redeclaration]
+   17 | int memcmp(const void *lhs, const void *rhs, size_t count); // 比较内存区域
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: note: 'memcmp' is a builtin with type 'int (const void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: warning: incompatible redeclaration of library function 'memset' [-Wincompatible-library-redeclaration]
+   18 | void *memset(void *dest, int ch, size_t count);             // 设置内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: note: 'memset' is a builtin with type 'void *(void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: warning: incompatible redeclaration of library function 'memcpy' [-Wincompatible-library-redeclaration]
+   19 | void *memcpy(void *dest, const void *src, size_t count);    // 复制内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: note: 'memcpy' is a builtin with type 'void *(void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: warning: incompatible redeclaration of library function 'memchr' [-Wincompatible-library-redeclaration]
+   20 | void *memchr(const void *ptr, int ch, size_t count);        // 查找内存区域中字符首次出现位置
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: note: 'memchr' is a builtin with type 'void *(const void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/lib/bitmap.c:8:15: warning: assigning to 'u8 *' (aka 'unsigned char *') from 'char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+    8 |     map->bits = bits;       // 位图数组指针，每一位表示一个资源的使用状态
+      |               ^ ~~~~
+
+(/home/ysy/code/Os_wrtie/src/include/onix/bitmap.h has correct #includes/fwd-decls)
+
+/home/ysy/code/Os_wrtie/src/lib/bitmap.c should add these lines:
+#include <stdio.h>        // for EOF
+#include "onix/types.h"   // for u32, idx_t, bool, u8, true
+
+/home/ysy/code/Os_wrtie/src/lib/bitmap.c should remove these lines:
+- #include <onix/onix.h>  // lines 3-3
+
+The full include-list for /home/ysy/code/Os_wrtie/src/lib/bitmap.c:
+#include <onix/bitmap.h>
+#include <onix/assert.h>  // for assert
+#include <onix/string.h>  // for memset
+#include <stdio.h>        // for EOF
+#include "onix/types.h"   // for u32, idx_t, bool, u8, true
+---
+==== /home/ysy/code/Os_wrtie/src/lib/fifo.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+
+(/home/ysy/code/Os_wrtie/src/include/onix/fifo.h has correct #includes/fwd-decls)
+
+/home/ysy/code/Os_wrtie/src/lib/fifo.c should add these lines:
+#include "onix/types.h"   // for bool, u32, _inline
+
+/home/ysy/code/Os_wrtie/src/lib/fifo.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/lib/fifo.c:
+#include <onix/fifo.h>
+#include <onix/assert.h>  // for assert
+#include "onix/types.h"   // for bool, u32, _inline
+---
+==== /home/ysy/code/Os_wrtie/src/lib/list.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+/home/ysy/code/Os_wrtie/src/lib/list.c:119:15: warning: cast to smaller integer type 'int' from 'list_node_t *' (aka 'struct list_node_t *') [-Wpointer-to-int-cast]
+  119 |     int key = element_node_key(node, offset);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:9:49: note: expanded from macro 'element_node_key'
+    9 | #define element_node_key(node, offset) *(int *)((int)node + offset) // 通过 node 指针和偏移量获取 key 值
+      |                                                 ^~~~~~~~~
+/home/ysy/code/Os_wrtie/src/lib/list.c:119:15: warning: cast to 'int *' from smaller integer type 'int' [-Wint-to-pointer-cast]
+  119 |     int key = element_node_key(node, offset);
+      |               ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:9:41: note: expanded from macro 'element_node_key'
+    9 | #define element_node_key(node, offset) *(int *)((int)node + offset) // 通过 node 指针和偏移量获取 key 值
+      |                                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/lib/list.c:121:23: warning: cast to smaller integer type 'int' from 'list_node_t *' (aka 'struct list_node_t *') [-Wpointer-to-int-cast]
+  121 |         int compare = element_node_key(ptr, offset);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:9:49: note: expanded from macro 'element_node_key'
+    9 | #define element_node_key(node, offset) *(int *)((int)node + offset) // 通过 node 指针和偏移量获取 key 值
+      |                                                 ^~~~~~~~~
+/home/ysy/code/Os_wrtie/src/lib/list.c:121:23: warning: cast to 'int *' from smaller integer type 'int' [-Wint-to-pointer-cast]
+  121 |         int compare = element_node_key(ptr, offset);
+      |                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/include/onix/list.h:9:41: note: expanded from macro 'element_node_key'
+    9 | #define element_node_key(node, offset) *(int *)((int)node + offset) // 通过 node 指针和偏移量获取 key 值
+      |                                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(/home/ysy/code/Os_wrtie/src/include/onix/list.h has correct #includes/fwd-decls)
+
+/home/ysy/code/Os_wrtie/src/lib/list.c should add these lines:
+#include <stddef.h>       // for NULL
+#include "onix/types.h"   // for bool, u32, false, true
+
+/home/ysy/code/Os_wrtie/src/lib/list.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/lib/list.c:
+#include <onix/list.h>
+#include <onix/assert.h>  // for assert
+#include <stddef.h>       // for NULL
+#include "onix/types.h"   // for bool, u32, false, true
+---
+==== /home/ysy/code/Os_wrtie/src/lib/printf.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/lib/printf.c:2:
+/home/ysy/code/Os_wrtie/src/include/onix/stdio.h:6:5: warning: incompatible redeclaration of library function 'vsprintf' [-Wincompatible-library-redeclaration]
+    6 | int vsprintf(char *buf, const char *fmt, va_list args);
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdio.h:6:5: note: 'vsprintf' is a builtin with type 'int (char *, const char *, struct __va_list_tag *)'
+
+/home/ysy/code/Os_wrtie/src/lib/printf.c should add these lines:
+#include <stdarg.h>        // for va_list
+#include "onix/types.h"    // for std_fd_t
+
+/home/ysy/code/Os_wrtie/src/lib/printf.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/lib/printf.c:
+#include <onix/stdarg.h>   // for va_end, va_start
+#include <onix/stdio.h>    // for printf, vsprintf
+#include <onix/syscall.h>  // for write
+#include <stdarg.h>        // for va_list
+#include "onix/types.h"    // for std_fd_t
+---
+==== /home/ysy/code/Os_wrtie/src/lib/stdlib.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/lib/stdlib.c:1:
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:13:6: warning: incompatible redeclaration of library function 'toupper' [-Wincompatible-library-redeclaration]
+   13 | char toupper(char ch);
+      |      ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:13:6: note: 'toupper' is a builtin with type 'int (int)'
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:14:6: warning: incompatible redeclaration of library function 'tolower' [-Wincompatible-library-redeclaration]
+   14 | char tolower(char ch);
+      |      ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:14:6: note: 'tolower' is a builtin with type 'int (int)'
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:21:6: warning: incompatible redeclaration of library function 'isdigit' [-Wincompatible-library-redeclaration]
+   21 | bool isdigit(int c);
+      |      ^
+/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h:21:6: note: 'isdigit' is a builtin with type 'int (int)'
+
+(/home/ysy/code/Os_wrtie/src/include/onix/stdlib.h has correct #includes/fwd-decls)
+
+/home/ysy/code/Os_wrtie/src/lib/stdlib.c should add these lines:
+#include <stddef.h>      // for NULL
+#include "onix/types.h"  // for u32, u8, bool, true
+
+/home/ysy/code/Os_wrtie/src/lib/stdlib.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/lib/stdlib.c:
+#include <onix/stdlib.h>
+#include <stddef.h>      // for NULL
+#include "onix/types.h"  // for u32, u8, bool, true
+---
+==== /home/ysy/code/Os_wrtie/src/lib/string.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/lib/string.c:1:
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: warning: incompatible redeclaration of library function 'strncpy' [-Wincompatible-library-redeclaration]
+    7 | char *strncpy(char *dest, const char *src, size_t count);   // 复制指定长度字符串
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: note: 'strncpy' is a builtin with type 'char *(char *, const char *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: warning: incompatible redeclaration of library function 'strlen' [-Wincompatible-library-redeclaration]
+    9 | size_t strlen(const char *str);                 // 计算字符串长度
+      |        ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: note: 'strlen' is a builtin with type 'unsigned long (const char *)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: warning: incompatible redeclaration of library function 'memcmp' [-Wincompatible-library-redeclaration]
+   17 | int memcmp(const void *lhs, const void *rhs, size_t count); // 比较内存区域
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: note: 'memcmp' is a builtin with type 'int (const void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: warning: incompatible redeclaration of library function 'memset' [-Wincompatible-library-redeclaration]
+   18 | void *memset(void *dest, int ch, size_t count);             // 设置内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: note: 'memset' is a builtin with type 'void *(void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: warning: incompatible redeclaration of library function 'memcpy' [-Wincompatible-library-redeclaration]
+   19 | void *memcpy(void *dest, const void *src, size_t count);    // 复制内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: note: 'memcpy' is a builtin with type 'void *(void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: warning: incompatible redeclaration of library function 'memchr' [-Wincompatible-library-redeclaration]
+   20 | void *memchr(const void *ptr, int ch, size_t count);        // 查找内存区域中字符首次出现位置
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: note: 'memchr' is a builtin with type 'void *(const void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/lib/string.c:154:1: warning: non-void function does not return a value in all control paths [-Wreturn-type]
+  154 | }
+      | ^
+
+/home/ysy/code/Os_wrtie/src/include/onix/string.h should add these lines:
+#include <stddef.h>  // for size_t
+
+/home/ysy/code/Os_wrtie/src/include/onix/string.h should remove these lines:
+- #include <onix/types.h>  // lines 4-4
+
+The full include-list for /home/ysy/code/Os_wrtie/src/include/onix/string.h:
+#include <stddef.h>  // for size_t
+---
+
+/home/ysy/code/Os_wrtie/src/lib/string.c should add these lines:
+#include "onix/types.h"  // for EOS, true
+
+/home/ysy/code/Os_wrtie/src/lib/string.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/lib/string.c:
+#include <onix/string.h>
+#include "onix/types.h"  // for EOS, true
+---
+==== /home/ysy/code/Os_wrtie/src/lib/syscall.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+/home/ysy/code/Os_wrtie/src/lib/syscall.c:58:40: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'char *' [-Wpointer-to-int-cast]
+   58 |     return _syscall3(SYS_NR_WRITE, fd, (u32)buf, len);
+      |                                        ^~~~~~~~
+/home/ysy/code/Os_wrtie/src/lib/syscall.c:62:34: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'void *' [-Wvoid-pointer-to-int-cast]
+   62 |     return _syscall1(SYS_NR_BRK, (u32)addr);
+      |                                  ^~~~~~~~~
+/home/ysy/code/Os_wrtie/src/lib/syscall.c:70:43: warning: cast to smaller integer type 'u32' (aka 'unsigned int') from 'int *' [-Wpointer-to-int-cast]
+   70 |     return _syscall2(SYS_NR_WAITPID, pid, (u32)status);
+      |                                           ^~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/lib/syscall.c:83:1: warning: function declared 'noreturn' should not return [-Winvalid-noreturn]
+   83 | }
+      | ^
+
+/home/ysy/code/Os_wrtie/src/include/onix/syscall.h should add these lines:
+#include <sys/types.h>   // for pid_t, time_t
+
+/home/ysy/code/Os_wrtie/src/include/onix/syscall.h should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/include/onix/syscall.h:
+#include <onix/types.h>  // for u32, int32, fd_t
+#include <sys/types.h>   // for pid_t, time_t
+---
+
+/home/ysy/code/Os_wrtie/src/lib/syscall.c should add these lines:
+#include "onix/types.h"  // for u32, _inline, int32, fd_t
+
+/home/ysy/code/Os_wrtie/src/lib/syscall.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/lib/syscall.c:
+#include <onix/syscall.h>
+#include "onix/types.h"  // for u32, _inline, int32, fd_t
+---
+==== /home/ysy/code/Os_wrtie/src/lib/vsprintf.c ====
+Cannot open mapping file '/usr/share/include-what-you-use/iwyu.imp': No such file or directory.
+In file included from /home/ysy/code/Os_wrtie/src/lib/vsprintf.c:2:
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: warning: incompatible redeclaration of library function 'strncpy' [-Wincompatible-library-redeclaration]
+    7 | char *strncpy(char *dest, const char *src, size_t count);   // 复制指定长度字符串
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:7:7: note: 'strncpy' is a builtin with type 'char *(char *, const char *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: warning: incompatible redeclaration of library function 'strlen' [-Wincompatible-library-redeclaration]
+    9 | size_t strlen(const char *str);                 // 计算字符串长度
+      |        ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:9:8: note: 'strlen' is a builtin with type 'unsigned long (const char *)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: warning: incompatible redeclaration of library function 'memcmp' [-Wincompatible-library-redeclaration]
+   17 | int memcmp(const void *lhs, const void *rhs, size_t count); // 比较内存区域
+      |     ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:17:5: note: 'memcmp' is a builtin with type 'int (const void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: warning: incompatible redeclaration of library function 'memset' [-Wincompatible-library-redeclaration]
+   18 | void *memset(void *dest, int ch, size_t count);             // 设置内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:18:7: note: 'memset' is a builtin with type 'void *(void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: warning: incompatible redeclaration of library function 'memcpy' [-Wincompatible-library-redeclaration]
+   19 | void *memcpy(void *dest, const void *src, size_t count);    // 复制内存区域
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:19:7: note: 'memcpy' is a builtin with type 'void *(void *, const void *, unsigned long)'
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: warning: incompatible redeclaration of library function 'memchr' [-Wincompatible-library-redeclaration]
+   20 | void *memchr(const void *ptr, int ch, size_t count);        // 查找内存区域中字符首次出现位置
+      |       ^
+/home/ysy/code/Os_wrtie/src/include/onix/string.h:20:7: note: 'memchr' is a builtin with type 'void *(const void *, int, unsigned long)'
+/home/ysy/code/Os_wrtie/src/lib/vsprintf.c:179:5: warning: incompatible redeclaration of library function 'vsprintf' [-Wincompatible-library-redeclaration]
+  179 | int vsprintf(char *buf, const char *fmt, va_list args)
+      |     ^
+/home/ysy/code/Os_wrtie/src/lib/vsprintf.c:179:5: note: 'vsprintf' is a builtin with type 'int (char *, const char *, struct __va_list_tag *)'
+/home/ysy/code/Os_wrtie/src/lib/vsprintf.c:361:17: warning: assigning to 'u8 *' (aka 'unsigned char *') from 'char *' converts between pointers to integer types where one is of the unique plain 'char' type and the other is not [-Wpointer-sign]
+  361 |             ptr = va_arg(args, char *);
+      |                 ^ ~~~~~~~~~~~~~~~~~~~~
+/home/ysy/code/Os_wrtie/src/lib/vsprintf.c:365:35: warning: passing 'int *' to parameter of type 'u32 *' (aka 'unsigned int *') converts between pointers to integer types with different sign [-Wpointer-sign]
+  365 |                 str = number(str, &num, 16, 2, precision, flags);
+      |                                   ^~~~
+/home/ysy/code/Os_wrtie/src/lib/vsprintf.c:32:37: note: passing argument to parameter 'num' here
+   32 | static char *number(char *str, u32 *num, int base, int size, int precision, int flags)
+      |                                     ^
+/home/ysy/code/Os_wrtie/src/lib/vsprintf.c:377:35: warning: passing 'int *' to parameter of type 'u32 *' (aka 'unsigned int *') converts between pointers to integer types with different sign [-Wpointer-sign]
+  377 |                 str = number(str, &num, 10, field_width, precision, flags);
+      |                                   ^~~~
+/home/ysy/code/Os_wrtie/src/lib/vsprintf.c:32:37: note: passing argument to parameter 'num' here
+   32 | static char *number(char *str, u32 *num, int base, int size, int precision, int flags)
+      |                                     ^
+
+/home/ysy/code/Os_wrtie/src/lib/vsprintf.c should add these lines:
+#include <cstdio>         // for size_t, va_list
+#include "onix/types.h"   // for u32, u8
+
+/home/ysy/code/Os_wrtie/src/lib/vsprintf.c should remove these lines:
+
+The full include-list for /home/ysy/code/Os_wrtie/src/lib/vsprintf.c:
+#include <onix/assert.h>  // for assert
+#include <onix/stdarg.h>  // for va_arg, va_end, va_start
+#include <onix/string.h>  // for strlen
+#include <cstdio>         // for size_t, va_list
+#include "onix/types.h"   // for u32, u8
+---

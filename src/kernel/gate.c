@@ -35,12 +35,12 @@ static u32 sys_test(){          // 测试系统调用函数
     // assert(device);
     // device_write(device->dev, &ch, 1, 0, 0);    // 向控制台设备写入一个字符
 
-    void *buf = alloc_kpage(1);                 // 分配一页内存作为缓冲区
-    device = device_find(DEV_IDE_DISK, 0);      // 查找第一个IDE磁盘设备
-    assert(device);                             // 断言设备存在
-    memset(buf, running_task()->pid, PAGE_SIZE);        // 用当前任务的PID填充缓冲区
+    void *buf = alloc_kpage(1);                     // 分配一页内存作为缓冲区
+    device = device_find(DEV_NVME_DISK, 0);         // 查找第一个NVMe磁盘设备
+    assert(device);                                 // 断言设备存在
+    memset(buf, running_task()->pid, PAGE_SIZE);    // 用当前任务的PID填充缓冲区
     device_request(device->dev, buf, 1, running_task()->pid, 0, REQ_WRITE); // 写请求, 扇区号为PID
-    free_kpage((u32)buf, 1);                            // 释放缓冲区
+    free_kpage((u32)buf, 1);                        // 释放缓冲区
     return 255;
 }
 

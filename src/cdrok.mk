@@ -1,4 +1,6 @@
+ifeq ($(notdir $(firstword $(MAKEFILE_LIST))),cdrok.mk)
 include Makefile
+endif
 
 $(BUILD)/kernel.iso : $(BUILD)/kernel.bin $(SRC)/utils/grub.cfg
 # 检查多重引导2兼容性
@@ -26,7 +28,13 @@ qemub: $(BUILD)/kernel.iso $(IMAGES)
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
 	$(QEMU) \
 	$(QEMU_CDROM) \
-# 	$(QEMU_DEBUG)
+
+.PHONY: qemubg
+qemubg: $(BUILD)/kernel.iso $(IMAGES)
+	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
+	$(QEMU) \
+	$(QEMU_CDROM) \
+	$(QEMU_DEBUG)
 
 .PHONY:cdrom
 cdrom: $(BUILD)/kernel.iso $(IMAGES)

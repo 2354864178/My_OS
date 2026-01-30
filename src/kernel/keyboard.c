@@ -5,9 +5,10 @@
 #include <onix/mutex.h>
 #include <onix/fifo.h>
 #include <onix/task.h>
-#include <onix/mutex.h>
 #include <onix/device.h>
 #include <onix/devicetree.h>
+#include <onix/string.h>
+#include <onix/types.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
 

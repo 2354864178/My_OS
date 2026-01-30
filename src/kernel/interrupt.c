@@ -12,6 +12,7 @@
 
 #define ENTRY_SIZE 0x30 // 中断处理函数数量
 
+// 8259A 端口定义（用于与设备树读取对比，中断控制器已转为APIC）
 #define PIC_M_CTRL 0x20 // 主片的控制端口
 #define PIC_M_DATA 0x21 // 主片的数据端口
 #define PIC_S_CTRL 0xa0 // 从片的控制端口

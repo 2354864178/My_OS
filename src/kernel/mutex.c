@@ -2,6 +2,9 @@
 #include <onix/interrupt.h>
 #include <onix/task.h>
 #include <onix/assert.h>
+#include <onix/list.h>
+#include <onix/onix.h>
+#include <onix/types.h>
 
 // 不可重入互斥锁
 void raw_mutex_init(raw_mutex_t *raw_mutex) {
