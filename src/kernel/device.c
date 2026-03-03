@@ -8,6 +8,16 @@
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)  // 内核日志宏
 static device_t devices[DEVICE_NR];             // 设备数组
 
+// 调试开关：人为放慢 do_request，便于观察阻塞/唤醒顺序
+// 0 表示关闭；
+#define DEVICE_REQ_SLOW_YIELD 300
+
+static _inline void request_slowdown(void){
+    for (u32 i = 0; i < DEVICE_REQ_SLOW_YIELD; i++) {
+        task_yield();
+    }
+}
+
 // 获取空设备槽
 static device_t *get_null_device() {        
     for (size_t i = 0; i < DEVICE_NR; i++) {
@@ -44,6 +54,7 @@ int device_write(dev_t dev, void *buf, size_t count, idx_t idx, int flags){
 
 // 执行块设备请求
 static void do_request(request_t *request){
+    request_slowdown();     // 放慢请求处理速度，便于观察阻塞/唤醒顺序
     switch (request->type)
     {
     case REQ_READ:
@@ -56,6 +67,20 @@ static void do_request(request_t *request){
         panic("do_request: unsupported request type %d\n", request->type);
         break;
     }
+    request_slowdown();     // 放慢请求处理速度，便于观察阻塞/唤醒顺序
+}
+
+// 电梯算法：根据当前寻道方向和请求队列中的请求位置，选择下一个请求进行处理
+static request_t *request_nextreq(device_t *device, request_t *req){
+    list_t *list = &device->requests_list;    // 获取设备请求队列
+    if(device->direct == DIRECT_UP && req->node.next == &list->tail) device->direct = DIRECT_DOWN;      // 如果当前寻道方向向上且下一个请求不存在，则切换寻道方向为向下
+    else if(device->direct == DIRECT_DOWN && req->node.prev == &list->head) device->direct = DIRECT_UP; // 如果当前寻道方向向下且上一个请求不存在，则切换寻道方向为向上
+
+    void *next = NULL;
+    if(device->direct == DIRECT_UP) next = req->node.next;          // 如果当前寻道方向向上，则获取下一个请求
+    else if(device->direct == DIRECT_DOWN) next = req->node.prev;   // 如果当前寻道方向向下，则获取上一个请求
+    if(next == &list->head || next == &list->tail) return NULL;     // 如果下一个请求不存在，则返回NULL
+    return element_entry(request_t, node, next);                    // 返回下一个请求结构体
 }
 
 // 块设备请求
@@ -74,8 +99,10 @@ void device_request(dev_t dev, void *buf, u8 count, idx_t idx, int flags, u32 ty
     request->buf = buf;         // 设置数据缓冲区
     request->task = NULL;       // 设置发起请求的任务为空
 
+    LOGK("Dev %d request: idx=%d\n", request->dev, request->idx); // 输出请求日志  
+    
     bool empty = list_empty(&device->requests_list);    // 检查请求队列是否为空
-    list_push(&device->requests_list, &request->node);  // 将请求加入
+    list_insert_sort(&device->requests_list, &request->node, element_node_offset(request_t, node, idx)); // 将请求插入设备请求队列并按 idx 排序
     // 如果请求队列不为空，说明设备正在处理其他请求，当前任务需要阻塞等待
     if(!empty){
         request->task = running_task();                 // 设置发起请求的任务为当前任务
@@ -83,11 +110,15 @@ void device_request(dev_t dev, void *buf, u8 count, idx_t idx, int flags, u32 ty
     }
 
     do_request(request);            // 执行请求
+
+    request_t *next_request = request_nextreq(device, request); // 获取下一个请求
+
     list_remove(&request->node);    // 从请求队列中移除请求
     kfree(request);                 // 释放请求结构体内存
-    if(!list_empty(&device->requests_list)){
-        request_t *next_request = element_entry(request_t, node, device->requests_list.tail.prev);
+
+    if(next_request){                 // 如果下一个请求存在，解锁下一个请求的任务以继续处理)
         assert(next_request -> task -> magic == ONIX_MAGIC);    // 校验任务结构的魔数以检测损坏
+        LOGK("Unlock task %d for next request\n", next_request->task->uid); // 输出解锁日志
         task_unlock(next_request->task);                        // 解锁下一个请求的任务
     }
 }
@@ -122,6 +153,7 @@ void device_init(){
         device->write = NULL;                   // 设置write函数指针为NULL  
 
         list_init(&device->requests_list);      // 初始化设备请求队列
+        device->direct = DIRECT_UP;             // 设置磁盘寻道方向默认向上
     }
 }
 

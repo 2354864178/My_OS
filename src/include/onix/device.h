@@ -33,6 +33,9 @@ enum device_cmd_t{
 #define REQ_READ  0 // 读请求
 #define REQ_WRITE 1 // 写请求
 
+#define DIRECT_UP 0 // 磁盘寻道方向：向上
+#define DIRECT_DOWN 1 // 磁盘寻道方向：向下
+
 // 设备请求结构体
 typedef struct request_t{
     dev_t dev;              // 设备号
@@ -54,6 +57,8 @@ typedef struct device_t {
     dev_t parent;        // 父设备号
     void *ptr;           // 设备指针
     list_t requests_list;    // 设备请求队列
+    bool direct;         // 磁盘寻道方向
+
     int (*ioctl)(void *dev, int cmd, void *args, int flags);                // 控制操作
     int (*read)(void *dev, void *buf, size_t count, idx_t idx, int flags);  // 读操作
     int (*write)(void *dev, void *buf, size_t count, idx_t idx, int flags); // 写操作

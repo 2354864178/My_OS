@@ -433,8 +433,8 @@ void task_init(){
 
     idle_task = task_create(idle_thread, "idle", 1, KERNEL_USER);   // 创建空闲任务
     task_create(init_thread, "init", 5, NORMAL_USER);               // 创建初始化任务
-    task_create(test_thread, "test", 5, KERNEL_USER);               // 创建测试任务
-    task_create(test_thread, "test", 5, KERNEL_USER);               // 创建测试任务
-    task_create(test_thread, "test", 5, KERNEL_USER);               // 创建测试任务
+    task_create(test_thread, "test", 5, 1);               // 创建测试任务
+    task_create(test_thread, "test", 5, 5);               // 创建测试任务
+    task_create(test_thread, "test", 5, 3);               // 创建测试任务
     printk("Task init done!\n");
 }
