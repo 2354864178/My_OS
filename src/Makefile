@@ -78,6 +78,7 @@ $(BUILD)/kernel.bin: \
 	$(BUILD)/kernel/pci.o \
 	$(BUILD)/kernel/nvme.o \
 	$(BUILD)/kernel/ide.o \
+	$(BUILD)/kernel/buffer.o \
 	$(BUILD)/lib/string.o \
 	$(BUILD)/lib/vsprintf.o \
 	$(BUILD)/lib/stdlib.o \
@@ -153,13 +154,14 @@ QEMU_DISK:= -boot c
 
 QEMU_DEBUG:= -s -S
 
-.PHONY: qemu
+# 已失效 请看cdrok.mk中的qemub和qemubg
+.PHONY: qemu 	# 已失效 使用qemub代替
 qemu:
 	$(MAKE) -B $(IMAGES)
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
 	$(QEMU) $(QEMU_DISK)
 
-.PHONY: qemug
+.PHONY: qemug 	# 已失效 使用qemubg代替
 qemug:
 	$(MAKE) -B $(IMAGES)
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \

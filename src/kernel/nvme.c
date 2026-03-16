@@ -186,7 +186,6 @@ static int nvme_io_submit(nvme_ctrl_t *ctrl, nvme_cmd_t *cmd) {
         ctrl->io_cq_head = (ctrl->io_cq_head + 1) % NVME_IO_Q_DEPTH;        // 更新完成队列头
         if (ctrl->io_cq_head == 0) ctrl->io_cq_phase ^= 1;                  // 切换相位位
         nvme_write32(ctrl, nvme_db_off(ctrl, 1, true), ctrl->io_cq_head);   // 更新 doorbell
-
         if (sc || sct) {
             LOGK("nvme io cmd failed sct %u sc %u\n", sct, sc); // 错误处理
             return EOF;
@@ -293,6 +292,7 @@ static int nvme_ctrl_init_one(nvme_ctrl_t *ctrl, u32 mmio_base) {
         return EOF;
     }
 
+    // 创建 IO 队列
     if(nvme_create_io_queues(ctrl) != 0){
         LOGK("nvme create io queues failed\n");
         return EOF;
@@ -309,37 +309,37 @@ static int nvme_find_nth_mmio(u32 nth, u32 *mmio_out){
             // func0 不存在直接跳过
             if (pci_config_read16((u8)bus, (u8)dev, 0, 0x00) == 0xFFFFu) continue;
 
-            u8 header_type = pci_config_read8((u8)bus, (u8)dev, 0, 0x0E);
-            u32 func_limit = (header_type & 0x80u) ? 8 : 1;
+            u8 header_type = pci_config_read8((u8)bus, (u8)dev, 0, 0x0E);   // 读取 header type
+            u32 func_limit = (header_type & 0x80u) ? 8 : 1;                 // 多功能设备有 8 个函数，否则只有 1 个函数
 
             for (u32 func = 0; func < func_limit; func++){
-                if (pci_config_read16((u8)bus, (u8)dev, (u8)func, 0x00) == 0xFFFFu) continue;
+                if (pci_config_read16((u8)bus, (u8)dev, (u8)func, 0x00) == 0xFFFFu) continue; // 函数不存在跳过
 
-                u8 class_code = pci_config_read8((u8)bus, (u8)dev, (u8)func, 0x0B);
-                u8 subclass = pci_config_read8((u8)bus, (u8)dev, (u8)func, 0x0A);
-                u8 prog_if = pci_config_read8((u8)bus, (u8)dev, (u8)func, 0x09);
+                u8 class_code = pci_config_read8((u8)bus, (u8)dev, (u8)func, 0x0B); // 读取类代码
+                u8 subclass = pci_config_read8((u8)bus, (u8)dev, (u8)func, 0x0A);   // 读取子类代码
+                u8 prog_if = pci_config_read8((u8)bus, (u8)dev, (u8)func, 0x09);    // 读取编程接口
 
-                if (class_code != PCI_CLASS_MASS_STORAGE) continue;
-                if (subclass != PCI_SUBCLASS_NVM) continue;
-                if (prog_if != PCI_PROGIF_NVME) continue;
+                if (class_code != PCI_CLASS_MASS_STORAGE) continue;     // 质量存储控制器
+                if (subclass != PCI_SUBCLASS_NVM) continue;             // 非易失性存储器控制器
+                if (prog_if != PCI_PROGIF_NVME) continue;               // NVMe 编程接口
 
-                u32 bar0 = pci_config_read32((u8)bus, (u8)dev, (u8)func, 0x10);
-                u32 bar1 = pci_config_read32((u8)bus, (u8)dev, (u8)func, 0x14);
-                u32 mmio_lo = bar0 & ~0xFu;
-                u32 mmio_hi = bar1;
+                u32 bar0 = pci_config_read32((u8)bus, (u8)dev, (u8)func, 0x10); // 读取 BAR0
+                u32 bar1 = pci_config_read32((u8)bus, (u8)dev, (u8)func, 0x14); // 读取 BAR1
+                u32 mmio_lo = bar0 & ~0xFu; // 32 位内核：BAR0 存储 MMIO 基址低 32 位
+                u32 mmio_hi = bar1;         // 32 位内核：BAR1 存储 MMIO 基址高 32 位（要求为 0）
 
                 // 打开 Memory Space + Bus Master
-                u16 cmd = pci_config_read16((u8)bus, (u8)dev, (u8)func, 0x04);
-                cmd |= (1u << 1); // MEM
-                cmd |= (1u << 2); // BUS MASTER
-                pci_config_write16((u8)bus, (u8)dev, (u8)func, 0x04, cmd);
+                u16 cmd = pci_config_read16((u8)bus, (u8)dev, (u8)func, 0x04);  // 读取命令寄存器
+                cmd |= (1u << 1); // 内存空间使能
+                cmd |= (1u << 2); // 总线主控使能
+                pci_config_write16((u8)bus, (u8)dev, (u8)func, 0x04, cmd);      // 写回命令寄存器
 
                 if (mmio_hi){
-                    panic("nvme %02x:%02x.%u mmio >4GiB unsupported\n", bus, dev, func);
+                    panic("nvme %02x:%02x.%u mmio >4GiB unsupported\n", bus, dev, func);    // 32 位内核要求 MMIO 基址 <4GiB
                 }
 
                 if (found == nth) {
-                    *mmio_out = mmio_lo;
+                    *mmio_out = mmio_lo;    // 输出找到的 MMIO 基址
                     return 0;
                 }
                 found++;
@@ -514,20 +514,20 @@ void nvme_init(void) {
 
     for (u32 i = 0; i < NVME_CTRL_NR; i++) {
         u32 mmio;
-        if (nvme_find_nth_mmio(i, &mmio) != 0) break;
+        if (nvme_find_nth_mmio(i, &mmio) != 0) break;       // 查找第 i 个 NVMe 设备的 MMIO 基址
 
         nvme_ctrl_t *ctrl = &nvme_ctrls[i];
         sprintf(ctrl->name, "nvme%u", i);
-        if (nvme_ctrl_init_one(ctrl, mmio) != 0) continue;
+        if (nvme_ctrl_init_one(ctrl, mmio) != 0) continue;  // 初始化控制器失败跳过
 
-        nvme_disk_t *disk = &ctrl->disks[0];
-        sprintf(disk->name, "nv%u", i);
-        disk->ctrl = ctrl;
-        disk->nsid = 1;
+        nvme_disk_t *disk = &ctrl->disks[0];                // 目前每个控制器只处理第一个命名空间（disk[0]）
+        sprintf(disk->name, "nv%u", i);                     
+        disk->ctrl = ctrl;      // 设置控制器指针
+        disk->nsid = 1;         // 目前默认使用 NSID 1，实际可能需要枚举命名空间
 
-        if (nvme_disk_identify(disk) != 0) continue;
-        nvme_part_init(disk, buf);
-        nvme_install(ctrl);
+        if (nvme_disk_identify(disk) != 0) continue;    // 识别磁盘失败跳过
+        nvme_part_init(disk, buf);  // 初始化分区信息
+        nvme_install(ctrl);         // 安装设备节点
     }
 
     free_kpage((u32)buf, 1);

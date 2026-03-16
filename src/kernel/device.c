@@ -10,13 +10,13 @@ static device_t devices[DEVICE_NR];             // 设备数组
 
 // 调试开关：人为放慢 do_request，便于观察阻塞/唤醒顺序
 // 0 表示关闭；
-#define DEVICE_REQ_SLOW_YIELD 300
+// #define DEVICE_REQ_SLOW_YIELD 300
 
-static _inline void request_slowdown(void){
-    for (u32 i = 0; i < DEVICE_REQ_SLOW_YIELD; i++) {
-        task_yield();
-    }
-}
+// static _inline void request_slowdown(void){
+//     for (u32 i = 0; i < DEVICE_REQ_SLOW_YIELD; i++) {
+//         task_yield();
+//     }
+// }
 
 // 获取空设备槽
 static device_t *get_null_device() {        
@@ -54,7 +54,7 @@ int device_write(dev_t dev, void *buf, size_t count, idx_t idx, int flags){
 
 // 执行块设备请求
 static void do_request(request_t *request){
-    request_slowdown();     // 放慢请求处理速度，便于观察阻塞/唤醒顺序
+    // request_slowdown();     // 放慢请求处理速度，便于观察阻塞/唤醒顺序
     switch (request->type)
     {
     case REQ_READ:
@@ -67,7 +67,7 @@ static void do_request(request_t *request){
         panic("do_request: unsupported request type %d\n", request->type);
         break;
     }
-    request_slowdown();     // 放慢请求处理速度，便于观察阻塞/唤醒顺序
+    // request_slowdown();     // 放慢请求处理速度，便于观察阻塞/唤醒顺序
 }
 
 // 电梯算法：根据当前寻道方向和请求队列中的请求位置，选择下一个请求进行处理

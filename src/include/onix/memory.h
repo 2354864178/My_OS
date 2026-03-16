@@ -4,11 +4,15 @@
 #define PAGE_SIZE 0x1000     // 一页的大小 4K
 #define MEMORY_BASE 0x100000 // 1M，可用内存开始的位置
 
-#define KERNEL_MEMORY_SIZE 0x800000 // 内核内存大小 8M
+#define KERNEL_MEMORY_SIZE 0x1000000    // 内核内存大小 16M
+#define KERNEL_BUFFER_MEM 0x800000      // 内核缓冲区起始地址 8M
+#define KERNEL_BUFFER_SIZE 0x400000     // 内核缓冲区大小 4M
+#define KERNEL_RAMDISK_MEM 0xC00000     // 内核虚拟磁盘起始地址 12M
+#define KERNEL_RAMDISK_SIZE 0x400000    // 内核虚拟磁盘大小 4M
 
 #define USER_STACK_TOP 0x8000000    // 用户栈顶地址 128M
 #define USER_STACK_SIZE 0x200000    // 用户栈最大 2M
-#define USER_STACK_BOTTOM (USER_STACK_TOP - USER_STACK_SIZE)  // 用户栈底地址 128M - 2M
+#define USER_STACK_BOTTOM 0x7E00000 // 用户栈底地址 126M
 
 #define KERNEL_PAGE_DIR 0x1000      // 内核页目录索引
 
@@ -21,11 +25,6 @@
 #define PAGE_PWT     0x8    // 页写通过
 #define PAGE_PCD     0x10   // 页缓存禁用
 #define PAGE_GLOBAL  0x100  // 全局页
-
-static u32 KERNEL_PAGE_TABLE[] = {  // 内核页表索引
-    0x2000,
-    0x3000,
-};
 
 #pragma pack(1) 
 typedef struct page_entry_t

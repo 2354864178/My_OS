@@ -17,6 +17,7 @@ extern void arena_init();
 extern void ide_init();
 extern void pci_init();
 extern void nvme_init();
+extern void buffer_init();
 
 void kernel_init(){
     tss_init();
@@ -30,8 +31,10 @@ void kernel_init(){
     rtc_init();
     // ide_init();
     time_init();
-    task_init();
     nvme_init();
+    buffer_init();
+    task_init();
+    
     syscall_init();
     
     set_interrupt_state(true);

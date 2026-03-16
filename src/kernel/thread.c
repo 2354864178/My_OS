@@ -30,21 +30,6 @@ static void user_init_thread(){
     BMB;
     char ch;
     while (true) {
-        // pid_t pid = fork();
-        // if (pid) {
-        //     sleep(2000);
-        //     printf("Parent thread %d, %d, %d... \n", getpid(), getppid(), counter++);
-            
-        //     pid_t child = waitpid(pid, &status);
-        //     printf("waitpid %d done with status %d %d\n", child, status, time());
-        // }
-        // else{
-        //     sleep(2000);
-        //     printf("Child thread %d, %d, %d... \n", getpid(), getppid(), counter++);
-        //     sleep(2000);
-        //     exit(0);
-        // }
-        // hang();
         sleep(1000);
     }
 }
@@ -58,9 +43,7 @@ void init_thread(){
 void test_thread(){
     set_interrupt_state(true);
     test();
-    LOGK("Test thread done...\n");
     while(true) {
-        
         sleep(10);
     }
 }

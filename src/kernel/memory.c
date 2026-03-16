@@ -18,7 +18,13 @@
 #define PAGE(idx) ((u32)idx << 12)             // 获取页索引 idx 对应的页开始的位置
 #define ASSERT_PAGE(addr) assert((addr & 0xfff) == 0)
 
-#define KERNEL_MAP_BITS 0x4000      // 内核内存位图缓冲区起始地址
+#define KERNEL_MAP_BITS 0x6000      // 内核内存位图缓冲区起始地址
+static u32 KERNEL_PAGE_TABLE[] = {  // 内核页表索引
+    0x2000,
+    0x3000,
+    0x4000,
+    0x5000,
+};
 
 bitmap_t kernel_map; // 内核内存位图
 
@@ -310,7 +316,7 @@ page_entry_t *copy_pde() {
     entry_init(entry, IDX(pde));                        // 初始化该页目录项
 
     page_entry_t *dentry;
-    for(size_t didx = 2; didx < 1023; didx++) {         // 复制内核空间的页表项
+    for(size_t didx = sizeof(KERNEL_PAGE_TABLE) / 4; didx < 1023; didx++) {         // 复制内核空间的页表项
         dentry = &pde[didx];                            // 遍历页目录的所有页目录项
         if(!dentry->present) continue;                  // 如果该页目录项不存在，跳过
 
@@ -364,7 +370,7 @@ int32 sys_brk(void *addr){
     ASSERT_PAGE(brk);                         // 判断brk是否是页开始的位置
     task_t *task = running_task();
     assert(task->uid != KERNEL_USER);         // 判断是否是用户
-    assert(KERNEL_MEMORY_SIZE < brk < USER_STACK_BOTTOM);  // 判断brk是否属于用户内存空间
+    assert(KERNEL_MEMORY_SIZE <= brk && brk < USER_STACK_BOTTOM);  // 判断brk是否属于用户内存空间
     u32 old_brk = task->brk;   // 获取进程当前的堆内存边界
 
     // 如果当前边界大于新申请的边界，那就释放内存映射
