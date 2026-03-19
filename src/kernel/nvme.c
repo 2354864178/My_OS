@@ -74,6 +74,7 @@ typedef struct nvme_cpl_t{
 } _packed nvme_cpl_t;
 
 static nvme_ctrl_t nvme_ctrls[NVME_CTRL_NR];    // NVMe 控制器数组
+static u8 nvme_ctrl_irqs[NVME_CTRL_NR];         // 每个控制器对应的 IRQ（INTx）
 
 // 读取/写入 NVMe MMIO 寄存器
 static _inline u32 nvme_read32(nvme_ctrl_t *ctrl, u32 off){
@@ -121,9 +122,17 @@ static int nvme_wait_ready(nvme_ctrl_t *ctrl, bool ready){
 
 // 获取下一个命令标识符
 static u16 nvme_next_cid(nvme_ctrl_t *ctrl) {
-    u16 cid = ctrl->next_cid++;                     // 分配当前 cid 并自增
-    if (ctrl->next_cid == 0) ctrl->next_cid = 1;    // 避免 cid 为 0
-    return cid;
+    // 简单的 CID 分配策略：循环扫描 CID，找到一个在途请求上下文空闲的 CID 返回
+    for (u32 i = 0; i < NVME_CID_MAX; i++) {
+        if (ctrl->next_cid == 0 || ctrl->next_cid > NVME_CID_MAX) {
+            ctrl->next_cid = 1;
+        }
+
+        u16 cid = ctrl->next_cid++;
+        nvme_req_ctx_t *ctx = &ctrl->inflight[cid];
+        if (!ctx->bytes && !ctx->done)  return cid;     // 该 CID 上没有在途请求，返回可用 CID
+    }
+    panic("nvme no free cid\n");
 }
 
 // 提交 Admin 命令并等待完成
@@ -164,34 +173,99 @@ static int nvme_admin_submit(nvme_ctrl_t *ctrl, nvme_cmd_t *cmd) {
     }
 }
 
-// 提交 IO 命令并等待完成
-static int nvme_io_submit(nvme_ctrl_t *ctrl, nvme_cmd_t *cmd) {
+// 提交 IO 命令（不等待完成）
+static int nvme_io_submit_only(nvme_ctrl_t *ctrl, nvme_cmd_t *cmd) {
     nvme_cmd_t *sq = (nvme_cmd_t *)ctrl->io_sq; // 提交队列
-    nvme_cpl_t *cq = (nvme_cpl_t *)ctrl->io_cq; // 完成队列
 
     u16 tail = ctrl->io_sq_tail;    // 获取当前 tail
     sq[tail] = *cmd;                // 写入命令
     ctrl->io_sq_tail = (tail + 1) % NVME_IO_Q_DEPTH;    // 更新 tail
     nvme_write32(ctrl, nvme_db_off(ctrl, 1, false), ctrl->io_sq_tail);
 
-    while (true) {
-        nvme_cpl_t *cpl = &cq[ctrl->io_cq_head];    // 获取当前完成队列头
-        u16 status = cpl->status;                   // 读取状态字段
-        u16 phase = status & 1u;                    // 新的完成条目相位位
-        if (phase != ctrl->io_cq_phase) continue;   // 新的完成条目未到达
+    return 0;
+}
 
-        u16 sc = (status >> 1) & 0xFFu;     // 提取状态码
-        u16 sct = (status >> 9) & 0x7u;     // 提取状态码类型
+// 收割一个 IO 完成条目（若无新完成返回 0）
+static int nvme_io_reap_one(nvme_ctrl_t *ctrl) {
+    nvme_cpl_t *cq = (nvme_cpl_t *)ctrl->io_cq; // 完成队列
+    nvme_cpl_t *cpl = &cq[ctrl->io_cq_head];    // 获取当前完成队列头
+    u16 status = cpl->status;                   // 读取状态字段
+    u16 phase = status & 1u;                    // 新的完成条目相位位
+    if (phase != ctrl->io_cq_phase) return 0;   // 新的完成条目未到达
 
-        ctrl->io_cq_head = (ctrl->io_cq_head + 1) % NVME_IO_Q_DEPTH;        // 更新完成队列头
-        if (ctrl->io_cq_head == 0) ctrl->io_cq_phase ^= 1;                  // 切换相位位
-        nvme_write32(ctrl, nvme_db_off(ctrl, 1, true), ctrl->io_cq_head);   // 更新 doorbell
-        if (sc || sct) {
-            LOGK("nvme io cmd failed sct %u sc %u\n", sct, sc); // 错误处理
-            return EOF;
+    u16 cid = cpl->cid;
+    nvme_req_ctx_t *ctx = &ctrl->inflight[cid];
+    // 基于 CID 找到对应的在途请求上下文，更新状态并唤醒等待的任务
+    if (!ctx->done && ctx->bytes) {
+        ctx->status = status;   // 更新完成状态码
+
+        // 只有读请求且状态码表示成功时才将数据从 bounce 缓冲复制回原始缓冲区
+        if (!ctx->write && (((status >> 1) & 0xFFu) == 0) && (((status >> 9) & 0x7u) == 0)) {
+            memcpy(ctx->buffer, ctx->bounce, ctx->bytes);
         }
-        return 0;
+        ctx->done = 1;          // 标记请求已完成
+
+        // 唤醒等待的任务
+        if (ctx->task != NULL) {
+            if (ctx->task->state != TASK_RUNNING && ctx->task->state != TASK_READY) {
+                // LOGK("nvme reap cid %u wake task %s pid %u\n", cid, ctx->task->name, ctx->task->pid);
+                task_unlock(ctx->task);
+            }
+            ctx->task = NULL;
+        }
+    } 
+    else  LOGK("nvme cpl cid %u without inflight ctx\n", cid); 
+
+    ctrl->io_cq_head = (ctrl->io_cq_head + 1) % NVME_IO_Q_DEPTH;        // 更新完成队列头
+    if (ctrl->io_cq_head == 0) ctrl->io_cq_phase ^= 1;                  // 切换相位位
+    nvme_write32(ctrl, nvme_db_off(ctrl, 1, true), ctrl->io_cq_head);   // 更新 doorbell
+
+    return 1;
+}
+
+// NVMe 中断处理：循环收割所有已完成 IO CQE
+static void nvme_handler(int vector) {
+    send_eoi(vector);
+
+    u32 irq = (u32)vector - IRQ_MASTER_NR;
+    if (irq >= 16) return;
+
+    for (u32 i = 0; i < NVME_CTRL_NR; i++) {
+        if (nvme_ctrl_irqs[i] != (u8)irq) continue;
+        nvme_ctrl_t *ctrl = &nvme_ctrls[i];
+        while (nvme_io_reap_one(ctrl)) {
+            ;
+        }
     }
+}
+
+// 等待指定 CID 完成（通过收割完成队列推进）
+static int nvme_io_wait_cid(nvme_ctrl_t *ctrl, u16 cid) {
+    nvme_req_ctx_t *ctx = &ctrl->inflight[cid]; // 获取请求上下文
+
+    // 轮询等待完成，期间收割完成队列以推进请求完成
+    while (!ctx->done) {
+        task_t *current = running_task();
+        if (current->state == TASK_RUNNING) {
+            ctx->task = current;                        // 关联当前任务到请求上下文，完成时唤醒
+            task_block(current, NULL, TASK_BLOCKED);    // 阻塞当前任务，等待完成
+        }
+    }
+
+    u16 status = ctx->status;
+    u16 sc = (status >> 1) & 0xFFu;     // 提取状态码
+    u16 sct = (status >> 9) & 0x7u;     // 提取状态码类型
+    if (sc || sct) {
+        LOGK("nvme io cmd failed cid %u sct %u sc %u\n", cid, sct, sc);
+        return EOF;
+    }
+    return 0;
+}
+
+// 提交 IO 命令并等待完成
+static int nvme_io_submit(nvme_ctrl_t *ctrl, nvme_cmd_t *cmd) {
+    if (nvme_io_submit_only(ctrl, cmd) != 0) return EOF;
+    return nvme_io_wait_cid(ctrl, cmd->cid);
 }
 
 // 识别 NVMe 磁盘信息
@@ -218,19 +292,19 @@ static int nvme_create_io_queues(nvme_ctrl_t *ctrl) {
     ctrl->io_cq_head = 0;                   // 初始化完成队列头指针
     ctrl->io_cq_phase = 1;                  // 初始化完成队列相位位
 
-    // Create IO Completion Queue (qid=1)
+    // 创建 IO 完成队列 (qid=1)
     nvme_cmd_t cmd;
     memset(&cmd, 0, sizeof(cmd));
     cmd.opc = NVME_ADMIN_CREATE_IOCQ;
     cmd.cid = nvme_next_cid(ctrl);
     cmd.prp1 = (u32)ctrl->io_cq;
     // cdw10: QID[15:0] | QSIZE[31:16]
-    cmd.cdw10 = (1u & 0xFFFFu) | ((u32)(NVME_IO_Q_DEPTH - 1) << 16);
-    // cdw11: PC=1(bit0), IEN=0(bit1), IV=0
-    cmd.cdw11 = 1u;
+    cmd.cdw10 = (1u & 0xFFFFu) | ((u32)(NVME_IO_Q_DEPTH - 1) << 16);    // 设置队列标识符和队列深度
+    // cdw11: PC=1(bit0), IEN=1(bit1), IV=0
+    cmd.cdw11 = 1u | (1u << 1);     // 启用中断通知
     if (nvme_admin_submit(ctrl, &cmd) != 0) return EOF;
 
-    // Create IO Submission Queue (qid=1, cqid=1)
+    // 创建 IO 提交队列 (qid=1)，关联到完成队列 1
     memset(&cmd, 0, sizeof(cmd));
     cmd.opc = NVME_ADMIN_CREATE_IOSQ;
     cmd.cid = nvme_next_cid(ctrl);
@@ -301,8 +375,8 @@ static int nvme_ctrl_init_one(nvme_ctrl_t *ctrl, u32 mmio_base) {
     return 0;
 }
 
-// 查找第 nth 个 NVMe 设备的 MMIO 基址
-static int nvme_find_nth_mmio(u32 nth, u32 *mmio_out){
+// 查找第 nth 个 NVMe 设备的 MMIO 基址和 IRQ 线
+static int nvme_find_nth_pci_info(u32 nth, u32 *mmio_out, u8 *irq_out){
     u32 found = 0;
     for (u32 bus = 0; bus < 256; bus++){
         for (u32 dev = 0; dev < 32; dev++){
@@ -325,6 +399,7 @@ static int nvme_find_nth_mmio(u32 nth, u32 *mmio_out){
 
                 u32 bar0 = pci_config_read32((u8)bus, (u8)dev, (u8)func, 0x10); // 读取 BAR0
                 u32 bar1 = pci_config_read32((u8)bus, (u8)dev, (u8)func, 0x14); // 读取 BAR1
+                u8 irq_line = pci_config_read8((u8)bus, (u8)dev, (u8)func, 0x3C); // 中断线
                 u32 mmio_lo = bar0 & ~0xFu; // 32 位内核：BAR0 存储 MMIO 基址低 32 位
                 u32 mmio_hi = bar1;         // 32 位内核：BAR1 存储 MMIO 基址高 32 位（要求为 0）
 
@@ -340,6 +415,7 @@ static int nvme_find_nth_mmio(u32 nth, u32 *mmio_out){
 
                 if (found == nth) {
                     *mmio_out = mmio_lo;    // 输出找到的 MMIO 基址
+                    *irq_out = irq_line;    // 输出找到的 IRQ 线
                     return 0;
                 }
                 found++;
@@ -417,12 +493,19 @@ static int nvme_rw(nvme_disk_t *disk, void *buffer, u8 count, idx_t lba, bool wr
     cmd.cdw11 = 0;                  // 起始 LBA 高 32 位
     cmd.cdw12 = (u32)(count - 1);   // 传输扇区数（0 表示 1 个扇区）
 
-    int ret = nvme_io_submit(ctrl, &cmd);   // 提交命令
+    nvme_req_ctx_t *ctx = &ctrl->inflight[cmd.cid];
+    memset(ctx, 0, sizeof(*ctx));
+    ctx->task = running_task();
+    ctx->bounce = bounce;
+    ctx->buffer = buffer;
+    ctx->bytes = (u32)count * SECTOR_SIZE;
+    ctx->write = write ? 1 : 0;
+    ctx->done = 0;
 
-    // 读取时拷贝数据到上层 buffer
-    if (!write && ret == 0) memcpy(buffer, bounce, (u32)count * SECTOR_SIZE);  
+    int ret = nvme_io_submit(ctrl, &cmd);   // 提交命令并等待该 CID 完成
 
     free_kpage((u32)bounce, 1);     // 释放 bounce buffer
+    memset(ctx, 0, sizeof(*ctx));   // 回收 inflight 槽位
     raw_mutex_unlock(&ctrl->lock);  // 解锁
     return ret;
 }
@@ -512,13 +595,27 @@ static void nvme_install(nvme_ctrl_t *ctrl){
 void nvme_init(void) {
     u16 *buf = (u16 *)alloc_kpage(1);
 
+    for (u32 i = 0; i < NVME_CTRL_NR; i++)  nvme_ctrl_irqs[i] = 0xFFu; // 初始化 IRQ 数组为无效值
+
     for (u32 i = 0; i < NVME_CTRL_NR; i++) {
         u32 mmio;
-        if (nvme_find_nth_mmio(i, &mmio) != 0) break;       // 查找第 i 个 NVMe 设备的 MMIO 基址
+        u8 irq;
+        if (nvme_find_nth_pci_info(i, &mmio, &irq) != 0) break;       // 查找第 i 个 NVMe 设备的 MMIO 基址
+        if (irq >= 16 || irq == 0xFFu) {
+            LOGK("nvme%u invalid irq line %u\n", i, irq);
+            continue;
+        }
 
         nvme_ctrl_t *ctrl = &nvme_ctrls[i];
         sprintf(ctrl->name, "nvme%u", i);
         if (nvme_ctrl_init_one(ctrl, mmio) != 0) continue;  // 初始化控制器失败跳过
+
+        nvme_ctrl_irqs[i] = irq;
+
+        set_interrupt_handler(irq, nvme_handler);
+        set_interrupt_mask(irq, true);
+
+        LOGK("%s irq %u registered\n", ctrl->name, irq);
 
         nvme_disk_t *disk = &ctrl->disks[0];                // 目前每个控制器只处理第一个命名空间（disk[0]）
         sprintf(disk->name, "nv%u", i);                     

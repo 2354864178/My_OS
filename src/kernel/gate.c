@@ -31,9 +31,10 @@ static u32 sys_test(){          // 测试系统调用函数
 
     device = device_find(DEV_NVME_DISK, 0);         // 查找第一个NVMe磁盘设备
     assert(device);                                 // 断言设备存在
-    buffer_t *buf = bread(device->dev, 0);          // 从设备的第0块读取数据到缓冲区
+    task_t *current = running_task();               // 获取当前运行任务指针
+    buffer_t *buf = bread(device->dev, current->uid);          // 从设备的第0块读取数据到缓冲区
     char *data = buf->data + SECTOR_SIZE;           // 获取缓冲区数据指针，偏移一个扇区大小
-    memset(data, 0x5a, SECTOR_SIZE);                // 将数据区填充为0x5a，长度为一个扇区
+    memset(data, current->uid, SECTOR_SIZE);                // 将数据区填充为0x5a，长度为一个扇区
     buf->dirty = true;                              // 标记缓冲区为脏，表示数据已修改但未写回设备
     brelse(buf);                                    // 释放缓冲区，触发写回设备
     return 255;

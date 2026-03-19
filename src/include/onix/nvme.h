@@ -3,6 +3,7 @@
 
 #include <onix/types.h>
 #include <onix/mutex.h>
+#include <onix/task.h>
 
 #define SECTOR_SIZE 512 // 扇区大小
 
@@ -12,6 +13,19 @@
 
 #define NVME_ADMIN_Q_DEPTH 16   // 管理队列深度
 #define NVME_IO_Q_DEPTH    16   // IO 队列深度
+
+// CID 只需覆盖在飞请求规模，避免超大静态 inflight 表占用过多 BSS。
+#define NVME_CID_MAX       0x00FFu  // 最大命令标识符（1..255）
+
+typedef struct nvme_req_ctx_t {
+    struct task_t *task; // 发起该请求的任务
+    void *bounce;        // bounce 缓冲
+    void *buffer;        // 原始上层缓冲区
+    u32 bytes;           // 传输字节数
+    u16 status;          // 完成状态码（含 SCT/SC）
+    u8  write;           // 1=写请求，0=读请求
+    u8  done;            // 完成标志
+} nvme_req_ctx_t;
 
 #pragma pack(1) 
 typedef struct part_entry_t {   // 分区表项结构体
@@ -76,6 +90,8 @@ typedef struct nvme_ctrl_t {
     u8  io_cq_phase;    // 完成队列相位位
 
     u16 next_cid;       // 下一个命令标识符
+
+    nvme_req_ctx_t inflight[NVME_CID_MAX + 1];  // 按 CID 索引的在途请求上下文表
 } nvme_ctrl_t;
 
 // 磁盘操作
