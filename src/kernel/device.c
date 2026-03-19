@@ -99,7 +99,7 @@ void device_request(dev_t dev, void *buf, u8 count, idx_t idx, int flags, u32 ty
     request->buf = buf;         // 设置数据缓冲区
     request->task = NULL;       // 设置发起请求的任务为空
 
-    LOGK("Dev %d request: idx=%d\n", request->dev, request->idx); // 输出请求日志  
+    // LOGK("Dev %d request: idx=%d\n", request->dev, request->idx); // 输出请求日志  
     
     bool empty = list_empty(&device->requests_list);    // 检查请求队列是否为空
     list_insert_sort(&device->requests_list, &request->node, element_node_offset(request_t, node, idx)); // 将请求插入设备请求队列并按 idx 排序

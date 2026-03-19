@@ -477,7 +477,7 @@ static void nvme_part_init(nvme_disk_t *disk, u16 *buf)
 {
     if (!disk->total_sectors) return;
     // MBR 在 LBA0
-    if (nvme_pio_read(disk, buf, 1, 0) != 0) return;
+    // if (nvme_pio_read(disk, buf, 1, 0) != 0) return; 
 
     boot_sector_t *bs = (boot_sector_t *)buf;
     for (size_t i = 0; i < NVME_PART_NR; i++){
