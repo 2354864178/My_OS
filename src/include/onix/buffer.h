@@ -25,4 +25,8 @@ typedef struct buffer_t
     bool valid;         // 是否有效
 } buffer_t;
 
+buffer_t *bread(dev_t dev, idx_t block); // 从设备dev的块block读取数据到缓冲区，返回缓冲区指针
+void bwrite(buffer_t *buffer);             // 将缓冲区数据写回设备
+void brelse(buffer_t *buffer);             // 释放缓冲区，减少引用计数，可能会被回收
+
 #endif

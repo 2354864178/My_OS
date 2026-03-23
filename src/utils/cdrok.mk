@@ -1,6 +1,10 @@
 $(BUILD)/kernel.iso : $(BUILD)/kernel.bin $(SRC)/utils/grub.cfg
 # 检查多重引导2兼容性
 	grub-file --is-x86-multiboot2 $<
+# 检查生成ISO所需工具
+	@command -v grub-mkrescue >/dev/null 2>&1 || { echo "错误: 未找到 grub-mkrescue，请先安装 grub-pc-bin 后再执行 make qemub"; exit 1; }
+	@command -v xorriso >/dev/null 2>&1 || { echo "错误: 未找到 xorriso，请先安装后再执行 make qemub"; exit 1; }
+	@command -v mformat >/dev/null 2>&1 || { echo "错误: 未找到 mformat，请先安装 mtools 后再执行 make qemub"; exit 1; }
 # 创建目录
 	mkdir -p $(BUILD)/iso/boot/grub
 # 复制内核文件

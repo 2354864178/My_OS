@@ -79,6 +79,7 @@ $(BUILD)/kernel.bin: \
 	$(BUILD)/kernel/nvme.o \
 	$(BUILD)/kernel/ide.o \
 	$(BUILD)/kernel/buffer.o \
+	$(BUILD)/kernel/devicetree.o \
 	$(BUILD)/lib/string.o \
 	$(BUILD)/lib/vsprintf.o \
 	$(BUILD)/lib/stdlib.o \
@@ -87,7 +88,7 @@ $(BUILD)/kernel.bin: \
 	$(BUILD)/lib/list.o \
 	$(BUILD)/lib/fifo.o \
 	$(BUILD)/lib/printf.o \
-	$(BUILD)/kernel/devicetree.o \
+	$(BUILD)/fs/super.o \
 	$(DTB_OBJ)
 
 $(BUILD)/kernel.bin: | $(DTB)
