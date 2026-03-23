@@ -14,6 +14,8 @@
 #define IMAP_NR 8 // i节点位图占用的块数
 #define ZMAP_NR 8 // 块位图占用的块数
 
+#define BLOCK_BITS (BLOCK_SIZE * 8) // 每块包含的位数
+
 // i节点描述信息结构体 硬盘上的i节点表示  管理用途（存储文件的元数据，提供文件系统操作所需的信息）
 typedef struct inode_desc_t{ 
     u16 i_mode; // 文件类型和权限
@@ -43,7 +45,8 @@ typedef struct super_desc_t{
     u16 s_firstdatazone;    // 第一个数据块号
     u16 s_log_zone_size;    // 每个块包含的扇区数的对数值
     u32 s_max_size;         // 文件最大大小
-    u32 s_magic;            // 文件系统魔数
+    u16 s_magic;            // 文件系统魔数
+    u16 s_state;            // 文件系统状态
 } super_desc_t;
 
 // 超级块结构体 内存中的超级块表示 
@@ -66,5 +69,10 @@ typedef struct dentry_t{
 
 super_block_t* get_super(dev_t dev);    // 获取设备的超级块  管理用途（提供文件系统操作所需的信息，允许访问文件系统中的其他文件和目录）
 super_block_t* read_super(dev_t dev);   // 从设备读取超级块  管理用途（提供文件系统操作所需的信息，允许访问文件系统中的其他文件和目录）
+
+idx_t balloc(dev_t dev);    // 从设备上分配一个块，返回块号  管理用途（管理文件系统中的数据块，提供文件系统操作所需的信息）
+void bfree(dev_t dev, idx_t idx); // 从设备上释放一个块，返回块号  管理用途（管理文件系统中的数据块，提供文件系统操作所需的信息）
+idx_t ialloc(dev_t dev);    // 从设备上分配一个i节点，返回i节点号  管理用途（管理文件系统中的i节点，提供文件系统操作所需的信息）
+void ifree(dev_t dev, idx_t idx); // 从设备上释放一个i节点，返回i节点号  管理用途（管理文件系统中的i节点，提供文件系统操作所需的信息）  
 
 #endif

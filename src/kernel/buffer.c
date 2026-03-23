@@ -151,22 +151,15 @@ void bwrite(buffer_t *bf){
 // 释放buffer
 void brelse(buffer_t *bf){
     if (!bf) return;
-    bf->count--;            // 引用计数减去1
+    if(bf->dirty) bwrite(bf); // 如果buffer被修改过，先写回设备
+    bf->count--;                // 引用计数减去1
     assert(bf->count >= 0);
 
-    // 如果引用计数为0，说明没有使用者在使用这个buffer了，可以将它加入到空闲链表中
-    if (!bf->count){
-        if (bf->rnode.next) list_remove(&bf->rnode);    // 如果buffer在空闲链表中，先将它移除，避免重复加入
-        list_push(&free_list, &bf->rnode);              // 将释放的缓冲加入到空闲链表
-    }
-
-    if (bf->dirty) bwrite(bf);      // 如果buffer被修改过，写回设备，确保数据一致性
-
-    // 如果有任务在等待这个buffer，唤醒它们
-    if (!list_empty(&wait_list)){
-        task_t *task = element_entry(task_t, node, list_popback(&wait_list));  // 将该任务从阻塞状态唤醒/置为可运行
-        task_unlock(task);
-    }
+    if(bf->count > 0) return; // 如果还有使用者在使用这个buffer，直接返回
+    assert(!bf->rnode.next && !bf->rnode.prev); // 断言buffer不在空闲链表中
+    list_push(&free_list, &bf->rnode); // 否则将buffer放回空闲链表
+    // 唤醒等待链表中的任务，通知有buffer可用
+    if(!list_empty(&wait_list)) task_unlock(element_entry(task_t, node, wait_list.head.next));
 }
 
 void buffer_init(){

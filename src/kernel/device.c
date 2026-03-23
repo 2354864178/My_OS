@@ -91,7 +91,8 @@ void device_request(dev_t dev, void *buf, u8 count, idx_t idx, int flags, u32 ty
     if(device->parent) device = device_get(device->parent); // 获取父设备指针
     request_t *request = (request_t *)kmalloc(sizeof(request_t)); // 分配请求结构体内存
 
-    request->dev = dev;         // 设置设备号
+    // 对父设备发起实际 I/O，避免分区起始扇区被重复叠加
+    request->dev = device->dev; // 设置设备号
     request->type = type;       // 设置请求类型
     request->idx = offset;      // 设置索引
     request->count = count;     // 设置计数

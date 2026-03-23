@@ -89,6 +89,7 @@ $(BUILD)/kernel.bin: \
 	$(BUILD)/lib/fifo.o \
 	$(BUILD)/lib/printf.o \
 	$(BUILD)/fs/super.o \
+	$(BUILD)/fs/bmap.o \
 	$(DTB_OBJ)
 
 $(BUILD)/kernel.bin: | $(DTB)

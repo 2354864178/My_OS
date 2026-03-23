@@ -207,7 +207,7 @@ static int nvme_io_reap_one(nvme_ctrl_t *ctrl) {
 
         // 唤醒等待的任务
         if (ctx->task != NULL) {
-            if (ctx->task->state != TASK_RUNNING && ctx->task->state != TASK_READY) {
+            if (ctx->task->state != TASK_RUNNING && ctx->task->state != TASK_READY && ctx->task->state != TASK_INIT) {
                 // LOGK("nvme reap cid %u wake task %s pid %u\n", cid, ctx->task->name, ctx->task->pid);
                 task_unlock(ctx->task);
             }
@@ -243,12 +243,20 @@ static void nvme_handler(int vector) {
 static int nvme_io_wait_cid(nvme_ctrl_t *ctrl, u16 cid) {
     nvme_req_ctx_t *ctx = &ctrl->inflight[cid]; // 获取请求上下文
 
-    // 轮询等待完成，期间收割完成队列以推进请求完成
+    // 中断开启时走阻塞等待（异步）；仅在中断关闭阶段兜底轮询。
     while (!ctx->done) {
         task_t *current = running_task();
         if (current->state == TASK_RUNNING) {
-            ctx->task = current;                        // 关联当前任务到请求上下文，完成时唤醒
-            task_block(current, NULL, TASK_BLOCKED);    // 阻塞当前任务，等待完成
+            bool intr = interrupt_disable();
+            if (!ctx->done) {
+                ctx->task = current;                        // 关联当前任务到请求上下文，完成时唤醒
+                task_block(current, NULL, TASK_BLOCKED);    // 阻塞当前任务，等待完成
+            }
+            set_interrupt_state(intr);
+            continue;
+        }
+        while (nvme_io_reap_one(ctrl)) {
+            ;
         }
     }
 
@@ -559,14 +567,20 @@ int nvme_pio_part_ioctl(nvme_part_t *part, int cmd, void *args, int flags) {
 static void nvme_part_init(nvme_disk_t *disk, u16 *buf)
 {
     if (!disk->total_sectors) return;
+    memset(disk->disk, 0, sizeof(disk->disk));
+
     // MBR 在 LBA0
-    // if (nvme_pio_read(disk, buf, 1, 0) != 0) return; 
+    if (nvme_pio_read(disk, buf, 1, 0) != 0) return;
 
     boot_sector_t *bs = (boot_sector_t *)buf;
+    if (bs->signature != 0xAA55) return;
+
     for (size_t i = 0; i < NVME_PART_NR; i++){
         part_entry_t *entry = &bs->entry[i];    // 分区表项
         nvme_part_t *part = &disk->disk[i];     // 分区结构体
         if (!entry->system) continue;           // 空分区跳过
+        if (!entry->count) continue;
+        if ((u32)entry->start + (u32)entry->count > disk->total_sectors) continue;
 
         sprintf(part->name, "%s%d", disk->name, i + 1);
         part->disk = disk;

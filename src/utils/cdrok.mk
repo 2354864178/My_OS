@@ -33,6 +33,7 @@ qemubg: $(BUILD)/kernel.iso $(IMAGES)
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
 	$(QEMU) \
 	$(QEMU_CDROM) \
+	$(QEMU_CDROM_BOOT) \
 	$(QEMU_DEBUG)
 
 .PHONY:cdrom

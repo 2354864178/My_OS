@@ -26,19 +26,18 @@ void kernel_init(){
     mapping_init();
     arena_init();
     interrupt_init();
-    pci_init();
     clock_init();
     keyboard_init();
-    rtc_init();
+        // rtc_init();
     // ide_init();
     time_init();
+    pci_init();
     nvme_init();
     buffer_init();
     task_init();
-    super_init();
     syscall_init();
-    
+    super_init();
     set_interrupt_state(true);
-
+    
     hang();
 }

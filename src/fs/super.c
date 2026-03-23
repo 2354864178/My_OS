@@ -31,7 +31,7 @@ super_block_t* read_super(dev_t dev){
     LOGK("Reading super block from device %d\n", dev);
 
     super = get_free_super();
-    buffer_t* buffer = bread(dev, 1);           // 超级块在第1块
+    buffer_t* buffer = bread(dev, 1);       
     super->buffer = buffer;
     super->desc = (super_desc_t *)buffer->data; // 从缓冲区数据读取超级块描述信息
     super->dev = dev;
@@ -64,6 +64,14 @@ static void mount_root(){
     assert(device); // 确保设备存在
 
     root_super = read_super(device->dev); // 读取根文件系统的超级块
+
+    device = device_find(DEV_NVME_PART, 1); // 查找第二个NVMe分区设备
+    assert(device); // 确保设备存在
+    super_block_t *home_super = read_super(device->dev); // 读取/home分区的超级块
+    idx_t idx = ialloc(root_super->dev);    // 在根文件系统上分配一个i节点
+    ifree(root_super->dev, idx);            // 释放该i节点
+    idx = balloc(root_super->dev);    // 在根文件系统上分配一个块，返回块号
+    bfree(root_super->dev, idx);            // 释放该块
 }
 
 void super_init(){
