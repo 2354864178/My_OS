@@ -3,6 +3,7 @@
 
 #include <onix/types.h>
 #include <onix/list.h>
+#include <onix/fs.h>
 
 #define KERNEL_USER 0
 #define NORMAL_USER 1
@@ -40,6 +41,8 @@ typedef struct task_t
     struct bitmap_t *vmap;      // 进程虚拟内存位图
     u32 brk;                    // 进程堆内存最高地址
     int status;                 // 任务退出状态码
+    struct inode_t *cwd;        // 当前工作目录i节点
+    struct inode_t *root;       // 根目录i节点
     u32 magic;                  // 内核魔数，用于检测栈溢出
 } task_t;
 

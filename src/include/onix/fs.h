@@ -14,7 +14,15 @@
 #define IMAP_NR 8 // i节点位图占用的块数
 #define ZMAP_NR 8 // 块位图占用的块数
 
-#define BLOCK_BITS (BLOCK_SIZE * 8) // 每块包含的位数
+#define BLOCK_BITS (BLOCK_SIZE * 8)                         // 每块包含的位数
+#define BLOCK_INODES (BLOCK_SIZE / sizeof(inode_desc_t))    // 每块包含的i节点数量
+#define BLOCK_DENTRIES (BLOCK_SIZE / sizeof(dentry_t))      // 每块包含的目录项数量
+#define BLOCK_INDEXES (BLOCK_SIZE / sizeof(u16))            // 每块包含的索引数量
+
+#define DIRECTORY_BLOCKS (7)    // 直接块数量
+#define INDIRECT1_BLOCKS (BLOCK_INDEXES)    // 一级间接块数量
+#define INDIRECT2_BLOCKS (INDIRECT1_BLOCKS * INDIRECT1_BLOCKS)  // 二级间接块数量
+#define TOTAL_BLOCKS (DIRECTORY_BLOCKS + INDIRECT1_BLOCKS + INDIRECT2_BLOCKS) // 文件最大块数量
 
 // i节点描述信息结构体 硬盘上的i节点表示  管理用途（存储文件的元数据，提供文件系统操作所需的信息）
 typedef struct inode_desc_t{ 
@@ -22,8 +30,8 @@ typedef struct inode_desc_t{
     u16 i_uid;  // 所有者用户ID
     u32 i_size; // 文件大小 
     u32 i_time; // 最后修改时间
-    u16 i_gid;  // 所有者组ID
-    u16 i_nlinks; // 链接数
+    u8 i_gid;  // 所有者组ID
+    u8 i_nlinks; // 链接数
     u16 i_zone[9]; // 数据块指针
 } inode_desc_t;
 
@@ -33,7 +41,11 @@ typedef struct inode_t{
     struct buffer_t* buffer;            // i节点所在的缓冲区
     dev_t dev;                          // 设备号
     idx_t num;                          // i节点号
+    u32 count;                          // 引用计数  管理用途（维护i节点的使用情况，优化i节点分配和回收）
+    time_t atime;                       // 最后访问时间  管理用途（提供文件系统操作所需的信息，允许访问文件系统中的其他文件和目录）
+    time_t mtime;                       // 最后修改时间  管理用途（提供文件
     list_node_t node;                   // i节点列表节点  管理用途（维护i节点的使用情况，优化i节点分配和回收）
+    dev_t mount_dev;                    // 挂载设备号  管理用途（表示文件系统中的挂载点，提供文件系统操作所需的信息）
 } inode_t;
 
 // 超级块描述信息结构体  硬盘上的超级块表示
@@ -67,12 +79,16 @@ typedef struct dentry_t{
     char name[NAME_MAX];    // 文件名
 } dentry_t;
 
-super_block_t* get_super(dev_t dev);    // 获取设备的超级块  管理用途（提供文件系统操作所需的信息，允许访问文件系统中的其他文件和目录）
-super_block_t* read_super(dev_t dev);   // 从设备读取超级块  管理用途（提供文件系统操作所需的信息，允许访问文件系统中的其他文件和目录）
+super_block_t* get_super(dev_t dev);    // 获取设备的超级块
+super_block_t* read_super(dev_t dev);   // 从设备读取超级块
 
-idx_t balloc(dev_t dev);    // 从设备上分配一个块，返回块号  管理用途（管理文件系统中的数据块，提供文件系统操作所需的信息）
-void bfree(dev_t dev, idx_t idx); // 从设备上释放一个块，返回块号  管理用途（管理文件系统中的数据块，提供文件系统操作所需的信息）
-idx_t ialloc(dev_t dev);    // 从设备上分配一个i节点，返回i节点号  管理用途（管理文件系统中的i节点，提供文件系统操作所需的信息）
-void ifree(dev_t dev, idx_t idx); // 从设备上释放一个i节点，返回i节点号  管理用途（管理文件系统中的i节点，提供文件系统操作所需的信息）  
+idx_t balloc(dev_t dev);            // 从设备上分配一个块，返回块号 
+void bfree(dev_t dev, idx_t idx);   // 从设备上释放一个块，返回块号 
+idx_t ialloc(dev_t dev);            // 从设备上分配一个i节点，返回i节点号 
+void ifree(dev_t dev, idx_t idx);   // 从设备上释放一个i节点，返回i节点号 
+
+inode_t *iget(dev_t dev, idx_t num);    // 从设备和i节点号获取i节点，返回i节点指针
+void iput(inode_t *inode);              // 释放i节点 
+inode_t* get_root_inode();              // 获取根目录i节点
 
 #endif

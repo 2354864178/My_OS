@@ -65,13 +65,22 @@ static void mount_root(){
 
     root_super = read_super(device->dev); // 读取根文件系统的超级块
 
-    device = device_find(DEV_NVME_PART, 1); // 查找第二个NVMe分区设备
-    assert(device); // 确保设备存在
-    super_block_t *home_super = read_super(device->dev); // 读取/home分区的超级块
-    idx_t idx = ialloc(root_super->dev);    // 在根文件系统上分配一个i节点
-    ifree(root_super->dev, idx);            // 释放该i节点
-    idx = balloc(root_super->dev);    // 在根文件系统上分配一个块，返回块号
-    bfree(root_super->dev, idx);            // 释放该块
+    root_super->iroot = iget(root_super->dev, 1);   // 获取根目录i节点，i节点号为1
+    root_super->imount = root_super->iroot;         // 设置挂载点i节点为根目录i节点
+
+    idx_t idx = 0;
+    inode_t *inode = iget(root_super->dev, 1);      // 从设备和i节点号获取根目录i节点，返回i节点指针
+
+    // 直接块
+    idx = bmap(inode, 3, true);
+
+    // 一级间接块
+    idx = bmap(inode, 7 + 7, true);
+
+    // 二级间接块
+    idx = bmap(inode, 7 + 512 * 3 + 510, true);
+
+    iput(inode);
 }
 
 void super_init(){

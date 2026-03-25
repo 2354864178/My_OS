@@ -101,3 +101,105 @@ void ifree(dev_t dev, idx_t idx){
     bwrite(buffer); // 将修改后的位图写回设备(用于调试)
     LOGK("ifree: freed inode %d\n", idx); // 输出释放的i节点号
 }
+
+idx_t bmap(inode_t *inode, idx_t block, bool create){
+    assert(block >= 0 && block < TOTAL_BLOCKS);
+
+    buffer_t *buf = inode->buffer; // 获取i节点所在的缓冲区
+    buf->count += 1; // 先给 inode buffer 加引用，防止被回收
+
+    // 直接块 
+    if (block < DIRECTORY_BLOCKS){
+        u16 *array = inode->desc.i_zone; 
+        
+        if (!array[block] && create){
+            array[block] = balloc(inode->dev);
+            buf->dirty = true;
+        }
+        idx_t result = array[block]; // 先拿结果
+        brelse(buf);                  // 再释放 buffer
+        return result;
+    }
+
+    block -= DIRECTORY_BLOCKS;
+
+    // 一阶间接块 (Single Indirect)
+    if (block < INDIRECT1_BLOCKS){
+        u16 *inode_array = inode->desc.i_zone;  // i节点描述信息中的块指针数组
+        u16 indir_blkno = inode_array[DIRECTORY_BLOCKS];    // 一级间接块的块号
+
+        if (!indir_blkno) {
+            if (!create){
+                brelse(buf);
+                return 0;
+            }
+            indir_blkno = balloc(inode->dev);   // 分配新块
+            inode_array[DIRECTORY_BLOCKS] = indir_blkno;    // 更新一级间接块的块号
+        }
+        buf->dirty = true;
+        brelse(buf);
+        buffer_t *indir_buf = bread(inode->dev, indir_blkno);
+        u16 *indir_array = (u16 *)indir_buf->data;
+
+        u16 data_blkno = indir_array[block];
+        if (!data_blkno && create){
+            data_blkno = balloc(inode->dev);
+            indir_array[block] = data_blkno;
+        }
+        indir_buf->dirty = true;
+        idx_t result = data_blkno;
+        brelse(indir_buf);
+        return result;  
+    }
+
+    block -= INDIRECT1_BLOCKS;
+    assert(block < INDIRECT2_BLOCKS); // 断言块号合法
+
+    // 二阶间接块 (Double Indirect)
+    {
+        u16 *inode_array = inode->desc.i_zone;
+        u16 indir2_blkno = inode_array[DIRECTORY_BLOCKS + 1];
+        int need_zero2 = 0;
+
+        if (!indir2_blkno){
+            if (!create){
+                brelse(buf);
+                return 0;
+            }
+            indir2_blkno = balloc(inode->dev);
+            inode_array[DIRECTORY_BLOCKS + 1] = indir2_blkno;
+        }
+        buf->dirty = true;
+        brelse(buf);
+        buffer_t *indir2_buf = bread(inode->dev, indir2_blkno);
+        u16 *indir2_array = (u16 *)indir2_buf->data;
+
+        u16 idx1 = block / BLOCK_INDEXES;
+        u16 idx0 = block % BLOCK_INDEXES;
+
+        u16 indir1_blkno = indir2_array[idx1];
+        int need_zero1 = 0;
+        if (!indir1_blkno){
+            if (!create){
+                brelse(indir2_buf);
+                return 0;
+            }
+            indir1_blkno = balloc(inode->dev);
+            indir2_array[idx1] = indir1_blkno;
+        }
+        indir2_buf->dirty = true;
+        brelse(indir2_buf);
+        buffer_t *indir1_buf = bread(inode->dev, indir1_blkno);
+        u16 *indir1_array = (u16 *)indir1_buf->data;
+        
+        u16 data_blkno = indir1_array[idx0];
+        if (!data_blkno && create){
+            data_blkno = balloc(inode->dev);
+            indir1_array[idx0] = data_blkno;
+        }
+        indir1_buf->dirty = true;
+        idx_t result = data_blkno;
+        brelse(indir1_buf);
+        return result;
+    }
+}

@@ -9,6 +9,7 @@
 #include <onix/string.h>
 #include <onix/list.h>
 #include <onix/global.h>
+#include <onix/fs.h>
 
 #define TASK_NR 64                  // 最大任务数
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)
@@ -227,6 +228,8 @@ static task_t *task_create(target_t target, const char *name, u32 priority, u32 
     task->vmap = &kernel_map;                   // 设置任务使用的虚拟内存位图为内核内存位图
     task->pde = KERNEL_PAGE_DIR;                // 设置任务的页目录地址为内核页目录地址
     task->brk = KERNEL_MEMORY_SIZE;             // 初始化进程堆内存最高地址
+    task->cwd = get_root_inode();               // 设置当前工作目录i节点为根目录i节点
+    task->root = get_root_inode();              // 设置根目录i节点为根目录i节点
     task->magic = ONIX_MAGIC;                   // 设置魔数以便后续校验结构完整性
 
     return task;
@@ -433,8 +436,8 @@ void task_init(){
 
     idle_task = task_create(idle_thread, "idle", 1, KERNEL_USER);   // 创建空闲任务
     task_create(init_thread, "init", 5, NORMAL_USER);               // 创建初始化任务
-    task_create(test_thread, "test", 5, 1);               // 创建测试任务
-    task_create(test_thread, "test", 5, 2);               // 创建测试任务
+    task_create(test_thread, "test", 5, KERNEL_USER);               // 创建测试任务
+    // task_create(test_thread, "test", 5, 2);               // 创建测试任务
     // task_create(test_thread, "test", 5, 3);               // 创建测试任务
     printk("Task init done!\n");
 }

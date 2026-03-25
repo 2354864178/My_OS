@@ -90,6 +90,7 @@ $(BUILD)/kernel.bin: \
 	$(BUILD)/lib/printf.o \
 	$(BUILD)/fs/super.o \
 	$(BUILD)/fs/bmap.o \
+	$(BUILD)/fs/inode.o \
 	$(DTB_OBJ)
 
 $(BUILD)/kernel.bin: | $(DTB)

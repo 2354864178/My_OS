@@ -18,6 +18,7 @@ extern void ide_init();
 extern void pci_init();
 extern void nvme_init();
 extern void buffer_init();
+extern void inode_init();
 extern void super_init();
 
 void kernel_init(){
@@ -33,9 +34,11 @@ void kernel_init(){
     time_init();
     pci_init();
     nvme_init();
-    buffer_init();
-    task_init();
+    
     syscall_init();
+    task_init();
+    buffer_init();
+    inode_init();
     super_init();
     set_interrupt_state(true);
     
