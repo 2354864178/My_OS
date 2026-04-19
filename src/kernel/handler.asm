@@ -7,8 +7,8 @@ section .text
 %macro INTERRUPT_HANDLER 2
 interrupt_handler_%1:
     ; xchg bx, bx
-%ifn %2
-    push 0x20251117
+%ifn %2 ; 如果不需要错误代码，则手动压入一个占位的错误代码
+    push 0x20251117 ; 压入魔数，魔数的地址在寄存器esp + 4的位置，系统调用处理函数可以通过这个魔数来区分是系统调用还是普通中断
 %endif
     push %1; 压入中断向量，跳转到中断入口
     jmp interrupt_entry
@@ -23,7 +23,7 @@ interrupt_entry:
     push gs
     pusha
 
-    mov eax, [esp + 12 * 4]; 找到前面 push %1 压入的 中断向量
+    mov eax, [esp + 12 * 4]; 找到前面 push %1 压入的 中断向量把它传递给中断处理函数，eax = vector
 
     push eax
     

@@ -29,14 +29,14 @@ static u32 sys_test(){          // 测试系统调用函数
     char ch;
     device_t *device;
 
-    device = device_find(DEV_NVME_DISK, 0);         // 查找第一个NVMe磁盘设备
-    assert(device);                                 // 断言设备存在
-    task_t *current = running_task();               // 获取当前运行任务指针
-    buffer_t *buf = bread(device->dev, current->uid);          // 从设备的第0块读取数据到缓冲区
-    char *data = buf->data + SECTOR_SIZE;           // 获取缓冲区数据指针，偏移一个扇区大小
-    memset(data, current->uid, SECTOR_SIZE);                // 将数据区填充为0x5a，长度为一个扇区
-    buf->dirty = true;                              // 标记缓冲区为脏，表示数据已修改但未写回设备
-    brelse(buf);                                    // 释放缓冲区，触发写回设备
+    // device = device_find(DEV_NVME_DISK, 0);         // 查找第一个NVMe磁盘设备
+    // assert(device);                                 // 断言设备存在
+    // task_t *current = running_task();               // 获取当前运行任务指针
+    // buffer_t *buf = bread(device->dev, current->uid);          // 从设备的第0块读取数据到缓冲区
+    // char *data = buf->data + SECTOR_SIZE;           // 获取缓冲区数据指针，偏移一个扇区大小
+    // memset(data, 0x5a, SECTOR_SIZE);                // 将数据区填充为0x5a，长度为一个扇区
+    // buf->dirty = true;                              // 标记缓冲区为脏，表示数据已修改但未写回设备
+    // brelse(buf);                                    // 释放缓冲区，触发写回设备
     return 255;
 }
 
@@ -53,6 +53,7 @@ int32 sys_write(fd_t fd, char *buf, u32 len){
 }
 
 extern time_t sys_time(); // 声明 sys_time 函数
+extern mode_t sys_umask(); // 声明 sys_umask 函数
 
 void syscall_init(){            // 初始化系统调用处理函数表
     for (int i = 0; i < SYSCALL_SIZE; i++) {
@@ -70,6 +71,7 @@ void syscall_init(){            // 初始化系统调用处理函数表
     syscall_table[SYS_NR_EXIT] = (handler_t)task_exit;      // 注册 exit 系统调用处理函数
     syscall_table[SYS_NR_WAITPID] = (handler_t)task_waitpid; // 注册 waitpid 系统调用处理函数
     syscall_table[SYS_NR_TIME] = (handler_t)sys_time;       // 注册 time 系统调用处理函数
+    syscall_table[SYS_NR_UMASK] = (handler_t)sys_umask;     // 注册 umask 系统调用处理函数
     LOGK("Syscall init done!\n");
 }
 

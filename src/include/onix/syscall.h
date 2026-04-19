@@ -15,6 +15,7 @@ typedef enum syscall_t{
     SYS_NR_EXIT,
     SYS_NR_WAITPID,
     SYS_NR_TIME,
+    SYS_NR_UMASK,
 } syscall_t;
 
 u32 test();

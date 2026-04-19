@@ -26,9 +26,13 @@ $(BUILD)/boot/%.bin: $(SRC)/boot/%.asm
 	$(shell mkdir -p $(dir $@))
 	nasm -f bin $< -o $@
 
+# $(BUILD)/%.o: $(SRC)/%.asm
+# 	$(shell mkdir -p $(dir $@))
+# 	nasm -f elf32 $(DEBUG) $< -o $@
+
 $(BUILD)/%.o: $(SRC)/%.asm
 	$(shell mkdir -p $(dir $@))
-	nasm -f elf32 $(DEBUG) $< -o $@
+	nasm -f elf32 -g -F dwarf $< -o $@
 
 $(BUILD)/%.o: $(SRC)/%.c
 	$(shell mkdir -p $(dir $@))
@@ -80,6 +84,7 @@ $(BUILD)/kernel.bin: \
 	$(BUILD)/kernel/ide.o \
 	$(BUILD)/kernel/buffer.o \
 	$(BUILD)/kernel/devicetree.o \
+	$(BUILD)/kernel/system.o \
 	$(BUILD)/lib/string.o \
 	$(BUILD)/lib/vsprintf.o \
 	$(BUILD)/lib/stdlib.o \
@@ -111,3 +116,4 @@ include utils/cmd.mk
 clean:
 	rm -rf ../build/*.bin
 	rm -rf ../build/*.img
+	find ../build -name "*.o" -type f -delete

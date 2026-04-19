@@ -26,6 +26,7 @@ static list_t sleep_list;           // 任务睡眠链表
 static task_t *idle_task;           // 空闲任务指针
 static task_t *task_table[TASK_NR]; // 任务表
 
+// #define a sizeof(task_t)    // 任务结构体大小
 // 返回一个空闲任务结构的指针
 task_t *get_free_task() { 
     // 遍历任务表寻找空闲槽，i 为索引
@@ -225,11 +226,13 @@ static task_t *task_create(target_t target, const char *name, u32 priority, u32 
     task->jiffies = 0;                          // 初始化任务运行计时器为0
     task->state = TASK_READY;                   // 将任务状态设置为就绪
     task->uid = uid;                            // 设置任务所属用户ID
+    task->gid = 0;                              // 设置任务所属组ID
     task->vmap = &kernel_map;                   // 设置任务使用的虚拟内存位图为内核内存位图
     task->pde = KERNEL_PAGE_DIR;                // 设置任务的页目录地址为内核页目录地址
     task->brk = KERNEL_MEMORY_SIZE;             // 初始化进程堆内存最高地址
     task->cwd = get_root_inode();               // 设置当前工作目录i节点为根目录i节点
     task->root = get_root_inode();              // 设置根目录i节点为根目录i节点
+    task->umask = 0022;                         // 初始化文件权限掩码为 0022
     task->magic = ONIX_MAGIC;                   // 设置魔数以便后续校验结构完整性
 
     return task;

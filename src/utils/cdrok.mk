@@ -23,12 +23,12 @@ QEMU_CDROM:= -drive file=$(BUILD)/kernel.iso,media=cdrom,if=ide # 光盘镜像
 
 QEMU_CDROM_BOOT:= -boot d
 
-.PHONY: qemub
-qemub: $(BUILD)/kernel.iso $(IMAGES)
+.PHONY: qemub clean image
+qemub: clean image $(BUILD)/kernel.iso $(IMAGES)
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
 	$(QEMU) $(QEMU_CDROM) $(QEMU_CDROM_BOOT)
 
-.PHONY: qemubg
+.PHONY: qemubg 
 qemubg: $(BUILD)/kernel.iso $(IMAGES)
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
 	$(QEMU) \

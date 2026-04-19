@@ -6,7 +6,7 @@
 #include <onix/fs.h>
 
 #define KERNEL_USER 0
-#define NORMAL_USER 1
+#define NORMAL_USER 1000
 
 #define TASK_NAME_LEN 16
 
@@ -34,6 +34,7 @@ typedef struct task_t
     u32 jiffies;                // 上次执行时全局时间片
     char name[TASK_NAME_LEN];   // 任务名
     u32 uid;                    // 用户 id
+    u32 gid;                    // 组 id
     pid_t pid;                  // 任务 id
     pid_t ppid;                 // 父任务 id
     pid_t waitpid;              // 等待的子任务 id
@@ -43,6 +44,7 @@ typedef struct task_t
     int status;                 // 任务退出状态码
     struct inode_t *cwd;        // 当前工作目录i节点
     struct inode_t *root;       // 根目录i节点
+    u16 umask;                  // 文件权限掩码
     u32 magic;                  // 内核魔数，用于检测栈溢出
 } task_t;
 

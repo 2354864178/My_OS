@@ -96,7 +96,6 @@ extern void task_wakeup();
 void clock_handler(int vector)
 {
     assert(vector == 0x20); // 时钟中断向量号 0x20
-
     send_eoi(vector);   // 发送中断处理结束
     stop_beep();        // 停止蜂鸣器
 
@@ -109,7 +108,6 @@ void clock_handler(int vector)
     }
 
     task_t *task = running_task();      // 获取当前运行任务指针
-    // printk("Clock tick: %d\n", task->magic);
     assert(task->magic == ONIX_MAGIC);  // 检查任务魔数，防止栈溢出
 
     task->jiffies = jiffies;            // 更新任务的 jiffies 字段

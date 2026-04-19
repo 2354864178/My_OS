@@ -1,84 +1,107 @@
-$(BUILD)/os.img: \
-	$(BUILD)/boot/boot.bin \
+LOOP_DEV := $(shell losetup -f)
+
+$(BUILD)/os.img: $(BUILD)/boot/boot.bin \
 	$(BUILD)/boot/loader.bin \
 	$(BUILD)/system.bin \
 	$(BUILD)/system.map \
-	$(SRC)/utils/os.sfdisk
+	$(SRC)/utils/os.sfdisk \
 
-	yes | ../bochs/bin/bximage -q -hd=16 -func=create -sectsize=512 -imgmode=flat $@
+# 创建一个 16M 的硬盘镜像
+	yes | bximage -q -hd=16 -func=create -sectsize=512 -imgmode=flat $@
+
+# 将 boot.bin 写入主引导扇区
 	dd if=$(BUILD)/boot/boot.bin of=$@ bs=512 count=1 conv=notrunc
+
+# 将 loader.bin 写入硬盘
 	dd if=$(BUILD)/boot/loader.bin of=$@ bs=512 count=4 seek=2 conv=notrunc
 
+# 测试 system.bin 小于 100k，否则需要修改下面的 count
 	test -n "$$(find $(BUILD)/system.bin -size -100k)"
+
+# 将 system.bin 写入硬盘
 	dd if=$(BUILD)/system.bin of=$@ bs=512 count=200 seek=10 conv=notrunc
+
+# 执行硬盘分区
 	sfdisk $@ < $(SRC)/utils/os.sfdisk
-	set -e; \
-	loopdev=$$(sudo losetup --find --show --partscan $@); \
-	trap 'sudo umount /mnt 2>/dev/null || true; sudo losetup -d "$$loopdev" 2>/dev/null || true' EXIT; \
-	sudo mkfs.minix -1 -n 14 "$${loopdev}p1"; \
-	sudo mount "$${loopdev}p1" /mnt; \
-	sudo chown ${USER} /mnt; \
-	mkdir -p /mnt/home; \
-	mkdir -p /mnt/d1/d2/d3/d4; \
-	echo "os Hello, World!" > /mnt/hello.txt; \
-	echo "os Hello, World!" > /mnt/home/hello.txt; \
-	sudo umount /mnt; \
-	sudo losetup -d "$$loopdev"; \
-	trap - EXIT
+
+# 挂载设备
+	sudo losetup $(LOOP_DEV) --partscan $@
+
+# 创建 minux 文件系统
+	sudo mkfs.minix -1 -n 14 $(LOOP_DEV)p1
+
+# 挂载文件系统
+	sudo mount $(LOOP_DEV)p1 /mnt
+
+# 切换所有者
+	sudo chown ${USER} /mnt 
+
+# 创建目录
+	mkdir -p /mnt/home
+	mkdir -p /mnt/d1/d2/d3/d4
+
+# 创建文件
+	echo "hello onix!!!, from root direcotry file..." > /mnt/hello.txt
+	echo "hello onix!!!, from home direcotry file..." > /mnt/home/hello.txt
+
+# 卸载文件系统
+	sudo umount /mnt
+
+# 卸载设备
+	sudo losetup -d $(LOOP_DEV)
 
 $(BUILD)/slave.img: $(SRC)/utils/slave.sfdisk
-	$(shell mkdir -p $(dir $@))
-	yes | ../bochs/bin/bximage -q -hd=32 -func=create -sectsize=512 -imgmode=flat $@
+
+# 创建一个 32M 的硬盘镜像
+	yes | bximage -q -hd=32 -func=create -sectsize=512 -imgmode=flat $@
+
+# 执行硬盘分区
 	sfdisk $@ < $(SRC)/utils/slave.sfdisk
 
-	set -e; \
-	loopdev=$$(sudo losetup --find --show --partscan $@); \
-	trap 'sudo umount /mnt 2>/dev/null || true; sudo losetup -d "$$loopdev" 2>/dev/null || true' EXIT; \
-	for i in 1 2 3 4 5; do [ -b "$${loopdev}p1" ] && break; sleep 0.2; done; \
-	test -b "$${loopdev}p1"; \
-	sudo mkfs.minix -1 -n 14 "$${loopdev}p1"; \
-	sudo mount "$${loopdev}p1" /mnt; \
-	sudo chown ${USER} /mnt; \
-	echo "slave Hello, World!" > /mnt/hello.txt; \
-	sudo umount /mnt; \
-	sudo losetup -d "$$loopdev"; \
-	trap - EXIT
+# 挂载设备
+	sudo losetup $(LOOP_DEV) --partscan $@
 
-# 生成系统二进制文件和符号表
+# 创建 minux 文件系统
+	sudo mkfs.minix -1 -n 14 $(LOOP_DEV)p1
+
+# 挂载文件系统
+	sudo mount $(LOOP_DEV)p1 /mnt
+
+# 切换所有者
+	sudo chown ${USER} /mnt 
+
+# 创建文件
+	echo "slave root direcotry file..." > /mnt/hello.txt
+
+# 卸载文件系统
+	sudo umount /mnt
+
+# 卸载设备
+	sudo losetup -d $(LOOP_DEV)
+
 .PHONY: mount0
 mount0: $(BUILD)/os.img
-	set -e; \
-	loopdev=$$(sudo losetup --find --show --partscan $<); \
-	echo "$$loopdev" > $(BUILD)/.mount0.loop; \
-	sudo mount "$${loopdev}p1" /mnt; \
-	sudo chown ${USER} /mnt
+	sudo losetup $(LOOP_DEV) --partscan $<
+	sudo mount $(LOOP_DEV)p1 /mnt
+	sudo chown ${USER} /mnt 
 
-# 卸载系统镜像
 .PHONY: umount0
-umount0:
-	set -e; \
-	loopdev=$$(cat $(BUILD)/.mount0.loop 2>/dev/null || true); \
-	sudo umount /mnt 2>/dev/null || true; \
-	if [ -n "$$loopdev" ]; then sudo losetup -d "$$loopdev" 2>/dev/null || true; fi; \
-	rm -f $(BUILD)/.mount0.loop
+umount0: $(LOOP_DEV)
+	-sudo umount /mnt
+	-sudo losetup -d $<
 
-# 生成系统镜像和符号表
 .PHONY: mount1
 mount1: $(BUILD)/slave.img
-	set -e; \
-	loopdev=$$(sudo losetup --find --show --partscan $<); \
-	echo "$$loopdev" > $(BUILD)/.mount1.loop; \
-	sudo mount "$${loopdev}p1" /mnt; \
-	sudo chown ${USER} /mnt
+	sudo losetup $(LOOP_DEV) --partscan $<
+	sudo mount $(LOOP_DEV)p1 /mnt
+	sudo chown ${USER} /mnt 
 
 .PHONY: umount1
-umount1:
-	set -e; \
-	loopdev=$$(cat $(BUILD)/.mount1.loop 2>/dev/null || true); \
-	sudo umount /mnt 2>/dev/null || true; \
-	if [ -n "$$loopdev" ]; then sudo losetup -d "$$loopdev" 2>/dev/null || true; fi; \
-	rm -f $(BUILD)/.mount1.loop
+umount1: $(LOOP_DEV)
+	-sudo umount /mnt
+	-sudo losetup -d $<
 
-IMAGES:= $(BUILD)/os.img $(BUILD)/slave.img
+IMAGES:= $(BUILD)/os.img \
+	$(BUILD)/slave.img
 
 image: $(IMAGES)

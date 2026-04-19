@@ -41,7 +41,7 @@ typedef int32 dev_t;    // 设备号类型：定义为32位有符号整数，表
 typedef u32 uintptr_t;  // 无符号整数指针类型：定义为32位无符号整数，用于指针与整数之间的转换
 typedef u32 time_t;     // 时间戳类型：定义为32位无符号整数，存储"从1970-01-01 00:00:00到当前的秒数"
 typedef u32 idx_t;
-
+typedef u16 mode_t; // 文件权限
 typedef int32 fd_t;     // 文件描述符类型：定义为32位有符号整数，表示打开的文件、设备等资源的索引
 typedef enum std_fd_t{  // 标准文件描述符枚举类型
     stdin,      // 标准输入，通常对应键盘输入
