@@ -95,4 +95,7 @@ inode_t *iget(dev_t dev, idx_t num);    // 从设备和i节点号获取i节点�
 void iput(inode_t *inode);              // 释放i节点 
 inode_t* get_root_inode();              // 获取根目录i节点
 
+inode_t *named(char *pathname, char **next);    // 获取pathname路径对应的父目录i节点，返回i节点指针，并返回路径剩余部分指针
+inode_t *namei(char *pathname);                 // 获取pathname路径对应的i节点，返回i节点指针
+
 #endif

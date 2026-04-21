@@ -3,7 +3,29 @@
 #include <onix/debug.h>
 #include <onix/types.h>
 #include <onix/stat.h>
+#include <onix/task.h>
 #include <onix/fs.h>
+
+#define LOGK(fmt, args...) DEBUGK(fmt, ##args)  // 内核日志宏
+
+#define P_EXEC IXOTH    // 其他用户执行权限位
+#define P_WRITE IOWOTH  // 其他用户写权限位
+#define P_READ IROTH    // 其他用户读权限位
+
+// 判断当前任务是否有权限访问指定的i节点
+static bool permission(inode_t *inode, u16 umask){
+    u16 mode = inode->desc->i_mode;             // 获取i节点的权限模式
+    
+    if(!inode->desc->i_nlinks) return false;    // 如果链接数为0，说明文件已被删除，拒绝访问
+
+    task_t *task = running_task();              // 获取当前运行的任务
+    if(task->uid == KERNEL_USER) return true;   // 如果是内核用户，直接允许访问
+    if(task->uid == inode->desc->i_uid) mode >>= 6;         // 用户权限位在高3位
+    else if(task->gid == inode->desc->i_gid) mode >>= 3;    // 所属组权限位在中间3位
+
+    if((mode & umask & 0b111) == umask) return true;   // 如果权限位满足要求，允许访问
+    return false;   // 否则拒绝访问
+}
 
 // 判断文件名是否匹配，并返回剩余部分
 static bool match_name(const char *name, const char *entry_name, char **next){
@@ -22,7 +44,7 @@ static bool match_name(const char *name, const char *entry_name, char **next){
     return true;
 }
 
-// 从目录i节点中查找指定名称的目录项，返回包含目录项的缓冲区指针，并通过参数返回目录项指针和剩余路径
+// 从目录i节点中查找指定名称的目录项
 static buffer_t *find_entry(inode_t **dir, const char *name, char **next, dentry_t **result){
     assert(ISDIR((*dir)->desc->i_mode));            // 确保 dir 是一个目录
 
@@ -92,42 +114,76 @@ static buffer_t *add_entry(inode_t *dir, const char *name, dentry_t **result){
     };
 }
 
-#include <onix/task.h>
-void dir_test(){
-    task_t *task = running_task();
-    inode_t *root = task->root;     // 获取当前任务的根目录i节点
-    root->count++;                  // 给根目录i节点加引用，防止被回收
+// 获取pathname路径对应的父目录i节点
+inode_t *named(char *pathname, char **next){
+    inode_t *dir = NULL;            // 当前目录i节点
+    task_t *task = running_task();  // 获取当前运行的任务
+    char *left = pathname;          // 路径剩余部分指针
+
+    if(IS_SEPARATOR(left[0])){
+        dir = task->root;       // 如果路径以分隔符开头，说明从根目录开始解析
+        left++;                 // 路径剩余部分跳过分隔符
+    }
+    else if(left[0]) dir = task->cwd;  // 否则从当前工作目录开始解析
+    
+    dir->count++;               // 给起始目录i节点加引用，防止被回收
+    *next = left;               // 返回路径剩余部分指针
+
+    if(!*left) return dir;      // 如果路径没有剩余部分，直接返回起始目录i节点
+    char *right = strrsep(left);   // 寻找路径剩余部分中最后一个分隔符的位置，分割出最后一个组件
+    if(!right || right < left) return dir;  // 如果没有找到分隔符，说明路径只有一个组件，直接返回起始目录i节点
+    right++;
+    *next = left;               // 更新路径剩余部分指针，指向下一个组件的起始位置
+    dentry_t *entry = NULL;           // 目录项指针
+    buffer_t *buf = NULL;              // 缓冲区指针
+    while(true){
+        buf = find_entry(&dir, left, next, &entry);  // 在当前目录i节点中查找路径组件对应的目录项
+        if(!buf) goto failure;    // 如果没有找到目录项，说明路径无效，跳转到失败处理
+
+        dev_t dev = dir->dev;      // 获取当前目录所在设备号
+        iput(dir);                 // 释放当前目录i节点的引用
+        dir = iget(dev, entry->inode);  // 获取找到的目录项对应的i节点，继续解析下一个组件
+        if(!ISDIR(dir->desc->i_mode) || !permission(dir, P_EXEC)) goto failure;       // 如果获取i节点失败，说明路径无效，跳转到失败处理
+        if(right == *next) goto success;  // 如果路径剩余部分没有更多组件，说明已经解析到目标目录，跳转到成功处理
+        left = *next;   // 更新路径剩余部分指针，指向下一个组件的起始位置
+    }
+success:
+    brelse(buf);    // 释放最后一个数据块缓冲区
+    return dir;     // 返回目标目录i节点
+
+failure:
+    brelse(buf);    // 释放最后一个数据块缓冲区
+    iput(dir);      // 释放当前目录i节点的引用
+    return NULL;    // 返回NULL表示路径无效
+}
+
+// 获取 pathname 对应的 inode
+inode_t *namei(char *pathname){
     char *next = NULL;
+    inode_t *dir = named(pathname, &next);  // 找到父目录的inode
+    if(!dir) return NULL;
+    if(!(*next)) return dir; // 如果路径没有剩余部分，说明 pathname 就是父目录，直接返回父目录的 inode
+
+    char *name = next;
     dentry_t *entry = NULL;
-    buffer_t *buf = NULL;
+    buffer_t *buf = find_entry(&dir, name, &next, &entry);
+    if (!buf){
+        iput(dir);
+        return NULL;
+    }
+    inode_t *inode = iget(dir->dev, entry->inode);
+    iput(dir);
+    brelse(buf);
+    return inode;
+}
 
-    char pathname[] = "d1/d2/d3/d4";
-    char *name = pathname;  // 从路径的起始位置开始解析路径组件
-    buf = find_entry(&root, name, &next, &entry);  // 查找路径的第一个组件
-    brelse(buf);            // 释放查找过程中使用的缓冲区
+void dir_test(){
+    char pathname[] = "/";
+    char *next = NULL;
+    inode_t *dir = named(pathname, &next);
+    iput(dir);
 
-    dev_t dev = root->dev;      // 获取根目录所在设备号
-    iput(root);                 // 释放根目录i节点的引用
-    root = iget(dev, entry->inode);  // 获取找到的目录项对应的i节点
-
-    name = next;    // 更新路径指针，指向下一个组件
-    buf = find_entry(&root, name, &next, &entry);  // 查找路径的第二个组件
-    brelse(buf);        // 释放查找过程中使用的缓冲区
-
-    iput(root);     // 释放上一个目录i节点的引用
-    root = iget(dev, entry->inode);  // 获取找到的目录项对应的i节点
-
-    name = next;    // 更新路径指针，指向下一个组件
-    buf = find_entry(&root, name, &next, &entry);  // 查找路径的第三个组件
-    brelse(buf);    // 释放查找过程中使用的缓冲区
-
-    iput(root);     // 释放上一个目录i节点的引用
-    root = iget(dev, entry->inode);  // 获取找到的目录项对应的i节点
-
-    name = next;    // 更新路径指针，指向下一个组件
-    buf = find_entry(&root, name, &next, &entry);  // 查找路径的第四个组件
-    brelse(buf);    // 释放查找过程中使用的缓冲区
-
-    iput(root);     // 释放上一个目录i节点的引用
-    root = iget(dev, entry->inode);  // 获取找到的目录项对应的i节点
+    dir = namei("/home/hello.txt");
+    LOGK("inode num: %d\n", dir->num);
+    iput(dir);
 }
