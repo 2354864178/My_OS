@@ -43,7 +43,7 @@ $(BUILD)/os.img: $(BUILD)/boot/boot.bin \
 # 创建文件
 	echo "hello onix!!!, from root direcotry file..." > /mnt/hello.txt
 	echo "hello onix!!!, from home direcotry file..." > /mnt/home/hello.txt
-
+	ls -lR /mnt
 # 卸载文件系统
 	sudo umount /mnt
 

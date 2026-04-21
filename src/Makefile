@@ -96,6 +96,7 @@ $(BUILD)/kernel.bin: \
 	$(BUILD)/fs/super.o \
 	$(BUILD)/fs/bmap.o \
 	$(BUILD)/fs/inode.o \
+	$(BUILD)/fs/namei.o \
 	$(DTB_OBJ)
 
 $(BUILD)/kernel.bin: | $(DTB)

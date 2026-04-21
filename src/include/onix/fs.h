@@ -24,20 +24,24 @@
 #define INDIRECT2_BLOCKS (INDIRECT1_BLOCKS * INDIRECT1_BLOCKS)  // 二级间接块数量
 #define TOTAL_BLOCKS (DIRECTORY_BLOCKS + INDIRECT1_BLOCKS + INDIRECT2_BLOCKS) // 文件最大块数量
 
+#define SEPARATOR1 '/'      // 路径分隔符1
+#define SEPARATOR2 '\\'     // 路径分隔符2
+#define IS_SEPARATOR(c) ((c) == SEPARATOR1 || (c) == SEPARATOR2) // 判断是否为路径分隔符
+
 // i节点描述信息结构体 硬盘上的i节点表示  管理用途（存储文件的元数据，提供文件系统操作所需的信息）
 typedef struct inode_desc_t{ 
-    u16 i_mode; // 文件类型和权限
-    u16 i_uid;  // 所有者用户ID
-    u32 i_size; // 文件大小 
-    u32 i_time; // 最后修改时间
-    u8 i_gid;  // 所有者组ID
-    u8 i_nlinks; // 链接数
-    u16 i_zone[9]; // 数据块指针
+    u16 i_mode;     // 文件类型和权限
+    u16 i_uid;      // 所有者用户ID
+    u32 i_size;     // 文件大小 
+    u32 i_time;     // 最后修改时间
+    u8 i_gid;       // 所有者组ID
+    u8 i_nlinks;    // 链接数
+    u16 i_zone[9];  // 数据块指针
 } inode_desc_t;
 
 // i节点结构体 内存中的i节点表示  管理用途（存储文件的元数据，提供文件系统操作所需的信息）
 typedef struct inode_t{
-    inode_desc_t desc;                  // i节点描述信息
+    inode_desc_t *desc;                 // i节点描述信息
     struct buffer_t* buffer;            // i节点所在的缓冲区
     dev_t dev;                          // 设备号
     idx_t num;                          // i节点号
@@ -75,7 +79,7 @@ typedef struct super_block_t{
 
 // 目录项结构体  管理用途（表示文件系统中的目录项，提供文件系统操作所需的信息）
 typedef struct dentry_t{
-    u32 inode;              // i节点号
+    u16 inode;              // i节点号
     char name[NAME_MAX];    // 文件名
 } dentry_t;
 

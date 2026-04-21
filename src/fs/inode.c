@@ -68,8 +68,8 @@ inode_t *iget(dev_t dev, idx_t num){
     idx_t block = inode_block(sb, num);     // 计算i节点所在的块号
     buffer_t *buffer = bread(dev, block);   // 从设备读取i节点所在的块到缓冲区
     inode_desc_t *desc = (inode_desc_t *)buffer->data + (num-1)%BLOCK_INODES; // 计算i节点在块中的位置，获取i节点描述信息
-    inode->desc = *desc;      // 将i节点描述信息复制到i节点结构体中
-    inode->buffer = buffer;   // 设置i节点所在的缓冲区
+    inode->desc = desc;         // 将i节点描述信息复制到i节点结构体中
+    inode->buffer = buffer;     // 设置i节点所在的缓冲区
 
     inode->atime = time();     // 设置最后访问时间为当前时间
     inode->mtime = time();     // 设置最后修改时间为当前时间
@@ -79,6 +79,10 @@ inode_t *iget(dev_t dev, idx_t num){
 
 void iput(inode_t *inode){
     if (!inode) return;
+
+    if(inode -> buffer -> dirty){
+        bwrite(inode->buffer);
+    }
 
     inode->count--;
 

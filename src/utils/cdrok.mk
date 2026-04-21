@@ -28,8 +28,8 @@ qemub: clean image $(BUILD)/kernel.iso $(IMAGES)
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
 	$(QEMU) $(QEMU_CDROM) $(QEMU_CDROM_BOOT)
 
-.PHONY: qemubg 
-qemubg: $(BUILD)/kernel.iso $(IMAGES)
+.PHONY: qemubg clean image
+qemubg: clean image $(BUILD)/kernel.iso $(IMAGES)
 	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libpthread.so.0"  \
 	$(QEMU) \
 	$(QEMU_CDROM) \

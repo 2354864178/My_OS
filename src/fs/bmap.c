@@ -110,7 +110,7 @@ idx_t bmap(inode_t *inode, idx_t block, bool create){
 
     // 直接块 
     if (block < DIRECTORY_BLOCKS){
-        u16 *array = inode->desc.i_zone; 
+        u16 *array = inode->desc->i_zone; 
         
         if (!array[block] && create){
             array[block] = balloc(inode->dev);
@@ -125,7 +125,7 @@ idx_t bmap(inode_t *inode, idx_t block, bool create){
 
     // 一阶间接块 (Single Indirect)
     if (block < INDIRECT1_BLOCKS){
-        u16 *inode_array = inode->desc.i_zone;  // i节点描述信息中的块指针数组
+        u16 *inode_array = inode->desc->i_zone;             // i节点描述信息中的块指针数组
         u16 indir_blkno = inode_array[DIRECTORY_BLOCKS];    // 一级间接块的块号
 
         if (!indir_blkno) {
@@ -133,7 +133,7 @@ idx_t bmap(inode_t *inode, idx_t block, bool create){
                 brelse(buf);
                 return 0;
             }
-            indir_blkno = balloc(inode->dev);   // 分配新块
+            indir_blkno = balloc(inode->dev);               // 分配新块
             inode_array[DIRECTORY_BLOCKS] = indir_blkno;    // 更新一级间接块的块号
         }
         buf->dirty = true;
@@ -157,7 +157,7 @@ idx_t bmap(inode_t *inode, idx_t block, bool create){
 
     // 二阶间接块 (Double Indirect)
     {
-        u16 *inode_array = inode->desc.i_zone;
+        u16 *inode_array = inode->desc->i_zone;
         u16 indir2_blkno = inode_array[DIRECTORY_BLOCKS + 1];
         int need_zero2 = 0;
 
