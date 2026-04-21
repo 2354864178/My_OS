@@ -1,8 +1,10 @@
 #include <onix/fs.h>
+#include <onix/stdlib.h>
 #include <onix/string.h>
 #include <onix/debug.h>
 #include <onix/device.h>
 #include <onix/assert.h>
+#include <onix/stat.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)  // 内核日志宏
 
@@ -27,7 +29,7 @@ static void put_free_inode(inode_t *inode){
 
 // 获取根目录i节点
 inode_t* get_root_inode(){
-    return inodes; // 根目录i节点在数组的第一个位置
+    return inodes;              // 根目录i节点在数组的第一个位置
 }
 
 // 计算i节点所在的块号
@@ -100,3 +102,63 @@ void inode_init(){
         inode->dev = EOF;
     }
 }
+
+int inode_read(inode_t *inode, char *buf, size_t size, size_t offset){
+    assert(inode); // 断言i节点存在
+    assert(buf);   // 断言缓冲区存在
+    assert(ISFILE(inode->desc->i_mode)); // 断言i节点是一个文件
+
+    if(offset >= inode->desc->i_size) return EOF;
+
+    u32 begin = offset;
+    u32 left = MIN(size, inode->desc->i_size - offset);     // 计算实际需要读取的字节数，不能超过文件大小
+    while(left){
+        idx_t nr = bmap(inode, offset/BLOCK_SIZE, false);   // 计算当前读取位置所在的块索引
+        assert(nr);    // 断言块索引有效
+        buffer_t *buffer = bread(inode->dev, nr);       // 从设备读取块到缓冲区
+        u32 start = offset % BLOCK_SIZE;                // 计算当前块内的起始位置
+        u32 bytes = MIN(left, BLOCK_SIZE - start);      // 计算当前块内实际需要读取的字节数，不能超过块大小
+        offset += bytes;    // 更新读取位置
+        left -= bytes;      // 更新剩余字节数
+        memcpy(buf, buffer->data + start, bytes);  // 将数据从缓冲区复制到用户缓冲区
+        buf += bytes;       // 更新用户缓冲区指针
+        brelse(buffer);     // 释放缓冲区        
+    }
+    inode->atime = time();  // 更新最后访问时间
+    return offset-begin;    // 返回实际读取的字节数
+}
+
+int inode_write(inode_t *inode, const char *buf, size_t size, size_t offset){
+    assert(inode); // 断言i节点存在
+    assert(buf);   // 断言缓冲区存在
+    assert(ISFILE(inode->desc->i_mode)); // 断言i节点是一个文件
+
+    u32 begin = offset;
+    u32 left = size;   // 计算实际需要写入的字节数
+    while(left){
+        idx_t nr = bmap(inode, offset/BLOCK_SIZE, true);    // 计算当前写入位置所在的块索引，如果块不存在则创建
+        assert(nr);         // 断言块索引有效
+        buffer_t *buffer = bread(inode->dev, nr);       // 从设备读取块到缓冲区
+        buffer->dirty = true;                           // 标记缓冲区为脏，表示数据需要写回磁盘
+        u32 start = offset % BLOCK_SIZE;                // 计算当前块内的起始位置
+        u32 bytes = MIN(left, BLOCK_SIZE - start);      // 计算当前块内实际需要写入的字节数，不能超过块大小
+        offset += bytes;    // 更新写入位置
+        left -= bytes;      // 更新剩余字节数
+
+        if(offset > inode->desc->i_size){
+            inode->desc->i_size = offset;       // 如果写入位置超过文件大小，更新文件大小
+            inode->buffer->dirty = true;        // 标记i节点所在的缓冲区为脏，表示需要写回磁盘
+        }        
+
+        memcpy(buffer->data + start, buf, bytes);  // 将数据从用户缓冲区复制到缓冲区
+        buf += bytes;           // 更新用户缓冲区指针
+        brelse(buffer);         // 释放缓冲区        
+    }
+    if(offset > inode->desc->i_size){   // 如果写入位置超过文件大小，更新文件大小
+        inode->desc->i_size = offset;
+    }
+    inode->mtime = time();      // 更新最后修改时间
+    return offset-begin;        // 返回实际写入的字节数
+}
+
+

@@ -79,18 +79,18 @@ $(BUILD)/slave.img: $(SRC)/utils/slave.sfdisk
 # 卸载设备
 	sudo losetup -d $(LOOP_DEV)
 
-.PHONY: mount0
+.PHONY: mount0	# 挂载 os.img
 mount0: $(BUILD)/os.img
 	sudo losetup $(LOOP_DEV) --partscan $<
 	sudo mount $(LOOP_DEV)p1 /mnt
 	sudo chown ${USER} /mnt 
 
-.PHONY: umount0
+.PHONY: umount0	# 卸载 os.img
 umount0: $(LOOP_DEV)
 	-sudo umount /mnt
-	-sudo losetup -d $<
+	-sudo losetup -d /dev/loop24
 
-.PHONY: mount1
+.PHONY: mount1	
 mount1: $(BUILD)/slave.img
 	sudo losetup $(LOOP_DEV) --partscan $<
 	sudo mount $(LOOP_DEV)p1 /mnt

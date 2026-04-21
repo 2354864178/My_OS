@@ -1,9 +1,11 @@
+#include <onix/memory.h>
 #include <onix/string.h>
 #include <onix/assert.h>
 #include <onix/debug.h>
 #include <onix/types.h>
 #include <onix/stat.h>
 #include <onix/task.h>
+#include <onix/time.h>
 #include <onix/fs.h>
 
 #define LOGK(fmt, args...) DEBUGK(fmt, ##args)  // 内核日志宏
@@ -137,6 +139,7 @@ inode_t *named(char *pathname, char **next){
     dentry_t *entry = NULL;           // 目录项指针
     buffer_t *buf = NULL;              // 缓冲区指针
     while(true){
+        brelse(buf);    // 释放之前的缓冲区
         buf = find_entry(&dir, left, next, &entry);  // 在当前目录i节点中查找路径组件对应的目录项
         if(!buf) goto failure;    // 如果没有找到目录项，说明路径无效，跳转到失败处理
 
@@ -178,12 +181,14 @@ inode_t *namei(char *pathname){
 }
 
 void dir_test(){
-    char pathname[] = "/";
-    char *next = NULL;
-    inode_t *dir = named(pathname, &next);
-    iput(dir);
-
-    dir = namei("/home/hello.txt");
-    LOGK("inode num: %d\n", dir->num);
-    iput(dir);
+    inode_t *inode = namei("/d1/d2/d3/../../../hello.txt");
+    char *buf = (char *)alloc_kpage(1);
+    int i = inode_read(inode, buf, 1024, 0);
+    LOGK("read %d bytes: %s\n", i, buf);
+    memset(buf, 'A', 1024);
+    inode_write(inode, buf, PAGE_SIZE, 0);
+    
+    memset(buf, 'B', 1024);
+    inode_write(inode, buf, PAGE_SIZE, PAGE_SIZE);
 }
+

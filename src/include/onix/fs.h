@@ -98,4 +98,9 @@ inode_t* get_root_inode();              // 获取根目录i节点
 inode_t *named(char *pathname, char **next);    // 获取pathname路径对应的父目录i节点，返回i节点指针，并返回路径剩余部分指针
 inode_t *namei(char *pathname);                 // 获取pathname路径对应的i节点，返回i节点指针
 
+idx_t bmap(inode_t *inode, idx_t block, bool create); // 计算i节点的第block块对应的块号
+
+int inode_read(inode_t *inode, char *buf, size_t size, size_t offset);
+int inode_write(inode_t *inode, const char *buf, size_t size, size_t offset);
+
 #endif
